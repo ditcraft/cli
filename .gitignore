@@ -1,0 +1,7 @@
+# General
+
+# MacOS
+.DS_Store
+
+# Golang
+binaries/
