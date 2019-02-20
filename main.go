@@ -4,6 +4,7 @@ import (
 	"dit/config"
 	"dit/ethereum"
 	"dit/git"
+	"dit/helpers"
 	"fmt"
 	"os"
 	"strconv"
@@ -11,7 +12,7 @@ import (
 )
 
 // The current dit coordinator address
-var defaultDitCoodinator = "0x808d9B0E0b36DCd34b64113F4c2AabadDc15743f"
+var defaultDitCoodinator = "0x9D97FF08886e8EA3cFD6E78CfCbC1F91629e85d6"
 
 func main() {
 	args := os.Args[1:]
@@ -33,9 +34,10 @@ func main() {
 	// If there is an error during the config load and the user is not
 	// in the process of setting dit up: print an error
 	if err != nil && command != "setup" {
-		fmt.Println(err.Error())
+		helpers.PrintLine(err.Error(), 2)
 		os.Exit(0)
 	}
+
 	switch command {
 	case "setup":
 		// Create a new config
@@ -46,8 +48,9 @@ func main() {
 			// Set the DitCoordinator
 			err = ethereum.SetDitCoordinator(defaultDitCoodinator)
 			if err == nil {
-				fmt.Println("\nditCoordinator automatically set to the current deployed one at " + defaultDitCoodinator)
-				fmt.Println("If you wish to change this use 'dit set_coordinator <DIT_COORDINATOR_ADDRESS>")
+				fmt.Println()
+				helpers.PrintLine("ditCoordinator automatically set to the current deployed one at "+defaultDitCoodinator, 0)
+				helpers.PrintLine("If you wish to change this use 'dit set_coordinator <DIT_COORDINATOR_ADDRESS>", 0)
 			}
 		}
 		break
@@ -56,7 +59,7 @@ func main() {
 		// Set the DitCoordinator to a provided address
 		err = ethereum.SetDitCoordinator(args[1])
 		if err == nil {
-			fmt.Println("ditCoordinator successfully set")
+			helpers.PrintLine("ditCoordinator successfully set", 0)
 		}
 		break
 	case "get_balance":
@@ -65,10 +68,11 @@ func main() {
 		break
 	case "get_address":
 		// Return the ETH address
-		fmt.Println("Ethereum Address: " + config.DitConfig.EthereumKeys.Address)
-		fmt.Println("Etherscan-URL: https://rinkeby.etherscan.io/address/" + config.DitConfig.EthereumKeys.Address)
+		helpers.PrintLine("Ethereum Address: "+config.DitConfig.EthereumKeys.Address, 0)
+		helpers.PrintLine("Etherscan-URL: https://rinkeby.etherscan.io/address/"+config.DitConfig.EthereumKeys.Address, 0)
 		break
 	case "clone":
+		checkIfExists(args, 1, "a URL to a repository")
 		var repositoryName string
 		// Clone a repository and return the name of it
 		repositoryName, err = git.Clone(args[1])
@@ -76,7 +80,7 @@ func main() {
 			// Initialize this new repository as a ditRepository
 			err = ethereum.InitDitRepository(repositoryName)
 			if err == nil {
-				fmt.Println("ditRepository successfully cloned and initialized")
+				helpers.PrintLine("ditRepository successfully cloned and initialized", 0)
 			}
 		}
 		break
@@ -84,21 +88,28 @@ func main() {
 		// Initialize the current repository as a ditRepository
 		err = ethereum.InitDitRepository()
 		if err == nil {
-			fmt.Println("ditRepository successfully initiated")
+			helpers.PrintLine("ditRepository successfully initiated", 0)
 		}
 		break
 	case "propose_commit":
 		checkIfExists(args, 1, "a commit message")
 		var voteDetails string
 		var proposalID int
-		// Propose a new commit
-		voteDetails, proposalID, err = ethereum.ProposeCommit(args[1])
+
+		err = git.CheckForChanges()
 		if err == nil {
-			// Push the commit into a proposal branch
-			err = git.Commit(proposalID, args[1])
+			// Propose a new commit
+			voteDetails, proposalID, err = ethereum.ProposeCommit(args[1])
 			if err == nil {
-				// Print the details of the vote
-				fmt.Println(voteDetails)
+				// Push the commit into a proposal branch
+				err = git.Commit(proposalID, args[1])
+				if err == nil {
+					// Print the details of the vote
+					stringLines := strings.Split(voteDetails, "\n")
+					for i := range stringLines {
+						helpers.PrintLine(stringLines[i], 0)
+					}
+				}
 			}
 		}
 		break
@@ -123,23 +134,38 @@ func main() {
 		// Reveals the vote on a proposal
 		err = ethereum.Reveal(args[1])
 		break
+	case "demo_reveal_vote", "demo_reveal":
+		checkIfExists(args, 1, "a proposal ID")
+		// Reveals the votes of the demo voters on a proposal
+		for i := 0; i < 3; i++ {
+			err = ethereum.DemoReveal(args[1], i)
+		}
+		if err == nil {
+			helpers.PrintLine("Successfully revealed all the concealed demo votes.", 3)
+			helpers.PrintLine("After the vote ended, the vote has to be resolved. This includes", 3)
+			helpers.PrintLine("calculating the outcome and distributing KNW tokens and ETH stakes.", 3)
+			helpers.PrintLine("To do so when the vote is over, execute 'dit resolve_vote "+args[1]+"'", 3)
+		}
+
+		break
 	case "resolve_vote", "resolve":
 		checkIfExists(args, 1, "a proposal ID")
 		var pollPassed bool
 		// Resolves a proposal
 		pollPassed, err = ethereum.Resolve(args[1])
 		if err == nil {
+			fmt.Println()
 			if pollPassed {
 				// Merges the proposal branch into master after a successful vote
 				err = git.Merge(args[1])
 				if err == nil {
-					fmt.Println("Successfully merged dit proposal " + args[1] + " into the master branch")
+					helpers.PrintLine("Successfully merged dit proposal "+args[1]+" into the master branch", 0)
 				}
 			} else {
 				// Deletes the proposal branch after an unsuccessful vote
 				err = git.DeleteBranch(args[1])
 				if err == nil {
-					fmt.Println("Removed the dit proposal " + args[1] + " from the repository")
+					helpers.PrintLine("Removed the dit proposal "+args[1]+" from the repository", 0)
 				}
 			}
 		}
@@ -150,34 +176,43 @@ func main() {
 		break
 	}
 	if err != nil {
-		fmt.Println("Error: " + err.Error())
+		if len(err.Error()) > 0 {
+			helpers.PrintLine(err.Error(), 2)
+		}
 	}
 }
 
 // Will check whether a provided argument exists and tell the user if its missing
 func checkIfExists(_arguments []string, _index int, _description string) {
 	if len(_arguments) < _index+1 {
-		fmt.Println("Error: Please provide " + _description)
+		helpers.PrintLine("Please provide "+_description, 2)
 		os.Exit(0)
 	}
 }
 
 func printUsage() {
-	fmt.Println("\n-------- dit client v0.1 -------")
+	fmt.Println("-------- dit client v0.1 -------")
+	if config.DemoMode {
+		fmt.Println("--------- demo mode active -------")
+	}
 	fmt.Println("------------- General ------------")
 	fmt.Println(" - dit setup\t\t\t\t\tCreates or imports the ethereum keys and creates a config")
-	fmt.Println("\t\t\t\t\t\tWill also set the ditCoordinator address to the currently deployed one")
-	fmt.Println(" - dit set_coordinator <ADDRESS>\t\tSaves the ditCoordinator address and retrieves the KNWToken and KNWVoting addresses")
-	fmt.Println("\n------------- Ethereum ------------")
+	fmt.Println(" - dit set_coordinator <ADDRESS>\t\tSaves the ditCoordinator address and retrieves the")
+	fmt.Println("\t\t\t\t\t\tKNWToken and KNWVoting addresses")
+	fmt.Println("")
+	fmt.Println("------------- Ethereum ------------")
 	fmt.Println(" - dit get_address\t\t\t\tReturns ethereum address of the account")
 	fmt.Println(" - dit get_balance\t\t\t\tReturns the ETH and KNW balance of the account")
-	fmt.Println("\n----------- Repositories ----------")
-	fmt.Println(" - dit clone <REPOSITORY_URL>\t\t\tClones a repository (GitHub only) and automatically calls 'dit init' afterwards")
-	fmt.Println(" - dit init\t\t\t\t\tRetrieves the address of the ditContract for the repository you are using (GitHub only)")
-	fmt.Println(" - dit propose_commit <COMMIT_MESSAGE>\t\tProposes a new commit with the specified commit message (This will start a vote)")
+	fmt.Println("")
+	fmt.Println("----------- Repositories ----------")
+	fmt.Println(" - dit clone <REPOSITORY_URL>\t\t\tClones a repository (GitHub only) and automatically")
+	fmt.Println("\t\t\t\t\t\tcalls 'dit init' afterwards")
+	fmt.Println(" - dit init\t\t\t\t\tRetrieves the address of the ditContract for the repository")
+	fmt.Println("\t\t\t\t\t\tyou are using (GitHub only)")
+	fmt.Println(" - dit propose_commit <COMMIT_MESSAGE>\t\tProposes a new commit with the specified")
+	fmt.Println("\t\t\t\t\t\tcommit message (This will start a vote)")
 	fmt.Println(" - dit vote <PROPOSAL_ID> <CHOICE> <SALT>\tVotes on a proposal")
 	fmt.Println(" - dit reveal_vote <PROPOSAL_ID>\t\tReveals a vote on a proposal")
 	fmt.Println(" - dit resolve_vote <PROPOSAL_ID>\t\tResolves a vote on a proposal")
-	fmt.Println("")
 	os.Exit(0)
 }

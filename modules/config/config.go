@@ -19,12 +19,15 @@ import (
 	"golang.org/x/crypto/ssh/terminal"
 )
 
+var DemoMode = true
+
 type ditConfig struct {
-	DitCoordinator string       `json:"dit_coordinator"`
-	KNWVoting      string       `json:"knw_voting"`
-	KNWToken       string       `json:"knw_token"`
-	EthereumKeys   ethereumKeys `json:"ethereum_keys"`
-	Repositories   []Repository `json:"repositories"`
+	DitCoordinator string         `json:"dit_coordinator"`
+	KNWVoting      string         `json:"knw_voting"`
+	KNWToken       string         `json:"knw_token"`
+	EthereumKeys   ethereumKeys   `json:"ethereum_keys"`
+	DemoKeys       []ethereumKeys `json:"demo_keys,omitempty"`
+	Repositories   []Repository   `json:"repositories"`
 }
 
 type ethereumKeys struct {
@@ -42,6 +45,7 @@ type Repository struct {
 
 // ActiveVote struct, exported since its used in the ethereum package for new votes
 type ActiveVote struct {
+	DemoVoter      int    `json:"demo_voter"`
 	ID             int    `json:"id"`
 	KNWVoteID      int    `json:"knw_vote_id"`
 	KnowledgeLabel string `json:"knowledge_label"`
@@ -58,26 +62,45 @@ type ActiveVote struct {
 // DitConfig is exported since it needs to be accessed from other packages all the time
 var DitConfig ditConfig
 
+var demoPassword = "alig49239kjjhsdf653"
+
 // GetPrivateKey will prompt the user for his password and return the decrypted ethereum private key
 func GetPrivateKey() (string, error) {
 	// Prompting the user
-	fmt.Printf("This action requires to send a transaction to the ethereum blockchain.\nPlease provide your password to unlock your ethereum account: ")
+	helpers.PrintLine("This action requires to send a transaction to the ethereum blockchain.", 0)
+	helpers.Printf("Please provide your password to unlock your ethereum account: ", 0)
 	password, err := terminal.ReadPassword(0)
 	fmt.Printf("\n")
 	if err != nil {
-		fmt.Println("Failed to retrieve password")
+		return "", errors.New("Failed to retrieve password")
 	}
 
 	// Converting the encrypted private key from hex to bytes
 	encPrivateKey, err := hex.DecodeString(DitConfig.EthereumKeys.PrivateKey)
 	if err != nil {
-		fmt.Println("Failed to decode private key from config")
+		return "", errors.New("Failed to decode private key from config")
 	}
 
 	// Decrypting the private key
 	decryptedPrivateKey, err := decrypt(encPrivateKey, string(password))
 	if err != nil {
 		return "", errors.New("Failed to decrypt the encrypted private key - wrong password?")
+	}
+
+	return string(decryptedPrivateKey), nil
+}
+
+// GetDemoPrivateKeys will prompt the user for his password and return the decrypted ethereum private key
+func GetDemoPrivateKeys(_num int) (string, error) {
+	// Converting the encrypted private key from hex to bytes
+	encPrivateKey, err := hex.DecodeString(DitConfig.DemoKeys[_num].PrivateKey)
+	if err != nil {
+		return "", errors.New("Failed to decode demo private keys from config")
+	}
+	// Decrypting the private key
+	decryptedPrivateKey, err := decrypt(encPrivateKey, demoPassword)
+	if err != nil {
+		return "", errors.New("Failed to decrypt the encrypted demo private keys")
 	}
 
 	return string(decryptedPrivateKey), nil
@@ -117,45 +140,66 @@ func Load() error {
 
 // Create will create a new config file
 func Create() error {
-	fmt.Println("Initializing the ditClient...")
+	helpers.PrintLine("Initializing the ditClient...", 0)
 
-	// Prompting the user for his choice on the ethereum key generation/importing
-	answerPrivateKeySelection := helpers.GetUserInputChoice("You can either (a) sample a new ethereum private-key or (b) provide your own one", "a", "b")
+	if !DemoMode {
+		// Prompting the user for his choice on the ethereum key generation/importing
+		answerPrivateKeySelection := helpers.GetUserInputChoice("You can either (a) sample a new ethereum private-key or (b) provide your own one", "a", "b")
 
-	// Sample new ethereum Keys
-	if answerPrivateKeySelection == "a" {
-		address, privateKey, err := sampleEthereumKeys()
-		if err != nil {
-			return err
-		}
-		DitConfig.EthereumKeys.PrivateKey = privateKey
-		DitConfig.EthereumKeys.Address = address
-	} else {
-		// Import existing ones, prompting the user for input
-		answerPrivateKeyInput := helpers.GetUserInput("Please provide a hex-formatted ethereum private-key")
-		if len(answerPrivateKeyInput) == 64 || len(answerPrivateKeyInput) == 66 {
-			// Remove possible "0x" at the beginning
-			if strings.Contains(answerPrivateKeyInput, "0x") && len(answerPrivateKeyInput) == 66 {
-				answerPrivateKeyInput = answerPrivateKeyInput[2:]
-			}
-			// Import the ethereum private key
-			address, privateKey, err := importEthereumKey(answerPrivateKeyInput)
+		// Sample new ethereum Keys
+		if answerPrivateKeySelection == "a" {
+			address, privateKey, err := sampleEthereumKeys()
 			if err != nil {
 				return err
 			}
-
 			DitConfig.EthereumKeys.PrivateKey = privateKey
 			DitConfig.EthereumKeys.Address = address
 		} else {
-			return errors.New("Invalid ethereum private-key")
+			// Import existing ones, prompting the user for input
+			answerPrivateKeyInput := helpers.GetUserInput("Please provide a hex-formatted ethereum private-key")
+			if len(answerPrivateKeyInput) == 64 || len(answerPrivateKeyInput) == 66 {
+				// Remove possible "0x" at the beginning
+				if strings.Contains(answerPrivateKeyInput, "0x") && len(answerPrivateKeyInput) == 66 {
+					answerPrivateKeyInput = answerPrivateKeyInput[2:]
+				}
+				// Import the ethereum private key
+				address, privateKey, err := importEthereumKey(answerPrivateKeyInput)
+				if err != nil {
+					return err
+				}
+
+				DitConfig.EthereumKeys.PrivateKey = privateKey
+				DitConfig.EthereumKeys.Address = address
+			} else {
+				return errors.New("Invalid ethereum private-key")
+			}
 		}
+	} else {
+		helpers.PrintLine("Pre-funded private key was chosen due to demo mode being active", 3)
+		DitConfig.EthereumKeys.PrivateKey = "0EFF81044DE7940865C6ED0039D9604FD9C7348E43168945ABCA5340120181CF"
+		DitConfig.EthereumKeys.Address = "0x1b0eFa0068Fd403D293048F8758aC153DB252A11"
+
+		DitConfig.DemoKeys = make([]ethereumKeys, 3)
+
+		// Encrypt the private keys with the password
+		encryptedPrivateKey1, _ := encrypt([]byte("B7D74145BBDD4ED8F6A2467A95C584E8C9AFFA2AFC956427C1517DA24C05C1A7"), demoPassword)
+		encryptedPrivateKey2, _ := encrypt([]byte("7F8480337E77D8B241942F069DBDD58F0A7CCC9F9FAF62456F1964BC4FAAB15B"), demoPassword)
+		encryptedPrivateKey3, _ := encrypt([]byte("E909852AEB18AD19ABCA2AB5CAC121FBC9BF323317312C8E8B642E348F7DE420"), demoPassword)
+
+		DitConfig.DemoKeys[0].PrivateKey = hex.EncodeToString(encryptedPrivateKey1)
+		DitConfig.DemoKeys[0].Address = "0x1e9f642f0bCa054A743fB117E91aa05E9b842F98"
+		DitConfig.DemoKeys[1].PrivateKey = hex.EncodeToString(encryptedPrivateKey2)
+		DitConfig.DemoKeys[1].Address = "0xCa5b5488DFB2e6E37a6B572D7Fb5E686806a1503"
+		DitConfig.DemoKeys[2].PrivateKey = hex.EncodeToString(encryptedPrivateKey3)
+		DitConfig.DemoKeys[2].Address = "0x125Ba426110FBc83980cc716a63ed4B6229Ec0c0"
+
 	}
 
 	// Prompting the user to set a password for the private keys encryption
 	var password []byte
 	keepAsking := true
 	for keepAsking {
-		fmt.Printf("Please provide a password to encrypt your private key: ")
+		helpers.Printf("Please provide a password to encrypt your private key: ", 0)
 		var err error
 		password, err = terminal.ReadPassword(0)
 		fmt.Printf("\n")
@@ -164,18 +208,18 @@ func Create() error {
 		}
 
 		// Repeating the password to make sure that there are no typos
-		fmt.Printf("Please repeat your password: ")
+		helpers.Printf("Please repeat your password: ", 0)
 		passwordAgain, err := terminal.ReadPassword(0)
 		fmt.Printf("\n")
 		if err != nil {
-			fmt.Println("Failed to retrieve password")
+			return errors.New("Failed to retrieve password")
 		}
 
 		// If passwords don't match or are empty
 		if string(passwordAgain) != string(password) {
-			fmt.Println("Passwords didn't match - try again!")
+			helpers.PrintLine("Passwords didn't match - try again!", 1)
 		} else if len(password) == 0 {
-			fmt.Println("Password can't be empty - try again!")
+			helpers.PrintLine("Password can't be empty - try again!", 1)
 		} else {
 			// Stop if nothing of the above is true
 			keepAsking = false
@@ -197,7 +241,7 @@ func Create() error {
 		return err
 	}
 
-	fmt.Println("Initialization successfull")
+	helpers.PrintLine("Initialization successfull", 0)
 
 	return nil
 }
@@ -227,7 +271,7 @@ func Save() error {
 
 // importEthereumKey will return the private key and the address of an imported private key
 func importEthereumKey(privateKey string) (string, string, error) {
-	fmt.Println("Importing ethereum key...")
+	helpers.PrintLine("Importing ethereum key...", 0)
 
 	// Converting the private key string into a private key object
 	key, err := crypto.HexToECDSA(privateKey)
@@ -245,7 +289,7 @@ func importEthereumKey(privateKey string) (string, string, error) {
 }
 
 func sampleEthereumKeys() (string, string, error) {
-	fmt.Println("Sampling ethereum key...")
+	helpers.PrintLine("Sampling ethereum key...", 0)
 
 	// Sampling a new private key
 	key, err := crypto.GenerateKey()
