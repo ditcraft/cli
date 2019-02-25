@@ -242,6 +242,7 @@ func Create() error {
 	}
 
 	helpers.PrintLine("Initialization successfull", 0)
+	helpers.PrintLine("Your Ethereum Address is: "+DitConfig.EthereumKeys.Address, 0)
 
 	return nil
 }

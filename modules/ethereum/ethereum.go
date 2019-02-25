@@ -318,6 +318,9 @@ func ProposeCommit(_commitMessage string) (string, int, error) {
 	timeReveal := time.Unix(int64(newVote.RevealEnd), 0)
 	timeRevealString := timeReveal.Format("15:04:05 on 2006/01/02")
 
+	timeCommit := time.Unix(int64(newVote.CommitEnd), 0)
+	timeCommitString := timeCommit.Format("15:04:05 on 2006/01/02")
+
 	// Returning the response to the user, we don't want to print this right here and now
 	// since we are not sure whether the actual git commands will succeed.
 	// So it will be printed afterwards in the main routine
@@ -331,19 +334,25 @@ func ProposeCommit(_commitMessage string) (string, int, error) {
 
 	if config.DemoMode {
 		fmt.Println()
-		helpers.PrintLine("Starting demo voters to simulate participants", 3)
-		for i := 0; i < 3; i++ {
-			rand.Seed(time.Now().UnixNano())
-			randomSelection := rand.Intn(2)
-			randomSalt := rand.Intn(123456789)
-			err := Vote(strconv.Itoa(int(newVote.ID)), strconv.Itoa(randomSelection), strconv.Itoa(randomSalt), i)
-			if err != nil {
-				helpers.PrintLine("Error during vote commiting of demo voter "+strconv.Itoa(i), 2)
-			}
-		}
+		helpers.PrintLine("You may now simulate demo voters with 'dit demo_vote "+strconv.Itoa(int(newVote.ID))+"' until "+timeCommitString, 3)
 		fmt.Println()
 	}
 	return responseString, int(newProposalID.Int64()), nil
+}
+
+// DemoVote will simulate votes on a proposal
+func DemoVote(_proposalID string) error {
+	helpers.PrintLine("Starting demo voters to simulate participants", 3)
+	for i := 0; i < 3; i++ {
+		rand.Seed(time.Now().UnixNano())
+		randomSelection := rand.Intn(2)
+		randomSalt := rand.Intn(123456789)
+		err := Vote(_proposalID, strconv.Itoa(randomSelection), strconv.Itoa(randomSalt), i)
+		if err != nil {
+			helpers.PrintLine("Error during vote commiting of demo voter "+strconv.Itoa(i), 2)
+		}
+	}
+	return nil
 }
 
 // Vote will cast a users vote on a proposal
@@ -444,7 +453,7 @@ func Vote(_proposalID string, _choice string, _salt string, demo ...int) error {
 	// Verifying whether the commit period of this vote is active
 	commitPeriodActive, err := KNWVotingInstance.CommitPeriodActive(nil, proposal.KNWVoteID)
 	if err != nil {
-		return errors.New("Failed to retrieve reveal status")
+		return errors.New("Failed to retrieve opening status")
 	}
 
 	// If it is now active it's probably over
@@ -563,16 +572,12 @@ func Vote(_proposalID string, _choice string, _salt string, demo ...int) error {
 	timeRevealString := timeReveal.Format("15:04:05 on 2006/01/02")
 
 	if len(demo) != 0 {
-		if choice == 1 {
-			helpers.PrintLine("Demo-Voter "+strconv.Itoa(demo[0])+" voted in favor of the proposal", 3)
-		} else {
-			helpers.PrintLine("Demo-Voter "+strconv.Itoa(demo[0])+" voted against the proposal", 3)
-		}
+		helpers.PrintLine("Demo-Voter "+strconv.Itoa(demo[0])+" casted a vote on the proposed commit", 3)
 		if demo[0] == 2 {
 			fmt.Println()
 			helpers.PrintLine("With dit, votes are casted in a concealed manner through a commitment scheme.", 3)
-			helpers.PrintLine("This means that votes have to be revealed to the public once the commit-phase is over.", 3)
-			helpers.PrintLine("Please reveal the demo votes with 'dit demo_reveal "+strconv.Itoa(int(proposalID))+"' between "+timeCommitString+" and "+timeRevealString, 3)
+			helpers.PrintLine("This means that votes have to be opened and thus revealed to the public once the commit-phase is over.", 3)
+			helpers.PrintLine("Please open the concealed demo votes with 'dit demo_open "+strconv.Itoa(int(proposalID))+"' between "+timeCommitString+" and "+timeRevealString, 3)
 		}
 	} else {
 		if choice == 1 {
@@ -584,7 +589,7 @@ func Vote(_proposalID string, _choice string, _salt string, demo ...int) error {
 		// Letting the user know when and how he has to reveal the vote
 		helpers.PrintLine("With dit, votes are casted in a concealed manner through a commitment scheme.", 0)
 		helpers.PrintLine("This means that votes have to be revealed to the public once the commit-phase is over.", 0)
-		helpers.PrintLine("Please reveal your vote with 'dit reveal_vote "+strconv.Itoa(int(proposalID))+"' between "+timeCommitString+" and "+timeRevealString, 0)
+		helpers.PrintLine("Please open your vote with 'dit open "+strconv.Itoa(int(proposalID))+"' between "+timeCommitString+" and "+timeRevealString, 0)
 	}
 
 	return nil
@@ -633,12 +638,12 @@ func DemoReveal(_proposalID string, _demoID int) error {
 	// Verifying whether the reveal period of this vote is active
 	revealPeriodActive, err := KNWVotingInstance.RevealPeriodActive(nil, big.NewInt(int64(config.DitConfig.Repositories[ditContractIndex].ActiveVotes[voteIndex].KNWVoteID)))
 	if err != nil {
-		return errors.New("Failed to retrieve reveal status")
+		return errors.New("Failed to retrieve opening status")
 	}
 
 	// If it is now active it hasn't started yet or it's over
 	if !revealPeriodActive {
-		return errors.New("The reveal phase of this vote is not active")
+		return errors.New("The opening phase of this vote is not active")
 	}
 
 	// Verifying whether the user has commited a vote on this proposal
@@ -655,12 +660,12 @@ func DemoReveal(_proposalID string, _demoID int) error {
 	// Verifying whether the user has revealed his vote on this proposal
 	oldDidReveal, err := KNWVotingInstance.DidReveal(nil, myAddress, big.NewInt(int64(config.DitConfig.Repositories[ditContractIndex].ActiveVotes[voteIndex].KNWVoteID)))
 	if err != nil {
-		return errors.New("Failed to retrieve reveal status")
+		return errors.New("Failed to retrieve opening status")
 	}
 
 	// If this is the case, the user already revealed his vote
 	if oldDidReveal {
-		return errors.New("You already revealed your vote on this proposal")
+		return errors.New("You already opened your vote on this proposal")
 	}
 
 	var pk string
@@ -684,8 +689,16 @@ func DemoReveal(_proposalID string, _demoID int) error {
 		if strings.Contains(err.Error(), "insufficient funds") {
 			return errors.New("Your account doesn't have enough ETH to pay for the transaction")
 		}
-		return errors.New("Failed to reveal the vote: " + err.Error())
+		return errors.New("Failed to open the vote: " + err.Error())
 	}
+
+	var stringChoice string
+	if config.DitConfig.Repositories[ditContractIndex].ActiveVotes[voteIndex].Choice == 1 {
+		stringChoice = "for"
+	} else {
+		stringChoice = "against"
+	}
+	helpers.PrintLine("Demo-Voter "+strconv.Itoa(_demoID)+" opened his vote commitment (voted "+stringChoice+" the proposal) ", 3)
 
 	return nil
 }
@@ -733,12 +746,12 @@ func Reveal(_proposalID string) error {
 	// Verifying whether the reveal period of this vote is active
 	revealPeriodActive, err := KNWVotingInstance.RevealPeriodActive(nil, big.NewInt(int64(config.DitConfig.Repositories[ditContractIndex].ActiveVotes[voteIndex].KNWVoteID)))
 	if err != nil {
-		return errors.New("Failed to retrieve reveal status")
+		return errors.New("Failed to retrieve opening status")
 	}
 
 	// If it is now active it hasn't started yet or it's over
 	if !revealPeriodActive {
-		return errors.New("The reveal phase of this vote is not active")
+		return errors.New("The opening phase of this vote is not active")
 	}
 
 	// Verifying whether the user has commited a vote on this proposal
@@ -755,12 +768,12 @@ func Reveal(_proposalID string) error {
 	// Verifying whether the user has revealed his vote on this proposal
 	oldDidReveal, err := KNWVotingInstance.DidReveal(nil, myAddress, big.NewInt(int64(config.DitConfig.Repositories[ditContractIndex].ActiveVotes[voteIndex].KNWVoteID)))
 	if err != nil {
-		return errors.New("Failed to retrieve reveal status")
+		return errors.New("Failed to retrieve opening status")
 	}
 
 	// If this is the case, the user already revealed his vote
 	if oldDidReveal {
-		return errors.New("You already revealed your vote on this proposal")
+		return errors.New("You already opened your vote on this proposal")
 	}
 
 	// Crerating the transaction (basic values)
@@ -779,11 +792,11 @@ func Reveal(_proposalID string) error {
 		if strings.Contains(err.Error(), "insufficient funds") {
 			return errors.New("Your account doesn't have enough ETH to pay for the transaction")
 		}
-		return errors.New("Failed to reveal the vote: " + err.Error())
+		return errors.New("Failed to open the vote: " + err.Error())
 	}
 
 	// Waiting for the reveal transaction to be mined
-	helpers.Printf("Waiting for reveal transaction to be mined", 0)
+	helpers.Printf("Waiting for opening transaction to be mined", 0)
 	waitingFor := 0
 	newDidReveal := oldDidReveal
 	for newDidReveal == oldDidReveal {
@@ -793,7 +806,7 @@ func Reveal(_proposalID string) error {
 		// Checking the reveal status of the user every 5 seconds
 		newDidReveal, err = KNWVotingInstance.DidReveal(nil, myAddress, big.NewInt(int64(config.DitConfig.Repositories[ditContractIndex].ActiveVotes[voteIndex].KNWVoteID)))
 		if err != nil {
-			return errors.New("Failed to retrieve reveal status")
+			return errors.New("Failed to retrieve opening status")
 		}
 		// If we are waiting for more than 2 minutes, the transaction might have failed
 		if waitingFor > 180 {
@@ -804,7 +817,7 @@ func Reveal(_proposalID string) error {
 		}
 	}
 	fmt.Printf("\n")
-	helpers.PrintLine("Successfully revealed your vote", 0)
+	helpers.PrintLine("Successfully opened your vote", 0)
 
 	return nil
 }
@@ -869,7 +882,7 @@ func Resolve(_proposalID string) (bool, error) {
 
 	// If this user already called the Resolve function for this vote it's not possible anymore
 	if config.DitConfig.Repositories[ditContractIndex].ActiveVotes[voteIndex].Resolved {
-		return false, errors.New("You already resolved this vote")
+		return false, errors.New("You already finalized this vote")
 	}
 
 	// Verifying whether the vote has already ended
@@ -924,11 +937,11 @@ func Resolve(_proposalID string) (bool, error) {
 		if strings.Contains(err.Error(), "insufficient funds") {
 			return false, errors.New("Your account doesn't have enough ETH to pay for the transaction")
 		}
-		return false, errors.New("Failed to resolve the vote: " + err.Error())
+		return false, errors.New("Failed to finalize the vote: " + err.Error())
 	}
 
 	// Waiting for the resolve transaction to be mined
-	helpers.Printf("Waiting for resolve transaction to be mined", 0)
+	helpers.Printf("Waiting for finalizing transaction to be mined", 0)
 	waitingFor := 0
 	newEthBalance := oldEthBalance
 	for oldEthBalance.Cmp(newEthBalance) == 0 {
@@ -938,7 +951,7 @@ func Resolve(_proposalID string) (bool, error) {
 		// Checking the balance of the user every 5 seconds, if it changed, a transaction was executed
 		newEthBalance, err = connection.BalanceAt(context.Background(), myAddress, nil)
 		if err != nil {
-			return false, errors.New("Failed to retrieve reveal status")
+			return false, errors.New("Failed to retrieve opening status")
 		}
 		// If we are waiting for more than 2 minutes, the transaction might have failed
 		if waitingFor > 180 {
@@ -965,12 +978,12 @@ func Resolve(_proposalID string) (bool, error) {
 	fmt.Printf("\n")
 	// Show the user how the vote ended
 	if pollPassed {
-		helpers.PrintLine("Successfully resolve the vote - it passed", 0)
+		helpers.PrintLine("Successfully finalized the vote - it passed", 0)
 		if proposal.Proposer == common.HexToAddress(config.DitConfig.EthereumKeys.Address) {
 			helpers.PrintLine("You received your stake back and will share the opposing voters slashes stakes", 0)
 		}
 	} else {
-		helpers.PrintLine("Successfully resolve the vote - it didn't pass", 0)
+		helpers.PrintLine("Successfully finalized the vote - it didn't pass", 0)
 		if proposal.Proposer == common.HexToAddress(config.DitConfig.EthereumKeys.Address) {
 			helpers.PrintLine("Your stake was slashed and will be distributed amongst the voters", 0)
 		}
@@ -1004,11 +1017,10 @@ func Resolve(_proposalID string) (bool, error) {
 	}
 
 	if config.DemoMode {
-		fmt.Println()
 		for i := 0; i < 3; i++ {
 			_, err := DemoResolve(_proposalID, i)
 			if err != nil {
-				helpers.PrintLine("Error during vote reveal of demo voter "+strconv.Itoa(i), 2)
+				helpers.PrintLine("Error during vote opening of demo voter "+strconv.Itoa(i), 2)
 			}
 		}
 	}
@@ -1060,7 +1072,7 @@ func DemoResolve(_proposalID string, _demoID int) (bool, error) {
 
 	// If this user already called the Resolve function for this vote it's not possible anymore
 	if config.DitConfig.Repositories[ditContractIndex].ActiveVotes[voteIndex].Resolved {
-		return false, errors.New("You already resolved this vote")
+		return false, errors.New("You already finalized this vote")
 	}
 
 	// Verifying whether the vote has already ended
@@ -1108,7 +1120,7 @@ func DemoResolve(_proposalID string, _demoID int) (bool, error) {
 		if strings.Contains(err.Error(), "insufficient funds") {
 			return false, errors.New("Your account doesn't have enough ETH to pay for the transaction")
 		}
-		return false, errors.New("Failed to resolve the vote: " + err.Error())
+		return false, errors.New("Failed to finalize the vote: " + err.Error())
 	}
 
 	// Saving the resolved-status in the config
@@ -1120,7 +1132,7 @@ func DemoResolve(_proposalID string, _demoID int) (bool, error) {
 		return false, nil
 	}
 
-	helpers.PrintLine("Resolved vote for demo voter "+strconv.Itoa(_demoID), 3)
+	helpers.PrintLine("Finalized vote for demo voter "+strconv.Itoa(_demoID), 3)
 
 	return true, nil
 }
@@ -1229,8 +1241,8 @@ func GetVoteInfo(_proposalID ...int) error {
 		}
 	}
 	helpers.PrintLine(fmt.Sprintf("Current net stake: %f ETH\n", floatNetStake), 0)
-	helpers.PrintLine("Commit phase end: "+timeCommitString, 0)
-	helpers.PrintLine("Reveal phase end: "+timeRevealString, 0)
+	helpers.PrintLine("Vote phase end: "+timeCommitString, 0)
+	helpers.PrintLine("Opening phase end: "+timeRevealString, 0)
 	helpers.PrintLine("Resolved? "+strconv.FormatBool(proposal.IsResolved), 0)
 	helpers.PrintLine("Passed? "+strconv.FormatBool(proposal.ProposalAccepted), 0)
 	helpers.PrintLine("---------------------------", 0)
@@ -1474,10 +1486,21 @@ func populateTx(_connection *ethclient.Client, _pk ...string) (*bind.TransactOpt
 		return nil, errors.New("Failed to convert ethereum private-key")
 	}
 
-	// Retrieving the current nonce of our address
-	nonce, err := _connection.PendingNonceAt(context.Background(), common.HexToAddress(ethAddress))
+	// Retrieving the current pending nonce of our address
+	pendingNonce, err := _connection.PendingNonceAt(context.Background(), common.HexToAddress(ethAddress))
 	if err != nil {
 		return nil, errors.New("Failed to retrieve nonce for ethereum transaction")
+	}
+	// Retrieving the current non-pending nonce of our address
+	nonpendingNonce, err := _connection.NonceAt(context.Background(), common.HexToAddress(ethAddress), nil)
+	if err != nil {
+		return nil, errors.New("Failed to retrieve nonce for ethereum transaction")
+	}
+
+	// Edge-Case for slow nodes
+	nonce := pendingNonce
+	if nonpendingNonce > pendingNonce {
+		nonce = nonpendingNonce
 	}
 
 	// Retrieving the suggested gasprice by the network
@@ -1495,6 +1518,7 @@ func populateTx(_connection *ethclient.Client, _pk ...string) (*bind.TransactOpt
 	// Setting the values into the transaction-options object
 	auth := bind.NewKeyedTransactor(privateKey)
 	auth.Nonce = big.NewInt(int64(nonce))
+
 	auth.Value = big.NewInt(0)
 	auth.GasLimit = uint64(6000000)
 	auth.GasPrice = gasPrice

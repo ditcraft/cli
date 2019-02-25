@@ -12,7 +12,7 @@ import (
 )
 
 // The current dit coordinator address
-var defaultDitCoodinator = "0x9D97FF08886e8EA3cFD6E78CfCbC1F91629e85d6"
+var defaultDitCoodinator = "0x60F01B8F86Aa3D1a61d1E1730B49BaeE09D8d72c"
 
 func main() {
 	args := os.Args[1:]
@@ -36,6 +36,11 @@ func main() {
 	if err != nil && command != "setup" {
 		helpers.PrintLine(err.Error(), 2)
 		os.Exit(0)
+	}
+
+	if err == nil && config.DitConfig.DitCoordinator != defaultDitCoodinator && command != "setup" {
+		helpers.PrintLine("You are using an old version of the deployed ditCoordinator contract", 1)
+		helpers.PrintLine("To fix this call 'dit setup'", 1)
 	}
 
 	switch command {
@@ -91,7 +96,7 @@ func main() {
 			helpers.PrintLine("ditRepository successfully initiated", 0)
 		}
 		break
-	case "propose_commit":
+	case "commit", "propose_commit", "demo_commit":
 		checkIfExists(args, 1, "a commit message")
 		var voteDetails string
 		var proposalID int
@@ -129,26 +134,31 @@ func main() {
 		// Votes on a proposal
 		err = ethereum.Vote(args[1], args[2], args[3])
 		break
-	case "reveal_vote", "reveal":
+	case "demo_vote":
+		checkIfExists(args, 1, "a proposal ID - dit demo_vote <PROPOSAL_ID>")
+		// Demo-Votes on a proposal
+		err = ethereum.DemoVote(args[1])
+		break
+	case "open", "open_vote", "reveal_vote", "reveal":
 		checkIfExists(args, 1, "a proposal ID")
 		// Reveals the vote on a proposal
 		err = ethereum.Reveal(args[1])
 		break
-	case "demo_reveal_vote", "demo_reveal":
+	case "demo_open", "demo_open_vote", "demo_reveal_vote", "demo_reveal":
 		checkIfExists(args, 1, "a proposal ID")
 		// Reveals the votes of the demo voters on a proposal
 		for i := 0; i < 3; i++ {
 			err = ethereum.DemoReveal(args[1], i)
 		}
 		if err == nil {
-			helpers.PrintLine("Successfully revealed all the concealed demo votes.", 3)
-			helpers.PrintLine("After the vote ended, the vote has to be resolved. This includes", 3)
+			helpers.PrintLine("Successfully opened all the concealed demo votes.", 3)
+			helpers.PrintLine("After the vote ended, the vote has to be finalized. This includes", 3)
 			helpers.PrintLine("calculating the outcome and distributing KNW tokens and ETH stakes.", 3)
-			helpers.PrintLine("To do so when the vote is over, execute 'dit resolve_vote "+args[1]+"'", 3)
+			helpers.PrintLine("To do so when the vote is over, execute 'dit finalize "+args[1]+"'", 3)
 		}
 
 		break
-	case "resolve_vote", "resolve":
+	case "finalize", "finalize_vote":
 		checkIfExists(args, 1, "a proposal ID")
 		var pollPassed bool
 		// Resolves a proposal
@@ -191,7 +201,7 @@ func checkIfExists(_arguments []string, _index int, _description string) {
 }
 
 func printUsage() {
-	fmt.Println("-------- dit client v0.1 -------")
+	fmt.Println("--------- dit client v0.1 --------")
 	if config.DemoMode {
 		fmt.Println("--------- demo mode active -------")
 	}
@@ -209,10 +219,12 @@ func printUsage() {
 	fmt.Println("\t\t\t\t\t\tcalls 'dit init' afterwards")
 	fmt.Println(" - dit init\t\t\t\t\tRetrieves the address of the ditContract for the repository")
 	fmt.Println("\t\t\t\t\t\tyou are using (GitHub only)")
-	fmt.Println(" - dit propose_commit <COMMIT_MESSAGE>\t\tProposes a new commit with the specified")
+	fmt.Println(" - dit commit <COMMIT_MESSAGE>—\t\t\tProposes a new commit with the specified")
 	fmt.Println("\t\t\t\t\t\tcommit message (This will start a vote)")
-	fmt.Println(" - dit vote <PROPOSAL_ID> <CHOICE> <SALT>\tVotes on a proposal")
-	fmt.Println(" - dit reveal_vote <PROPOSAL_ID>\t\tReveals a vote on a proposal")
-	fmt.Println(" - dit resolve_vote <PROPOSAL_ID>\t\tResolves a vote on a proposal")
+	fmt.Println("")
+	fmt.Println("------------- Voting --------------")
+	fmt.Println(" - dit vote <PROPOSAL_ID> <CHOICE> <SALT>\tCasts a concealed vote on a proposed commit")
+	fmt.Println(" - dit open <PROPOSAL_ID>\t\t\tOpens and reveals the vote commitment on a proposed commit")
+	fmt.Println(" - dit finalize <PROPOSAL_ID>\t\t\tFinalizes the vote on proposed commit and claims the tokens")
 	os.Exit(0)
 }
