@@ -2,13 +2,6 @@ package ethereum
 
 import (
 	"context"
-	"dit/config"
-	"dit/git"
-	"dit/helpers"
-	"dit/smartcontracts/KNWToken"
-	"dit/smartcontracts/KNWVoting"
-	"dit/smartcontracts/ditContract"
-	"dit/smartcontracts/ditCoordinator"
 	"errors"
 	"fmt"
 	"math/big"
@@ -17,6 +10,14 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/ditcraft/client/config"
+	"github.com/ditcraft/client/git"
+	"github.com/ditcraft/client/helpers"
+	"github.com/ditcraft/client/smartcontracts/KNWToken"
+	"github.com/ditcraft/client/smartcontracts/KNWVoting"
+	"github.com/ditcraft/client/smartcontracts/ditContract"
+	"github.com/ditcraft/client/smartcontracts/ditCoordinator"
 
 	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"

@@ -5,7 +5,6 @@ import (
 	"crypto/cipher"
 	"crypto/rand"
 	"crypto/sha256"
-	"dit/helpers"
 	"encoding/hex"
 	"encoding/json"
 	"errors"
@@ -14,6 +13,8 @@ import (
 	"io/ioutil"
 	"os/user"
 	"strings"
+
+	"github.com/ditcraft/client/helpers"
 
 	"github.com/ethereum/go-ethereum/crypto"
 	"golang.org/x/crypto/ssh/terminal"

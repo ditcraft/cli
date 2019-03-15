@@ -1,14 +1,15 @@
 package main
 
 import (
-	"dit/config"
-	"dit/ethereum"
-	"dit/git"
-	"dit/helpers"
 	"fmt"
 	"os"
 	"strconv"
 	"strings"
+
+	"github.com/ditcraft/client/config"
+	"github.com/ditcraft/client/ethereum"
+	"github.com/ditcraft/client/git"
+	"github.com/ditcraft/client/helpers"
 )
 
 // The current dit coordinator address

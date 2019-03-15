@@ -1,12 +1,13 @@
 package git
 
 import (
-	"dit/helpers"
 	"errors"
 	"io/ioutil"
 	"os/exec"
 	"strconv"
 	"strings"
+
+	"github.com/ditcraft/client/helpers"
 )
 
 // GetRepository will return the name of the current repostiry
