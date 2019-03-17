@@ -16,7 +16,6 @@ import (
 	"github.com/ditcraft/client/helpers"
 	"github.com/ditcraft/client/smartcontracts/KNWToken"
 	"github.com/ditcraft/client/smartcontracts/KNWVoting"
-	"github.com/ditcraft/client/smartcontracts/ditContract"
 	"github.com/ditcraft/client/smartcontracts/ditCoordinator"
 
 	"github.com/ethereum/go-ethereum/accounts/abi"
@@ -37,7 +36,7 @@ func SetDitCoordinator(_ditCoordinatorAddressString string) error {
 	}
 
 	// Create a new instance of the ditCoordinator to access it
-	ditCoordinatorInstance, err := getditCoordinatorInstance(connection, _ditCoordinatorAddressString)
+	ditCoordinatorInstance, err := getDitCoordinatorInstance(connection, _ditCoordinatorAddressString)
 	if err != nil {
 		return err
 	}
@@ -114,25 +113,27 @@ func InitDitRepository(_optionalRepository ...string) error {
 		return err
 	}
 
+	repoHash := GetHashOfString(repository)
+
 	// Create a new instance of the ditCoordinator to access it
-	ditCoordinatorInstance, err := getditCoordinatorInstance(connection)
+	ditCoordinatorInstance, err := getDitCoordinatorInstance(connection)
 	if err != nil {
 		return err
 	}
 
 	// Retrieving the address of the ditContract that was deployed for this repository
-	ditContractAddress, err := ditCoordinatorInstance.GetRepository(nil, repository)
+	isInitialized, err := ditCoordinatorInstance.RepositoryIsInitialized(nil, repoHash)
 	if err != nil {
 		return err
 	}
 
 	// If the address is zero, there is no contract deployed
-	if ditContractAddress == common.HexToAddress("0") {
+	if !isInitialized {
 		// Prompt the user whether he wants to deploy one
-		answer := helpers.GetUserInputChoice("There is no ditContract for this repository yet, do you want to deploy one?", "y", "n")
+		answer := helpers.GetUserInputChoice("This repository hasn't been initialized yet, do you want to initialize it?", "y", "n")
 		if answer == "y" {
 			// If yes: deploy the ditContract
-			ditContractAddress, err = deployDitContract(ditCoordinatorInstance, repository)
+			err = initDitRepository(ditCoordinatorInstance, repoHash)
 			if err != nil {
 				return err
 			}
@@ -143,16 +144,10 @@ func InitDitRepository(_optionalRepository ...string) error {
 		}
 	}
 
-	// Create a new instance of the ditContract to access it
-	ditContractInstance, err := getDitContractInstance(connection, 0, ditContractAddress.Hex())
-	if err != nil {
-		return err
-	}
-
 	// Retrieving the knowledge-labels of this ditContract
 	var knowledgeLabels []string
 	for i := 0; i < 3; i++ {
-		contractKnowledgeLabels, err := ditContractInstance.KnowledgeLabels(nil, big.NewInt(int64(i)))
+		contractKnowledgeLabels, err := ditCoordinatorInstance.GetKnowledgeLabels(nil, repoHash, big.NewInt(int64(i)))
 		if err != nil {
 			return err
 		}
@@ -167,7 +162,6 @@ func InitDitRepository(_optionalRepository ...string) error {
 	if strings.Contains(repository, "github.com") {
 		newRepository.Provider = "github"
 	}
-	newRepository.ContractAddress = ditContractAddress.Hex()
 	newRepository.KnowledgeLabels = knowledgeLabels
 	newRepository.ActiveVotes = make([]config.ActiveVote, 0)
 	config.DitConfig.Repositories = append(config.DitConfig.Repositories, newRepository)
@@ -184,13 +178,15 @@ func InitDitRepository(_optionalRepository ...string) error {
 // ProposeCommit will start a new proposal on the ditContract of this repository
 func ProposeCommit(_commitMessage string) (string, int, error) {
 	// Searching for this repositories object in the config
-	ditContractIndex, err := searchForRepoInConfig()
+	repoIndex, err := searchForRepoInConfig()
 	if err != nil {
 		return "", 0, err
 	}
 
+	repoHash := GetHashOfString(config.DitConfig.Repositories[repoIndex].Name)
+
 	// Gathering the the knowledge-labels from the config
-	knowledgeLabels := config.DitConfig.Repositories[ditContractIndex].KnowledgeLabels
+	knowledgeLabels := config.DitConfig.Repositories[repoIndex].KnowledgeLabels
 
 	connection, err := getConnection()
 	if err != nil {
@@ -198,7 +194,7 @@ func ProposeCommit(_commitMessage string) (string, int, error) {
 	}
 
 	// Create a new instance of the ditContract to access it
-	ditContractInstance, err := getDitContractInstance(connection, ditContractIndex)
+	ditCoordinatorInstance, err := getDitCoordinatorInstance(connection)
 	if err != nil {
 		return "", 0, err
 	}
@@ -262,13 +258,13 @@ func ProposeCommit(_commitMessage string) (string, int, error) {
 
 	// Retrieving the last/current proposalID of the ditContract
 	// (This will increment after a proposal, so we can see when the proposal is live)
-	lastProposalID, err := ditContractInstance.CurrentProposalID(nil)
+	lastProposalID, err := ditCoordinatorInstance.GetCurrentProposalID(nil, repoHash)
 	if err != nil {
 		return "", 0, errors.New("Failed to retrieve the current proposal id")
 	}
 
 	// Proposing the commit
-	transaction, err := ditContractInstance.ProposeCommit(auth, big.NewInt(int64(answerKnowledgeLabel-1)))
+	transaction, err := ditCoordinatorInstance.ProposeCommit(auth, repoHash, big.NewInt(int64(answerKnowledgeLabel-1)), big.NewInt(int64(120)), big.NewInt(int64(120)))
 	if err != nil {
 		if strings.Contains(err.Error(), "insufficient funds") {
 			return "", 0, errors.New("Your account doesn't have enough ETH to pay for the transaction")
@@ -285,7 +281,7 @@ func ProposeCommit(_commitMessage string) (string, int, error) {
 		time.Sleep(5 * time.Second)
 		fmt.Printf(".")
 		// Checking the current proposal ID every 5 seconds
-		newProposalID, err = ditContractInstance.CurrentProposalID(nil)
+		newProposalID, err = ditCoordinatorInstance.GetCurrentProposalID(nil, repoHash)
 		if err != nil {
 			return "", 0, errors.New("Failed to retrieve the current proposal id")
 		}
@@ -300,13 +296,13 @@ func ProposeCommit(_commitMessage string) (string, int, error) {
 	fmt.Printf("\n")
 
 	// Gathering the information of the new proposal from the ditContract (including the times to commit and reveal)
-	newVote, err := gatherProposalInfo(connection, ditContractInstance, ditContractIndex, newProposalID.Int64())
+	newVote, err := gatherProposalInfo(connection, ditCoordinatorInstance, repoHash, newProposalID.Int64())
 	if err != nil {
 		return "", 0, err
 	}
 
 	// Adding the new vote to the config object
-	config.DitConfig.Repositories[ditContractIndex].ActiveVotes = append(config.DitConfig.Repositories[ditContractIndex].ActiveVotes, newVote)
+	config.DitConfig.Repositories[repoIndex].ActiveVotes = append(config.DitConfig.Repositories[repoIndex].ActiveVotes, newVote)
 
 	// Saving the config back to the file
 	err = config.Save()
@@ -333,8 +329,8 @@ func ProposeCommit(_commitMessage string) (string, int, error) {
 	responseString += "\nSuccessfully proposed commit. Vote on proposal started with ID " + strconv.Itoa(int(newVote.ID)) + ""
 	responseString += fmt.Sprintf("\nYou staked %f ETH and used %f KNW.", floatETH, floatKNW)
 	responseString += "\nThe vote will end at " + timeRevealString
-	if config.DitConfig.Repositories[ditContractIndex].Provider == "github" {
-		responseString += "\nYour commit is at https://github.com/" + config.DitConfig.Repositories[ditContractIndex].Name + "/tree/dit_proposal_" + strconv.Itoa(int(newVote.ID))
+	if config.DitConfig.Repositories[repoIndex].Provider == "github" {
+		responseString += "\nYour commit is at https://github.com/" + config.DitConfig.Repositories[repoIndex].Name + "/tree/dit_proposal_" + strconv.Itoa(int(newVote.ID))
 	}
 	responseString += "\n---------------------------"
 
@@ -354,10 +350,12 @@ func Vote(_proposalID string, _choice string, _salt string) error {
 	salt, _ := strconv.Atoi(_salt)
 
 	// Searching for this repositories object in the config
-	ditContractIndex, err := searchForRepoInConfig()
+	repoIndex, err := searchForRepoInConfig()
 	if err != nil {
 		return err
 	}
+
+	repoHash := GetHashOfString(config.DitConfig.Repositories[repoIndex].Name)
 
 	connection, err := getConnection()
 	if err != nil {
@@ -368,7 +366,7 @@ func Vote(_proposalID string, _choice string, _salt string) error {
 	myAddress := common.HexToAddress(config.DitConfig.EthereumKeys.Address)
 
 	// Create a new instance of the ditContract to access it
-	ditContractInstance, err := getDitContractInstance(connection, ditContractIndex)
+	ditCooordinatorInstance, err := getDitCoordinatorInstance(connection)
 	if err != nil {
 		return err
 	}
@@ -380,7 +378,7 @@ func Vote(_proposalID string, _choice string, _salt string) error {
 	}
 
 	// Retrieving the proposal object from the ditContract
-	proposal, err := ditContractInstance.Proposals(nil, big.NewInt(int64(proposalID)))
+	proposal, err := ditCooordinatorInstance.ProposalsOfRepository(nil, repoHash, big.NewInt(int64(proposalID)))
 	if err != nil {
 		return errors.New("Failed to retrieve proposal")
 	}
@@ -467,7 +465,7 @@ func Vote(_proposalID string, _choice string, _salt string) error {
 	auth.Value = requiredStake
 
 	// Voting on the proposal
-	transaction, err := ditContractInstance.VoteOnProposal(auth, big.NewInt(int64(proposalID)), voteHash)
+	transaction, err := ditCooordinatorInstance.VoteOnProposal(auth, repoHash, big.NewInt(int64(proposalID)), voteHash)
 	if err != nil {
 		if strings.Contains(err.Error(), "insufficient funds") {
 			return errors.New("Your account doesn't have enough ETH to pay for the transaction")
@@ -499,7 +497,7 @@ func Vote(_proposalID string, _choice string, _salt string) error {
 	fmt.Printf("\n")
 
 	// Gathering the information of the proposal from the ditContract
-	newVote, err := gatherProposalInfo(connection, ditContractInstance, ditContractIndex, int64(proposalID))
+	newVote, err := gatherProposalInfo(connection, ditCooordinatorInstance, repoHash, int64(proposalID))
 	if err != nil {
 		return err
 	}
@@ -510,7 +508,7 @@ func Vote(_proposalID string, _choice string, _salt string) error {
 	newVote.Salt = salt
 
 	// Adding the new vote to the config object
-	config.DitConfig.Repositories[ditContractIndex].ActiveVotes = append(config.DitConfig.Repositories[ditContractIndex].ActiveVotes, newVote)
+	config.DitConfig.Repositories[repoIndex].ActiveVotes = append(config.DitConfig.Repositories[repoIndex].ActiveVotes, newVote)
 
 	// Saving the config back to the file
 	err = config.Save()
@@ -544,10 +542,12 @@ func Open(_proposalID string) error {
 	proposalID, _ := strconv.Atoi(_proposalID)
 
 	// Searching for this repositories object in the config
-	ditContractIndex, err := searchForRepoInConfig()
+	repoIndex, err := searchForRepoInConfig()
 	if err != nil {
 		return err
 	}
+
+	repoHash := GetHashOfString(config.DitConfig.Repositories[repoIndex].Name)
 
 	connection, err := getConnection()
 	if err != nil {
@@ -558,7 +558,7 @@ func Open(_proposalID string) error {
 	myAddress := common.HexToAddress(config.DitConfig.EthereumKeys.Address)
 
 	// Create a new instance of the ditContract to access it
-	ditContractInstance, err := getDitContractInstance(connection, ditContractIndex)
+	ditCooordinatorInstance, err := getDitCoordinatorInstance(connection)
 	if err != nil {
 		return err
 	}
@@ -571,15 +571,15 @@ func Open(_proposalID string) error {
 
 	// Searching for the corresponding vote in the votes stored in the config
 	var voteIndex int
-	for i := range config.DitConfig.Repositories[ditContractIndex].ActiveVotes {
-		if config.DitConfig.Repositories[ditContractIndex].ActiveVotes[i].ID == proposalID {
+	for i := range config.DitConfig.Repositories[repoIndex].ActiveVotes {
+		if config.DitConfig.Repositories[repoIndex].ActiveVotes[i].ID == proposalID {
 			voteIndex = i
 			break
 		}
 	}
 
 	// Verifying whether the reveal period of this vote is active
-	revealPeriodActive, err := KNWVotingInstance.RevealPeriodActive(nil, big.NewInt(int64(config.DitConfig.Repositories[ditContractIndex].ActiveVotes[voteIndex].KNWVoteID)))
+	revealPeriodActive, err := KNWVotingInstance.RevealPeriodActive(nil, big.NewInt(int64(config.DitConfig.Repositories[repoIndex].ActiveVotes[voteIndex].KNWVoteID)))
 	if err != nil {
 		return errors.New("Failed to retrieve opening status")
 	}
@@ -590,7 +590,7 @@ func Open(_proposalID string) error {
 	}
 
 	// Verifying whether the user has commited a vote on this proposal
-	didCommit, err := KNWVotingInstance.DidCommit(nil, myAddress, big.NewInt(int64(config.DitConfig.Repositories[ditContractIndex].ActiveVotes[voteIndex].KNWVoteID)))
+	didCommit, err := KNWVotingInstance.DidCommit(nil, myAddress, big.NewInt(int64(config.DitConfig.Repositories[repoIndex].ActiveVotes[voteIndex].KNWVoteID)))
 	if err != nil {
 		return errors.New("Failed to retrieve commit status")
 	}
@@ -601,7 +601,7 @@ func Open(_proposalID string) error {
 	}
 
 	// Verifying whether the user has revealed his vote on this proposal
-	oldDidReveal, err := KNWVotingInstance.DidReveal(nil, myAddress, big.NewInt(int64(config.DitConfig.Repositories[ditContractIndex].ActiveVotes[voteIndex].KNWVoteID)))
+	oldDidReveal, err := KNWVotingInstance.DidReveal(nil, myAddress, big.NewInt(int64(config.DitConfig.Repositories[repoIndex].ActiveVotes[voteIndex].KNWVoteID)))
 	if err != nil {
 		return errors.New("Failed to retrieve opening status")
 	}
@@ -618,11 +618,11 @@ func Open(_proposalID string) error {
 	}
 
 	// Gathering the original choice and the salt from the config
-	choice := big.NewInt(int64(config.DitConfig.Repositories[ditContractIndex].ActiveVotes[voteIndex].Choice))
-	salt := big.NewInt(int64(config.DitConfig.Repositories[ditContractIndex].ActiveVotes[voteIndex].Salt))
+	choice := big.NewInt(int64(config.DitConfig.Repositories[repoIndex].ActiveVotes[voteIndex].Choice))
+	salt := big.NewInt(int64(config.DitConfig.Repositories[repoIndex].ActiveVotes[voteIndex].Salt))
 
 	// Revealing the vote on the proposal
-	transaction, err := ditContractInstance.RevealVoteOnProposal(auth, big.NewInt(int64(proposalID)), choice, salt)
+	transaction, err := ditCooordinatorInstance.OpenVoteOnProposal(auth, repoHash, big.NewInt(int64(proposalID)), choice, salt)
 	if err != nil {
 		if strings.Contains(err.Error(), "insufficient funds") {
 			return errors.New("Your account doesn't have enough ETH to pay for the transaction")
@@ -639,7 +639,7 @@ func Open(_proposalID string) error {
 		time.Sleep(5 * time.Second)
 		fmt.Printf(".")
 		// Checking the reveal status of the user every 5 seconds
-		newDidReveal, err = KNWVotingInstance.DidReveal(nil, myAddress, big.NewInt(int64(config.DitConfig.Repositories[ditContractIndex].ActiveVotes[voteIndex].KNWVoteID)))
+		newDidReveal, err = KNWVotingInstance.DidReveal(nil, myAddress, big.NewInt(int64(config.DitConfig.Repositories[repoIndex].ActiveVotes[voteIndex].KNWVoteID)))
 		if err != nil {
 			return errors.New("Failed to retrieve opening status")
 		}
@@ -654,7 +654,7 @@ func Open(_proposalID string) error {
 	fmt.Printf("\n")
 
 	// Formatting the time of the reveal phase into a readable format
-	timeReveal := time.Unix(int64(config.DitConfig.Repositories[ditContractIndex].ActiveVotes[voteIndex].RevealEnd), 0)
+	timeReveal := time.Unix(int64(config.DitConfig.Repositories[repoIndex].ActiveVotes[voteIndex].RevealEnd), 0)
 	timeRevealString := timeReveal.Format("15:04:05 on 2006/01/02")
 
 	helpers.PrintLine("Successfully opened your vote", 0)
@@ -672,10 +672,12 @@ func Finalize(_proposalID string) (bool, error) {
 	proposalID, _ := strconv.Atoi(_proposalID)
 
 	// Searching for this repositories object in the config
-	ditContractIndex, err := searchForRepoInConfig()
+	repoIndex, err := searchForRepoInConfig()
 	if err != nil {
 		return false, err
 	}
+
+	repoHash := GetHashOfString(config.DitConfig.Repositories[repoIndex].Name)
 
 	connection, err := getConnection()
 	if err != nil {
@@ -686,7 +688,7 @@ func Finalize(_proposalID string) (bool, error) {
 	myAddress := common.HexToAddress(config.DitConfig.EthereumKeys.Address)
 
 	// Create a new instance of the ditContract to access it
-	ditContractInstance, err := getDitContractInstance(connection, ditContractIndex)
+	ditCooordinatorInstance, err := getDitCoordinatorInstance(connection)
 	if err != nil {
 		return false, err
 	}
@@ -705,20 +707,20 @@ func Finalize(_proposalID string) (bool, error) {
 
 	// Searching for the corresponding vote in the votes stored in the config
 	var voteIndex int
-	for i := range config.DitConfig.Repositories[ditContractIndex].ActiveVotes {
-		if config.DitConfig.Repositories[ditContractIndex].ActiveVotes[i].ID == proposalID {
+	for i := range config.DitConfig.Repositories[repoIndex].ActiveVotes {
+		if config.DitConfig.Repositories[repoIndex].ActiveVotes[i].ID == proposalID {
 			voteIndex = i
 			break
 		}
 	}
 
 	// If this user already called the Resolve function for this vote it's not possible anymore
-	if config.DitConfig.Repositories[ditContractIndex].ActiveVotes[voteIndex].Resolved {
+	if config.DitConfig.Repositories[repoIndex].ActiveVotes[voteIndex].Resolved {
 		return false, errors.New("You already finalized this vote")
 	}
 
 	// Verifying whether the vote has already ended
-	pollEnded, err := KNWVotingInstance.PollEnded(nil, big.NewInt(int64(config.DitConfig.Repositories[ditContractIndex].ActiveVotes[voteIndex].KNWVoteID)))
+	pollEnded, err := KNWVotingInstance.PollEnded(nil, big.NewInt(int64(config.DitConfig.Repositories[repoIndex].ActiveVotes[voteIndex].KNWVoteID)))
 	if err != nil {
 		return false, errors.New("Failed to retrieve vote status")
 	}
@@ -729,13 +731,13 @@ func Finalize(_proposalID string) (bool, error) {
 	}
 
 	// Verifying whether the user is a participant of this vote
-	didCommit, err := KNWVotingInstance.DidCommit(nil, myAddress, big.NewInt(int64(config.DitConfig.Repositories[ditContractIndex].ActiveVotes[voteIndex].KNWVoteID)))
+	didCommit, err := KNWVotingInstance.DidCommit(nil, myAddress, big.NewInt(int64(config.DitConfig.Repositories[repoIndex].ActiveVotes[voteIndex].KNWVoteID)))
 	if err != nil {
 		return false, errors.New("Failed to retrieve commit status")
 	}
 
 	// Retrieve the selected proposal obkect
-	proposal, err := ditContractInstance.Proposals(nil, big.NewInt(int64(proposalID)))
+	proposal, err := ditCooordinatorInstance.ProposalsOfRepository(nil, repoHash, big.NewInt(int64(proposalID)))
 	if err != nil {
 		return false, errors.New("Failed to retrieve the new proposal")
 	}
@@ -752,7 +754,7 @@ func Finalize(_proposalID string) (bool, error) {
 	}
 
 	// Saving the old KNW balance
-	oldKNWBalance, err := KNWTokenInstance.BalanceOfLabel(nil, myAddress, config.DitConfig.Repositories[ditContractIndex].ActiveVotes[voteIndex].KnowledgeLabel)
+	oldKNWBalance, err := KNWTokenInstance.BalanceOfLabel(nil, myAddress, config.DitConfig.Repositories[repoIndex].ActiveVotes[voteIndex].KnowledgeLabel)
 	if err != nil {
 		return false, errors.New("Failed to retrieve KNW balance")
 	}
@@ -764,7 +766,7 @@ func Finalize(_proposalID string) (bool, error) {
 	}
 
 	// Resolving the vote
-	transaction, err := ditContractInstance.ResolveVote(auth, big.NewInt(int64(proposalID)))
+	transaction, err := ditCooordinatorInstance.FinalizeVote(auth, repoHash, big.NewInt(int64(proposalID)))
 	if err != nil {
 		if strings.Contains(err.Error(), "insufficient funds") {
 			return false, errors.New("Your account doesn't have enough ETH to pay for the transaction")
@@ -796,13 +798,13 @@ func Finalize(_proposalID string) (bool, error) {
 	fmt.Printf("\n")
 
 	// Saving the new KNW balance after resolving the vote
-	newKNWBalance, err := KNWTokenInstance.BalanceOfLabel(nil, myAddress, config.DitConfig.Repositories[ditContractIndex].ActiveVotes[voteIndex].KnowledgeLabel)
+	newKNWBalance, err := KNWTokenInstance.BalanceOfLabel(nil, myAddress, config.DitConfig.Repositories[repoIndex].ActiveVotes[voteIndex].KnowledgeLabel)
 	if err != nil {
 		return false, errors.New("Failed to retrieve KNW balance")
 	}
 
 	// Retrieving the outcome of the vote
-	pollPassed, err := KNWVotingInstance.IsPassed(nil, big.NewInt(int64(config.DitConfig.Repositories[ditContractIndex].ActiveVotes[voteIndex].KNWVoteID)))
+	pollPassed, err := KNWVotingInstance.IsPassed(nil, big.NewInt(int64(config.DitConfig.Repositories[repoIndex].ActiveVotes[voteIndex].KNWVoteID)))
 	if err != nil {
 		return false, errors.New("Failed to retrieve vote outcome")
 	}
@@ -832,15 +834,15 @@ func Finalize(_proposalID string) (bool, error) {
 	if oldKNWBalance.Cmp(newKNWBalance) < 0 {
 		difference := newKNWBalance.Sub(newKNWBalance, oldKNWBalance)
 		floatDifference := new(big.Float).Quo((new(big.Float).SetInt64(difference.Int64())), big.NewFloat(1000000000000000000))
-		helpers.PrintLine(fmt.Sprintf("You earned %f KNW Tokens for the knowledge label '%s'\n", floatDifference, config.DitConfig.Repositories[ditContractIndex].ActiveVotes[voteIndex].KnowledgeLabel), 0)
+		helpers.PrintLine(fmt.Sprintf("You earned %f KNW Tokens for the knowledge label '%s'\n", floatDifference, config.DitConfig.Repositories[repoIndex].ActiveVotes[voteIndex].KnowledgeLabel), 0)
 	} else if oldKNWBalance.Cmp(newKNWBalance) > 0 {
 		difference := oldKNWBalance.Sub(oldKNWBalance, newKNWBalance)
 		floatDifference := new(big.Float).Quo((new(big.Float).SetInt64(difference.Int64())), big.NewFloat(1000000000000000000))
-		helpers.PrintLine(fmt.Sprintf("You lost %f KNW Tokens for the knowledge label '%s'\n", floatDifference, config.DitConfig.Repositories[ditContractIndex].ActiveVotes[voteIndex].KnowledgeLabel), 0)
+		helpers.PrintLine(fmt.Sprintf("You lost %f KNW Tokens for the knowledge label '%s'\n", floatDifference, config.DitConfig.Repositories[repoIndex].ActiveVotes[voteIndex].KnowledgeLabel), 0)
 	}
 
 	// Saving the resolved-status in the config
-	config.DitConfig.Repositories[ditContractIndex].ActiveVotes[voteIndex].Resolved = true
+	config.DitConfig.Repositories[repoIndex].ActiveVotes[voteIndex].Resolved = true
 
 	// Saving the config back to the file
 	err = config.Save()
@@ -848,7 +850,7 @@ func Finalize(_proposalID string) (bool, error) {
 		return false, nil
 	}
 
-	if config.DitConfig.DemoModeActive && len(config.DitConfig.Repositories[ditContractIndex].ActiveVotes[voteIndex].DemoChoices) == 3 {
+	if config.DitConfig.DemoModeActive && len(config.DitConfig.Repositories[repoIndex].ActiveVotes[voteIndex].DemoChoices) == 3 {
 		for i := 0; i < 3; i++ {
 			_, err := demo.Finalize(_proposalID, i)
 			if err != nil {
@@ -862,10 +864,12 @@ func Finalize(_proposalID string) (bool, error) {
 // GetVoteInfo will print information about a vote
 func GetVoteInfo(_proposalID ...int) error {
 	// Searching for this repositories object in the config
-	ditContractIndex, err := searchForRepoInConfig()
+	repoIndex, err := searchForRepoInConfig()
 	if err != nil {
 		return err
 	}
+
+	repoHash := GetHashOfString(config.DitConfig.Repositories[repoIndex].Name)
 
 	connection, err := getConnection()
 	if err != nil {
@@ -873,7 +877,7 @@ func GetVoteInfo(_proposalID ...int) error {
 	}
 
 	// Create a new instance of the ditContract to access it
-	ditContractInstance, err := getDitContractInstance(connection, ditContractIndex)
+	ditCooordinatorInstance, err := getDitCoordinatorInstance(connection)
 	if err != nil {
 		return err
 	}
@@ -885,7 +889,7 @@ func GetVoteInfo(_proposalID ...int) error {
 	}
 
 	// Retrieving the current proposalID
-	currentProposalIDBigInt, err := ditContractInstance.CurrentProposalID(nil)
+	currentProposalIDBigInt, err := ditCooordinatorInstance.GetCurrentProposalID(nil, repoHash)
 	if err != nil {
 		return errors.New("Failed to retrieve the current proposal id")
 	}
@@ -910,7 +914,7 @@ func GetVoteInfo(_proposalID ...int) error {
 	}
 
 	// Retrieve the selected proposal obkect
-	proposal, err := ditContractInstance.Proposals(nil, big.NewInt(int64(proposalID)))
+	proposal, err := ditCooordinatorInstance.ProposalsOfRepository(nil, repoHash, big.NewInt(int64(proposalID)))
 	if err != nil {
 		return errors.New("Failed to retrieve the new proposal")
 	}
@@ -944,17 +948,17 @@ func GetVoteInfo(_proposalID ...int) error {
 	// Printing the information about this vote
 	helpers.PrintLine("---------------------------", 0)
 	helpers.PrintLine("Proposal ID: "+strconv.Itoa(proposalID), 0)
-	helpers.PrintLine("URL: https://github.com/"+config.DitConfig.Repositories[ditContractIndex].Name+"/tree/dit_proposal_"+strconv.Itoa(proposalID), 0)
+	helpers.PrintLine("URL: https://github.com/"+config.DitConfig.Repositories[repoIndex].Name+"/tree/dit_proposal_"+strconv.Itoa(proposalID), 0)
 	helpers.PrintLine("Proposer: "+proposal.Proposer.Hex(), 0)
 	helpers.PrintLine("Knowledge-Label: "+proposal.KnowledgeLabel, 0)
 
 	// If the user participated in this vote, the choice and stake/KNW are also printed
-	for i := range config.DitConfig.Repositories[ditContractIndex].ActiveVotes {
-		if config.DitConfig.Repositories[ditContractIndex].ActiveVotes[i].ID == proposalID {
-			floatETH := new(big.Float).Quo((new(big.Float).SetInt(big.NewInt(int64(config.DitConfig.Repositories[ditContractIndex].ActiveVotes[i].NumTokens)))), big.NewFloat(1000000000000000000))
-			floatKNW := new(big.Float).Quo((new(big.Float).SetInt(big.NewInt(int64(config.DitConfig.Repositories[ditContractIndex].ActiveVotes[i].NumKNW)))), big.NewFloat(1000000000000000000))
+	for i := range config.DitConfig.Repositories[repoIndex].ActiveVotes {
+		if config.DitConfig.Repositories[repoIndex].ActiveVotes[i].ID == proposalID {
+			floatETH := new(big.Float).Quo((new(big.Float).SetInt(big.NewInt(int64(config.DitConfig.Repositories[repoIndex].ActiveVotes[i].NumTokens)))), big.NewFloat(1000000000000000000))
+			floatKNW := new(big.Float).Quo((new(big.Float).SetInt(big.NewInt(int64(config.DitConfig.Repositories[repoIndex].ActiveVotes[i].NumKNW)))), big.NewFloat(1000000000000000000))
 			if proposal.Proposer.Hex() != config.DitConfig.EthereumKeys.Address {
-				helpers.PrintLine("Your choice: "+strconv.Itoa(config.DitConfig.Repositories[ditContractIndex].ActiveVotes[i].Choice), 0)
+				helpers.PrintLine("Your choice: "+strconv.Itoa(config.DitConfig.Repositories[repoIndex].ActiveVotes[i].Choice), 0)
 			}
 			helpers.PrintLine(fmt.Sprintf("You staked %f ETH and used %f KNW\n", floatETH, floatKNW), 0)
 			break
@@ -965,7 +969,7 @@ func GetVoteInfo(_proposalID ...int) error {
 	helpers.PrintLine(fmt.Sprintf("Current net stake: %f ETH\n", floatNetStake), 0)
 	helpers.PrintLine("Vote phase end: "+timeCommitString, 0)
 	helpers.PrintLine("Opening phase end: "+timeRevealString, 0)
-	helpers.PrintLine("Resolved? "+strconv.FormatBool(proposal.IsResolved), 0)
+	helpers.PrintLine("Resolved? "+strconv.FormatBool(proposal.IsFinalized), 0)
 	helpers.PrintLine("Passed? "+strconv.FormatBool(proposal.ProposalAccepted), 0)
 	helpers.PrintLine("---------------------------", 0)
 
@@ -1046,10 +1050,10 @@ func GetBalances() error {
 }
 
 // gatherProposalInfo will retrieve necessary information about a proposal from the ditContract
-func gatherProposalInfo(_connection *ethclient.Client, _ditContractInstance *ditContract.DitContract, _repositoryIndex int64, _proposalID int64) (config.ActiveVote, error) {
+func gatherProposalInfo(_connection *ethclient.Client, _ditCoordinatorInstance *ditCoordinator.DitCoordinator, _repoHash [32]byte, _proposalID int64) (config.ActiveVote, error) {
 	// Retrieve the proposal object from the ditContract
 	var newVote config.ActiveVote
-	proposal, err := _ditContractInstance.Proposals(nil, big.NewInt(_proposalID))
+	proposal, err := _ditCoordinatorInstance.ProposalsOfRepository(nil, _repoHash, big.NewInt(_proposalID))
 	if err != nil {
 		return newVote, errors.New("Failed to retrieve the new proposal")
 	}
@@ -1101,15 +1105,15 @@ func gatherProposalInfo(_connection *ethclient.Client, _ditContractInstance *dit
 	return newVote, nil
 }
 
-// deployDitContract will deploy a new ditContract for a repository through the ditCoordinator
-func deployDitContract(_ditCoordinatorInstance *ditCoordinator.DitCoordinator, _repository string) (common.Address, error) {
+// TODO
+func initDitRepository(_ditCoordinatorInstance *ditCoordinator.DitCoordinator, _repoHash [32]byte) error {
 	connection, err := getConnection()
 	if err != nil {
-		return common.HexToAddress("0"), err
+		return err
 	}
 
 	// Setting the voting setting for this repository
-	var voteSettings [3]*big.Int
+	var voteSettings [7]*big.Int
 
 	// Majority (in percent)
 	voteSettings[0] = big.NewInt(50)
@@ -1119,6 +1123,18 @@ func deployDitContract(_ditCoordinatorInstance *ditCoordinator.DitCoordinator, _
 
 	// KNW burning method (0 = square-root based, 1 = divide by 2 each time, 2 = proportial to the winning percentage)
 	voteSettings[2] = big.NewInt(0)
+
+	// TODO
+	voteSettings[3] = big.NewInt(120)
+
+	// TODO
+	voteSettings[4] = big.NewInt(121)
+
+	// TODO
+	voteSettings[5] = big.NewInt(120)
+
+	// TODO
+	voteSettings[6] = big.NewInt(121)
 
 	// Prompting the user to provide 1 to 3 knowledge-labels for this repository
 	helpers.PrintLine("Please provide knowledge labels that will be used for this repository:", 0)
@@ -1142,30 +1158,31 @@ func deployDitContract(_ditCoordinatorInstance *ditCoordinator.DitCoordinator, _
 	// Crerating the transaction (basic values)
 	auth, err := populateTx(connection)
 	if err != nil {
-		return common.HexToAddress("0"), err
+		return err
 	}
 
 	// Initializing the repository = deploying a new ditContract
-	transaction, err := _ditCoordinatorInstance.InitRepository(auth, _repository, knowledgeLabels[0], knowledgeLabels[1], knowledgeLabels[2], voteSettings)
+	transaction, err := _ditCoordinatorInstance.InitRepository(auth, _repoHash, knowledgeLabels[0], knowledgeLabels[1], knowledgeLabels[2], voteSettings)
 	if err != nil {
 		if strings.Contains(err.Error(), "insufficient funds") {
-			return common.HexToAddress("0"), errors.New("Your account doesn't have enough ETH to pay for the transaction")
+			return errors.New("Your account doesn't have enough ETH to pay for the transaction")
 		}
-		return common.HexToAddress("0"), err
+		return err
 	}
 
 	// Waiting for the deployment transaction to be mined
-	helpers.Printf("Waiting for deployment transaction to be mined", 0)
-	ditContractAddress := common.HexToAddress("0")
+	helpers.Printf("Waiting for initialization transaction to be mined", 0)
+	boolTrue := true
+	isInitialized := false
 	waitingFor := 0
-	for ditContractAddress == common.HexToAddress("0") {
+	for isInitialized != boolTrue {
 		waitingFor += 5
 		time.Sleep(5 * time.Second)
 		fmt.Printf(".")
 		// Checking the repository status every 5 seconds
-		ditContractAddress, err = _ditCoordinatorInstance.GetRepository(nil, _repository)
+		isInitialized, err = _ditCoordinatorInstance.RepositoryIsInitialized(nil, _repoHash)
 		if err != nil {
-			return common.HexToAddress("0"), err
+			return err
 		}
 		// If we are waiting for more than 2 minutes, the transaction might have failed
 		if waitingFor > 180 {
@@ -1177,7 +1194,7 @@ func deployDitContract(_ditCoordinatorInstance *ditCoordinator.DitCoordinator, _
 	}
 	fmt.Printf("\n")
 
-	return ditContractAddress, nil
+	return nil
 }
 
 // populateTX will set the necessary values for a ethereum transaction
@@ -1236,28 +1253,7 @@ func populateTx(_connection *ethclient.Client) (*bind.TransactOpts, error) {
 	return auth, nil
 }
 
-func getDitContractInstance(_connection *ethclient.Client, _ditContractIndex int64, _ditContractAddress ...string) (*ditContract.DitContract, error) {
-	var ditContractAddressString string
-
-	if len(_ditContractAddress) > 0 {
-		ditContractAddressString = _ditContractAddress[0]
-	} else {
-		// Gathering the ditContracts address and the knowledge-labels from the config
-		ditContractAddressString = config.DitConfig.Repositories[_ditContractIndex].ContractAddress
-	}
-
-	// Convertig the hex-string-formatted address into an address object
-	ditContractAddress := common.HexToAddress(ditContractAddressString)
-
-	// Create a new instance of the ditContract to access it
-	ditContractInstance, err := ditContract.NewDitContract(ditContractAddress, _connection)
-	if err != nil {
-		return nil, errors.New("Failed to find ditCoordinator at provided address")
-	}
-	return ditContractInstance, nil
-}
-
-func getditCoordinatorInstance(_connection *ethclient.Client, _ditCoordinatorAddress ...string) (*ditCoordinator.DitCoordinator, error) {
+func getDitCoordinatorInstance(_connection *ethclient.Client, _ditCoordinatorAddress ...string) (*ditCoordinator.DitCoordinator, error) {
 	var ditCoordinatorAddressString string
 
 	if len(_ditCoordinatorAddress) > 0 {
@@ -1334,4 +1330,12 @@ func searchForRepoInConfig() (int64, error) {
 
 	// Return an error if nothing was found
 	return 0, errors.New("Repository hasn't been initialized")
+}
+
+// GetHashOfString takes a string a returns it as keccak256
+func GetHashOfString(_string string) [32]byte {
+	repoHash32 := [32]byte{}
+	copy(repoHash32[:], crypto.Keccak256([]byte(_string))[:])
+
+	return repoHash32
 }

@@ -338,12 +338,10 @@ func DeleteBranch(_proposalID string) error {
 func sanitizeURL(_url string) string {
 	_url = strings.Replace(_url, "http://", "", -1)
 	_url = strings.Replace(_url, "https://", "", -1)
-	_url = strings.Replace(_url, "git@github.com:", "", -1)
-	_url = strings.Replace(_url, "git@gitlab.com:", "", -1)
-	_url = strings.Replace(_url, "git@bitbucket.org:", "", -1)
-	_url = strings.Replace(_url, "github.com/", "", -1)
-	_url = strings.Replace(_url, "gitlab.com/", "", -1)
-	_url = strings.Replace(_url, "bitbucket.org/", "", -1)
+	_url = strings.Replace(_url, "git@", "", -1)
+	_url = strings.Replace(_url, "github.com:", "github.com/", -1)
+	_url = strings.Replace(_url, "gitlab.com:", "gitlab.com/", -1)
+	_url = strings.Replace(_url, "bitbucket.org:", "bitbucket.com/", -1)
 	_url = strings.Replace(_url, ".git", "", -1)
 
 	return _url

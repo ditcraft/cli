@@ -15,7 +15,6 @@ import (
 	"github.com/ditcraft/client/helpers"
 	"github.com/ditcraft/client/smartcontracts/KNWToken"
 	"github.com/ditcraft/client/smartcontracts/KNWVoting"
-	"github.com/ditcraft/client/smartcontracts/ditContract"
 	"github.com/ditcraft/client/smartcontracts/ditCoordinator"
 
 	"github.com/ethereum/go-ethereum/accounts/abi"
@@ -65,6 +64,8 @@ func _executeVote(_proposalID string, _choice string, _salt string, _demoVoter i
 		return err
 	}
 
+	repoHash := getHashOfString(config.DitConfig.Repositories[ditContractIndex].Name)
+
 	connection, err := getConnection()
 	if err != nil {
 		return err
@@ -74,7 +75,7 @@ func _executeVote(_proposalID string, _choice string, _salt string, _demoVoter i
 	myAddress := common.HexToAddress(demoVoterAddresses[_demoVoter])
 
 	// Create a new instance of the ditContract to access it
-	ditContractInstance, err := getDitContractInstance(connection, ditContractIndex)
+	ditCoordingatorInstance, err := getDitCoordinatorInstance(connection)
 	if err != nil {
 		return err
 	}
@@ -95,7 +96,8 @@ func _executeVote(_proposalID string, _choice string, _salt string, _demoVoter i
 	}
 
 	// Retrieving the proposal object from the ditContract
-	proposal, err := ditContractInstance.Proposals(nil, big.NewInt(int64(proposalID)))
+
+	proposal, err := ditCoordingatorInstance.ProposalsOfRepository(nil, repoHash, big.NewInt(int64(proposalID)))
 	if err != nil {
 		return errors.New("Failed to retrieve proposal")
 	}
@@ -169,7 +171,7 @@ func _executeVote(_proposalID string, _choice string, _salt string, _demoVoter i
 	auth.Value = requiredStake
 
 	// Voting on the proposal
-	_, err = ditContractInstance.VoteOnProposal(auth, big.NewInt(int64(proposalID)), voteHash)
+	_, err = ditCoordingatorInstance.VoteOnProposal(auth, repoHash, big.NewInt(int64(proposalID)), voteHash)
 	if err != nil {
 		if strings.Contains(err.Error(), "insufficient funds") {
 			return errors.New("Your account doesn't have enough ETH to pay for the transaction")
@@ -220,6 +222,8 @@ func Open(_proposalID string, _demoVoter int) error {
 		return err
 	}
 
+	repoHash := getHashOfString(config.DitConfig.Repositories[ditContractIndex].Name)
+
 	connection, err := getConnection()
 	if err != nil {
 		return err
@@ -229,7 +233,7 @@ func Open(_proposalID string, _demoVoter int) error {
 	myAddress := common.HexToAddress(demoVoterAddresses[_demoVoter])
 
 	// Create a new instance of the ditContract to access it
-	ditContractInstance, err := getDitContractInstance(connection, ditContractIndex)
+	ditCoordinatorInstance, err := getDitCoordinatorInstance(connection)
 	if err != nil {
 		return err
 	}
@@ -297,7 +301,7 @@ func Open(_proposalID string, _demoVoter int) error {
 	salt := big.NewInt(int64(config.DitConfig.Repositories[ditContractIndex].ActiveVotes[voteIndex].DemoSalts[_demoVoter]))
 
 	// Revealing the vote on the proposal
-	_, err = ditContractInstance.RevealVoteOnProposal(auth, big.NewInt(int64(proposalID)), choice, salt)
+	_, err = ditCoordinatorInstance.OpenVoteOnProposal(auth, repoHash, big.NewInt(int64(proposalID)), choice, salt)
 	if err != nil {
 		if strings.Contains(err.Error(), "insufficient funds") {
 			return errors.New("Your account doesn't have enough ETH to pay for the transaction")
@@ -341,6 +345,8 @@ func Finalize(_proposalID string, _demoVoter int) (bool, error) {
 		return false, err
 	}
 
+	repoHash := getHashOfString(config.DitConfig.Repositories[ditContractIndex].Name)
+
 	connection, err := getConnection()
 	if err != nil {
 		return false, err
@@ -350,7 +356,7 @@ func Finalize(_proposalID string, _demoVoter int) (bool, error) {
 	myAddress := common.HexToAddress(demoVoterAddresses[_demoVoter])
 
 	// Create a new instance of the ditContract to access it
-	ditContractInstance, err := getDitContractInstance(connection, ditContractIndex)
+	ditCoordinatorInstance, err := getDitCoordinatorInstance(connection)
 	if err != nil {
 		return false, err
 	}
@@ -392,7 +398,7 @@ func Finalize(_proposalID string, _demoVoter int) (bool, error) {
 	}
 
 	// Retrieve the selected proposal obkect
-	proposal, err := ditContractInstance.Proposals(nil, big.NewInt(int64(proposalID)))
+	proposal, err := ditCoordinatorInstance.ProposalsOfRepository(nil, repoHash, big.NewInt(int64(proposalID)))
 	if err != nil {
 		return false, errors.New("Failed to retrieve the new proposal")
 	}
@@ -409,7 +415,7 @@ func Finalize(_proposalID string, _demoVoter int) (bool, error) {
 	}
 
 	// Resolving the vote
-	_, err = ditContractInstance.ResolveVote(auth, big.NewInt(int64(proposalID)))
+	_, err = ditCoordinatorInstance.FinalizeVote(auth, repoHash, big.NewInt(int64(proposalID)))
 	if err != nil {
 		if strings.Contains(err.Error(), "insufficient funds") {
 			return false, errors.New("Your account doesn't have enough ETH to pay for the transaction")
@@ -471,28 +477,7 @@ func populateTx(_connection *ethclient.Client, _privateKey string, _address stri
 	return auth, nil
 }
 
-func getDitContractInstance(_connection *ethclient.Client, _ditContractIndex int64, _ditContractAddress ...string) (*ditContract.DitContract, error) {
-	var ditContractAddressString string
-
-	if len(_ditContractAddress) > 0 {
-		ditContractAddressString = _ditContractAddress[0]
-	} else {
-		// Gathering the ditContracts address and the knowledge-labels from the config
-		ditContractAddressString = config.DitConfig.Repositories[_ditContractIndex].ContractAddress
-	}
-
-	// Convertig the hex-string-formatted address into an address object
-	ditContractAddress := common.HexToAddress(ditContractAddressString)
-
-	// Create a new instance of the ditContract to access it
-	ditContractInstance, err := ditContract.NewDitContract(ditContractAddress, _connection)
-	if err != nil {
-		return nil, errors.New("Failed to find ditCoordinator at provided address")
-	}
-	return ditContractInstance, nil
-}
-
-func getditCoordinatorInstance(_connection *ethclient.Client, _ditCoordinatorAddress ...string) (*ditCoordinator.DitCoordinator, error) {
+func getDitCoordinatorInstance(_connection *ethclient.Client, _ditCoordinatorAddress ...string) (*ditCoordinator.DitCoordinator, error) {
 	var ditCoordinatorAddressString string
 
 	if len(_ditCoordinatorAddress) > 0 {
@@ -569,4 +554,11 @@ func searchForRepoInConfig() (int64, error) {
 
 	// Return an error if nothing was found
 	return 0, errors.New("Repository hasn't been initialized")
+}
+
+func getHashOfString(_string string) [32]byte {
+	repoHash32 := [32]byte{}
+	copy(repoHash32[:], crypto.Keccak256([]byte(_string))[:])
+
+	return repoHash32
 }

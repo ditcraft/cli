@@ -14,7 +14,7 @@ import (
 )
 
 // The current dit coordinator address
-var defaultDitCoodinator = "0x60F01B8F86Aa3D1a61d1E1730B49BaeE09D8d72c"
+var defaultDitCoodinator = "0x8b8571Eb59138aE1EE9D250e6D4f9a858bC75421"
 
 func main() {
 	var err error

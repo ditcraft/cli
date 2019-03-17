@@ -32,6 +32,8 @@ If you want to build the client yourself feel free to do so by following this gu
 * For Linux/MacOS: Move `dit` to /usr/bin and grant execution permissions
     * `mv dit /usr/bin/dit && chmod a+x /ust/bin/dit`
 
+**Please note**: If you intend to make use of the demo mode described below, you need to insert four Ethereum addresses and their corresponding private keys with funds on the Rinkeby Ethereum testnet into the code before building it. One (*the main one*) in `config.go` (*line 64/65*) and three (*the demo voters*) in `demo.go` (*lines 29-38*). The precompiled binaries already contain pre-funded ones, so only need to worry about this when building it yourself.
+
 ## Demo-Mode Usage
 To test the dit client you can follow this guideline, showcasing you the features:
 

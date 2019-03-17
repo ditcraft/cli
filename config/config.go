@@ -38,7 +38,6 @@ type ethereumKeys struct {
 type Repository struct {
 	Name            string       `json:"name"`
 	Provider        string       `json:"provider"`
-	ContractAddress string       `json:"contract_address"`
 	KnowledgeLabels []string     `json:"knowledge_labels"`
 	ActiveVotes     []ActiveVote `json:"active_votes"`
 }
@@ -105,9 +104,8 @@ func Load() error {
 	if err != nil {
 		if strings.Contains(err.Error(), "no such file or directory") {
 			return errors.New("Config file not found - please use '" + helpers.ColorizeCommand("setup") + "'")
-		} else {
-			return errors.New("Failed to load config file")
 		}
+		return errors.New("Failed to load config file")
 	}
 
 	// Parsing the json into a public object
