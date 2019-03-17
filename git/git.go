@@ -27,10 +27,7 @@ func GetRepository() (string, error) {
 	}
 
 	// Removing unecessary stuff from the url
-	cmdOutString = strings.Replace(cmdOutString, "http://", "", -1)
-	cmdOutString = strings.Replace(cmdOutString, "https://", "", -1)
-	cmdOutString = strings.Replace(cmdOutString, "github.com/", "", -1)
-	cmdOutString = strings.Replace(cmdOutString, ".git", "", -1)
+	cmdOutString = sanitizeURL(cmdOutString)
 
 	configErr := checkGitSetup()
 	if configErr != nil {
@@ -62,7 +59,7 @@ func Clone(_repository string) (string, error) {
 		return "", errors.New("Destination path already exists")
 	}
 	if strings.Contains(string(cmdOut), "Invalid username or password") {
-		helpers.PrintLine("Wrong username or password for GitHub", 2)
+		helpers.PrintLine("Wrong username or password", 2)
 		helpers.PrintLine("Note: If you have 2FA activated for GitHub, please go to: ", 1)
 		helpers.PrintLine("https://github.blog/2013-09-03-two-factor-authentication/#how-does-it-work-for-command-line-git", 1)
 		return "", errors.New("")
@@ -72,10 +69,7 @@ func Clone(_repository string) (string, error) {
 	}
 
 	// Removing unecessary stuff from the url
-	_repository = strings.Replace(_repository, "http://", "", -1)
-	_repository = strings.Replace(_repository, "https://", "", -1)
-	_repository = strings.Replace(_repository, "github.com/", "", -1)
-	_repository = strings.Replace(_repository, ".git", "", -1)
+	_repository = sanitizeURL(_repository)
 
 	configErr := checkGitSetup()
 	if configErr != nil {
@@ -183,7 +177,7 @@ func Commit(_proposalID int, _commitMessage string) error {
 		cmdArgs = []string{"push", "-v"}
 		cmdOut, err = exec.Command(cmdName, cmdArgs...).CombinedOutput()
 		if strings.Contains(string(cmdOut), "Invalid username or password") {
-			helpers.PrintLine("Wrong username or password for GitHub", 2)
+			helpers.PrintLine("Wrong username or password", 2)
 			helpers.PrintLine("Note: If you have 2FA activated for GitHub, please go to: ", 2)
 			helpers.PrintLine("https://github.blog/2013-09-03-two-factor-authentication/#how-does-it-work-for-command-line-git", 2)
 		}
@@ -242,7 +236,7 @@ func Commit(_proposalID int, _commitMessage string) error {
 	cmdArgs = []string{"push", "--set-upstream", "origin", branchName, "-v"}
 	cmdOut, err = exec.Command(cmdName, cmdArgs...).CombinedOutput()
 	if strings.Contains(string(cmdOut), "Invalid username or password") {
-		helpers.PrintLine("Wrong username or password for GitHub", 2)
+		helpers.PrintLine("Wrong username or password", 2)
 		helpers.PrintLine("Note: If you have 2FA activated for GitHub, please go to: ", 2)
 		helpers.PrintLine("https://github.blog/2013-09-03-two-factor-authentication/#how-does-it-work-for-command-line-git", 2)
 	}
@@ -295,7 +289,7 @@ func Merge(_proposalID string) error {
 	cmdArgs = []string{"push", "-v"}
 	cmdOut, err := exec.Command(cmdName, cmdArgs...).CombinedOutput()
 	if strings.Contains(string(cmdOut), "Invalid username or password") {
-		helpers.PrintLine("Wrong username or password for GitHub", 2)
+		helpers.PrintLine("Wrong username or password", 2)
 		helpers.PrintLine("Note: If you have 2FA activated for GitHub, please go to: ", 2)
 		helpers.PrintLine("https://github.blog/2013-09-03-two-factor-authentication/#how-does-it-work-for-command-line-git", 2)
 	}
@@ -322,7 +316,7 @@ func DeleteBranch(_proposalID string) error {
 	cmdArgs := []string{"push", "--delete", "origin", branchName}
 	cmdOut, err := exec.Command(cmdName, cmdArgs...).CombinedOutput()
 	if strings.Contains(string(cmdOut), "Invalid username or password") {
-		helpers.PrintLine("Wrong username or password for GitHub", 2)
+		helpers.PrintLine("Wrong username or password", 2)
 		helpers.PrintLine("Note: If you have 2FA activated for GitHub, please go to: ", 2)
 		helpers.PrintLine("https://github.blog/2013-09-03-two-factor-authentication/#how-does-it-work-for-command-line-git", 2)
 	}
@@ -339,4 +333,18 @@ func DeleteBranch(_proposalID string) error {
 	}
 
 	return nil
+}
+
+func sanitizeURL(_url string) string {
+	_url = strings.Replace(_url, "http://", "", -1)
+	_url = strings.Replace(_url, "https://", "", -1)
+	_url = strings.Replace(_url, "git@github.com:", "", -1)
+	_url = strings.Replace(_url, "git@gitlab.com:", "", -1)
+	_url = strings.Replace(_url, "git@bitbucket.org:", "", -1)
+	_url = strings.Replace(_url, "github.com/", "", -1)
+	_url = strings.Replace(_url, "gitlab.com/", "", -1)
+	_url = strings.Replace(_url, "bitbucket.org/", "", -1)
+	_url = strings.Replace(_url, ".git", "", -1)
+
+	return _url
 }

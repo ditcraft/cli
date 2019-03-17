@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"github.com/ditcraft/client/config"
+	"github.com/ditcraft/client/demo"
 	"github.com/ditcraft/client/ethereum"
 	"github.com/ditcraft/client/git"
 	"github.com/ditcraft/client/helpers"
@@ -16,17 +17,17 @@ import (
 var defaultDitCoodinator = "0x60F01B8F86Aa3D1a61d1E1730B49BaeE09D8d72c"
 
 func main() {
+	var err error
+
 	args := os.Args[1:]
+
+	// Loading the config
+	err = config.Load()
 
 	// If no arguments are provided print the usage information
 	if len(args) == 0 {
 		printUsage()
 	}
-
-	var err error
-
-	// Loading the config
-	err = config.Load()
 
 	// Converting everything to lowercase, so that a command will not fail if something
 	// is capitalized by accident
@@ -41,13 +42,18 @@ func main() {
 
 	if err == nil && config.DitConfig.DitCoordinator != defaultDitCoodinator && command != "setup" {
 		helpers.PrintLine("You are using an old version of the deployed ditCoordinator contract", 1)
-		helpers.PrintLine("To fix this call 'dit setup'", 1)
+		helpers.PrintLine("To fix this call '"+helpers.ColorizeCommand("setup")+"'", 1)
 	}
 
 	switch command {
 	case "setup":
 		// Create a new config
-		err = config.Create()
+		if len(args) == 2 && strings.Contains(args[1], "demo") {
+			err = config.Create(true)
+		} else {
+			err = config.Create(false)
+		}
+
 		if err == nil {
 			// Load the new config
 			config.Load()
@@ -56,7 +62,7 @@ func main() {
 			if err == nil {
 				fmt.Println()
 				helpers.PrintLine("ditCoordinator automatically set to the current deployed one at "+defaultDitCoodinator, 0)
-				helpers.PrintLine("If you wish to change this use 'dit set_coordinator <DIT_COORDINATOR_ADDRESS>", 0)
+				helpers.PrintLine("If you wish to change this use '"+helpers.ColorizeCommand("set_coordinator <DIT_COORDINATOR_ADDRESS>")+"'", 0)
 			}
 		}
 		break
@@ -138,32 +144,25 @@ func main() {
 	case "demo_vote":
 		checkIfExists(args, 1, "a proposal ID - dit demo_vote <PROPOSAL_ID>")
 		// Demo-Votes on a proposal
-		err = ethereum.DemoVote(args[1])
+		err = demo.Vote(args[1])
 		break
 	case "open", "open_vote", "reveal_vote", "reveal":
 		checkIfExists(args, 1, "a proposal ID")
 		// Reveals the vote on a proposal
-		err = ethereum.Reveal(args[1])
+		err = ethereum.Open(args[1])
 		break
 	case "demo_open", "demo_open_vote", "demo_reveal_vote", "demo_reveal":
 		checkIfExists(args, 1, "a proposal ID")
 		// Reveals the votes of the demo voters on a proposal
 		for i := 0; i < 3; i++ {
-			err = ethereum.DemoReveal(args[1], i)
+			err = demo.Open(args[1], i)
 		}
-		if err == nil {
-			helpers.PrintLine("Successfully opened all the concealed demo votes.", 3)
-			helpers.PrintLine("After the vote ended, the vote has to be finalized. This includes", 3)
-			helpers.PrintLine("calculating the outcome and distributing KNW tokens and ETH stakes.", 3)
-			helpers.PrintLine("To do so when the vote is over, execute 'dit finalize "+args[1]+"'", 3)
-		}
-
 		break
 	case "finalize", "finalize_vote":
 		checkIfExists(args, 1, "a proposal ID")
 		var pollPassed bool
 		// Resolves a proposal
-		pollPassed, err = ethereum.Resolve(args[1])
+		pollPassed, err = ethereum.Finalize(args[1])
 		if err == nil {
 			fmt.Println()
 			if pollPassed {
@@ -203,7 +202,7 @@ func checkIfExists(_arguments []string, _index int, _description string) {
 
 func printUsage() {
 	fmt.Println("--------- dit client v0.1 --------")
-	if config.DemoMode {
+	if config.DitConfig.DemoModeActive {
 		fmt.Println("--------- demo mode active -------")
 	}
 	fmt.Println("------------- General ------------")

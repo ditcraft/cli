@@ -31,6 +31,10 @@ func GetUserInput(_prompt string) string {
 	return answer
 }
 
+func ColorizeCommand(_command string) string {
+	return fmt.Sprintf("%s", aurora.Green("dit "+_command))
+}
+
 func PrintLine(_line string, _level int) {
 	switch _level {
 	case 0:

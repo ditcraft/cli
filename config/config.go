@@ -20,15 +20,13 @@ import (
 	"golang.org/x/crypto/ssh/terminal"
 )
 
-var DemoMode = true
-
 type ditConfig struct {
-	DitCoordinator string         `json:"dit_coordinator"`
-	KNWVoting      string         `json:"knw_voting"`
-	KNWToken       string         `json:"knw_token"`
-	EthereumKeys   ethereumKeys   `json:"ethereum_keys"`
-	DemoKeys       []ethereumKeys `json:"demo_keys,omitempty"`
-	Repositories   []Repository   `json:"repositories"`
+	DitCoordinator string       `json:"dit_coordinator"`
+	KNWVoting      string       `json:"knw_voting"`
+	KNWToken       string       `json:"knw_token"`
+	DemoModeActive bool         `json:"demo_mode_active"`
+	EthereumKeys   ethereumKeys `json:"ethereum_keys"`
+	Repositories   []Repository `json:"repositories"`
 }
 
 type ethereumKeys struct {
@@ -39,6 +37,7 @@ type ethereumKeys struct {
 // Repository struct, exported since its used in the ethereum package for new repositories
 type Repository struct {
 	Name            string       `json:"name"`
+	Provider        string       `json:"provider"`
 	ContractAddress string       `json:"contract_address"`
 	KnowledgeLabels []string     `json:"knowledge_labels"`
 	ActiveVotes     []ActiveVote `json:"active_votes"`
@@ -46,7 +45,6 @@ type Repository struct {
 
 // ActiveVote struct, exported since its used in the ethereum package for new votes
 type ActiveVote struct {
-	DemoVoter      int    `json:"demo_voter"`
 	ID             int    `json:"id"`
 	KNWVoteID      int    `json:"knw_vote_id"`
 	KnowledgeLabel string `json:"knowledge_label"`
@@ -58,12 +56,15 @@ type ActiveVote struct {
 	CommitEnd      int    `json:"commit_end"`
 	RevealEnd      int    `json:"reveal_end"`
 	Resolved       bool   `json:"resolved"`
+	DemoChoices    []int  `json:"demo_choices"`
+	DemoSalts      []int  `json:"demo_salts"`
 }
 
 // DitConfig is exported since it needs to be accessed from other packages all the time
 var DitConfig ditConfig
 
-var demoPassword = "alig49239kjjhsdf653"
+var demoUserAddress = "0x0000000000000000000000000000000000000000"
+var demoUserPrivateKey = "0000000000000000000000000000000000000000000000000000000000000000"
 
 // GetPrivateKey will prompt the user for his password and return the decrypted ethereum private key
 func GetPrivateKey() (string, error) {
@@ -91,22 +92,6 @@ func GetPrivateKey() (string, error) {
 	return string(decryptedPrivateKey), nil
 }
 
-// GetDemoPrivateKeys will prompt the user for his password and return the decrypted ethereum private key
-func GetDemoPrivateKeys(_num int) (string, error) {
-	// Converting the encrypted private key from hex to bytes
-	encPrivateKey, err := hex.DecodeString(DitConfig.DemoKeys[_num].PrivateKey)
-	if err != nil {
-		return "", errors.New("Failed to decode demo private keys from config")
-	}
-	// Decrypting the private key
-	decryptedPrivateKey, err := decrypt(encPrivateKey, demoPassword)
-	if err != nil {
-		return "", errors.New("Failed to decrypt the encrypted demo private keys")
-	}
-
-	return string(decryptedPrivateKey), nil
-}
-
 // Load will load the config and set it to the exported variable "DitConfig"
 func Load() error {
 	// Retrieve the home directory of the user
@@ -119,7 +104,7 @@ func Load() error {
 	configFile, err := ioutil.ReadFile(usr.HomeDir + "/.ditconfig")
 	if err != nil {
 		if strings.Contains(err.Error(), "no such file or directory") {
-			return errors.New("Config file not found - please use 'dit setup'")
+			return errors.New("Config file not found - please use '" + helpers.ColorizeCommand("setup") + "'")
 		} else {
 			return errors.New("Failed to load config file")
 		}
@@ -140,10 +125,13 @@ func Load() error {
 }
 
 // Create will create a new config file
-func Create() error {
+func Create(_demoMode bool) error {
 	helpers.PrintLine("Initializing the ditClient...", 0)
+	DitConfig.DemoModeActive = _demoMode
 
-	if !DemoMode {
+	if !DitConfig.DemoModeActive {
+		helpers.PrintLine("Hint: If you just want to play around with dit, you can also use demo mode with '"+helpers.ColorizeCommand("setup --demo")+"'", 0)
+
 		// Prompting the user for his choice on the ethereum key generation/importing
 		answerPrivateKeySelection := helpers.GetUserInputChoice("You can either (a) sample a new ethereum private-key or (b) provide your own one", "a", "b")
 
@@ -177,23 +165,8 @@ func Create() error {
 		}
 	} else {
 		helpers.PrintLine("Pre-funded private key was chosen due to demo mode being active", 3)
-		DitConfig.EthereumKeys.PrivateKey = "0EFF81044DE7940865C6ED0039D9604FD9C7348E43168945ABCA5340120181CF"
-		DitConfig.EthereumKeys.Address = "0x1b0eFa0068Fd403D293048F8758aC153DB252A11"
-
-		DitConfig.DemoKeys = make([]ethereumKeys, 3)
-
-		// Encrypt the private keys with the password
-		encryptedPrivateKey1, _ := encrypt([]byte("B7D74145BBDD4ED8F6A2467A95C584E8C9AFFA2AFC956427C1517DA24C05C1A7"), demoPassword)
-		encryptedPrivateKey2, _ := encrypt([]byte("7F8480337E77D8B241942F069DBDD58F0A7CCC9F9FAF62456F1964BC4FAAB15B"), demoPassword)
-		encryptedPrivateKey3, _ := encrypt([]byte("E909852AEB18AD19ABCA2AB5CAC121FBC9BF323317312C8E8B642E348F7DE420"), demoPassword)
-
-		DitConfig.DemoKeys[0].PrivateKey = hex.EncodeToString(encryptedPrivateKey1)
-		DitConfig.DemoKeys[0].Address = "0x1e9f642f0bCa054A743fB117E91aa05E9b842F98"
-		DitConfig.DemoKeys[1].PrivateKey = hex.EncodeToString(encryptedPrivateKey2)
-		DitConfig.DemoKeys[1].Address = "0xCa5b5488DFB2e6E37a6B572D7Fb5E686806a1503"
-		DitConfig.DemoKeys[2].PrivateKey = hex.EncodeToString(encryptedPrivateKey3)
-		DitConfig.DemoKeys[2].Address = "0x125Ba426110FBc83980cc716a63ed4B6229Ec0c0"
-
+		DitConfig.EthereumKeys.PrivateKey = demoUserPrivateKey
+		DitConfig.EthereumKeys.Address = demoUserAddress
 	}
 
 	// Prompting the user to set a password for the private keys encryption
