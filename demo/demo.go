@@ -108,7 +108,7 @@ func _executeVote(_proposalID string, _choice string, _salt string, _demoVoter i
 	}
 
 	if proposal.Proposer == myAddress {
-		return errors.New("You can't vote on your own proposal")
+		return errors.New("The demo voter can't vote on his own proposal")
 	}
 
 	// Retrieving the default stake from the ditContract
@@ -157,7 +157,7 @@ func _executeVote(_proposalID string, _choice string, _salt string, _demoVoter i
 
 	// If this is the case, the user can not vote again
 	if oldDidCommit {
-		return errors.New("You already voted on this proposal")
+		return errors.New("The demo voter already voted on this proposal")
 	}
 
 	var auth *bind.TransactOpts
@@ -174,7 +174,7 @@ func _executeVote(_proposalID string, _choice string, _salt string, _demoVoter i
 	_, err = ditCoordingatorInstance.VoteOnProposal(auth, repoHash, big.NewInt(int64(proposalID)), voteHash)
 	if err != nil {
 		if strings.Contains(err.Error(), "insufficient funds") {
-			return errors.New("Your account doesn't have enough ETH to pay for the transaction")
+			return errors.New("The demo voters account doesn't have enough ETH to pay for the transaction")
 		}
 		return errors.New("Failed to commit the vote: " + err.Error())
 	}
@@ -276,7 +276,7 @@ func Open(_proposalID string, _demoVoter int) error {
 
 	// If this is not the case the user never participated in this proposal through a vote
 	if !didCommit {
-		return errors.New("You didn't vote on this proposal")
+		return errors.New("The demo voter didn't vote on this proposal")
 	}
 
 	// Verifying whether the user has revealed his vote on this proposal
@@ -287,7 +287,7 @@ func Open(_proposalID string, _demoVoter int) error {
 
 	// If this is the case, the user already revealed his vote
 	if oldDidReveal {
-		return errors.New("You already opened your vote on this proposal")
+		return errors.New("The demo voter already opened the vote on this proposal")
 	}
 
 	// Crerating the transaction (basic values)
@@ -304,7 +304,7 @@ func Open(_proposalID string, _demoVoter int) error {
 	_, err = ditCoordinatorInstance.OpenVoteOnProposal(auth, repoHash, big.NewInt(int64(proposalID)), choice, salt)
 	if err != nil {
 		if strings.Contains(err.Error(), "insufficient funds") {
-			return errors.New("Your account doesn't have enough ETH to pay for the transaction")
+			return errors.New("The demo voters account doesn't have enough ETH to pay for the transaction")
 		}
 		return errors.New("Failed to open the vote: " + err.Error())
 	}
@@ -405,7 +405,7 @@ func Finalize(_proposalID string, _demoVoter int) (bool, error) {
 
 	// If not, we are not allowed to call this function (it would fail)
 	if !didCommit && myAddress != proposal.Proposer {
-		return false, errors.New("You didn't participate in this vote")
+		return false, errors.New("The demo voter didn't participate in this vote")
 	}
 
 	// Crerating the transaction (basic values)
@@ -418,7 +418,7 @@ func Finalize(_proposalID string, _demoVoter int) (bool, error) {
 	_, err = ditCoordinatorInstance.FinalizeVote(auth, repoHash, big.NewInt(int64(proposalID)))
 	if err != nil {
 		if strings.Contains(err.Error(), "insufficient funds") {
-			return false, errors.New("Your account doesn't have enough ETH to pay for the transaction")
+			return false, errors.New("The demo voters account doesn't have enough ETH to pay for the transaction")
 		}
 		return false, errors.New("Failed to finalize the vote: " + err.Error())
 	}

@@ -111,6 +111,33 @@ func checkGitSetup() error {
 	return nil
 }
 
+// Validate will return an error when the connection to
+// the git provider fails (validated through a git fetch)
+func Validate() error {
+	repoName, err := GetRepository()
+	if err != nil {
+		return err
+	}
+
+	// Verifying whether a master branch (or any branch) exists
+	cmdName := "git"
+	cmdArgs := []string{"branch"}
+	cmdOutBranch, err := exec.Command(cmdName, cmdArgs...).CombinedOutput()
+	if err != nil {
+		return errors.New("There was an error running git branch")
+	}
+
+	// Verifying whether the connection works correctly
+	cmdName = "git"
+	cmdArgs = []string{"fetch", "-v"}
+	cmdOutFetch, err := exec.Command(cmdName, cmdArgs...).CombinedOutput()
+	if (!strings.Contains(string(cmdOutFetch), repoName) && len(cmdOutBranch) > 0) || err != nil {
+		return errors.New("The connection to the git provider failed - please ensure that the repository is configured correctly")
+	}
+
+	return nil
+}
+
 // CheckForChanges will return an error if there are no new files to commit
 func CheckForChanges() error {
 	// Verifying whether files have been added

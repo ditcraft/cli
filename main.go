@@ -105,21 +105,24 @@ func main() {
 		break
 	case "commit", "propose_commit", "demo_commit":
 		checkIfExists(args, 1, "a commit message")
-		var voteDetails string
-		var proposalID int
-
-		err = git.CheckForChanges()
+		err = git.Validate()
 		if err == nil {
-			// Propose a new commit
-			voteDetails, proposalID, err = ethereum.ProposeCommit(args[1])
+			var voteDetails string
+			var proposalID int
+
+			err = git.CheckForChanges()
 			if err == nil {
-				// Push the commit into a proposal branch
-				err = git.Commit(proposalID, args[1])
+				// Propose a new commit
+				voteDetails, proposalID, err = ethereum.ProposeCommit(args[1])
 				if err == nil {
-					// Print the details of the vote
-					stringLines := strings.Split(voteDetails, "\n")
-					for i := range stringLines {
-						helpers.PrintLine(stringLines[i], 0)
+					// Push the commit into a proposal branch
+					err = git.Commit(proposalID, args[1])
+					if err == nil {
+						// Print the details of the vote
+						stringLines := strings.Split(voteDetails, "\n")
+						for i := range stringLines {
+							helpers.PrintLine(stringLines[i], 0)
+						}
 					}
 				}
 			}
@@ -160,26 +163,29 @@ func main() {
 		break
 	case "finalize", "finalize_vote":
 		checkIfExists(args, 1, "a proposal ID")
-		var pollPassed bool
-		// Resolves a proposal
-		pollPassed, err = ethereum.Finalize(args[1])
+		err = git.Validate()
 		if err == nil {
-			fmt.Println()
-			if pollPassed {
-				// Merges the proposal branch into master after a successful vote
-				err = git.Merge(args[1])
-				if err == nil {
-					helpers.PrintLine("Successfully merged dit proposal "+args[1]+" into the master branch", 0)
-				}
-			} else {
-				// Deletes the proposal branch after an unsuccessful vote
-				err = git.DeleteBranch(args[1])
-				if err == nil {
-					helpers.PrintLine("Removed the dit proposal "+args[1]+" from the repository", 0)
+			var pollPassed bool
+			var isProposer bool
+			// Finalizes a proposal
+			pollPassed, isProposer, err = ethereum.Finalize(args[1])
+			if err == nil && isProposer {
+				fmt.Println()
+				if pollPassed {
+					// Merges the proposal branch into master after a successful vote
+					err = git.Merge(args[1])
+					if err == nil {
+						helpers.PrintLine("Successfully merged dit proposal "+args[1]+" into the master branch", 0)
+					}
+				} else {
+					// Deletes the proposal branch after an unsuccessful vote
+					err = git.DeleteBranch(args[1])
+					if err == nil {
+						helpers.PrintLine("Removed the dit proposal "+args[1]+" from the repository", 0)
+					}
 				}
 			}
 		}
-
 		break
 	default:
 		printUsage()

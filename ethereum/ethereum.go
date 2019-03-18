@@ -264,7 +264,7 @@ func ProposeCommit(_commitMessage string) (string, int, error) {
 	}
 
 	// Proposing the commit
-	transaction, err := ditCoordinatorInstance.ProposeCommit(auth, repoHash, big.NewInt(int64(answerKnowledgeLabel-1)), big.NewInt(int64(120)), big.NewInt(int64(120)))
+	transaction, err := ditCoordinatorInstance.ProposeCommit(auth, repoHash, big.NewInt(int64(answerKnowledgeLabel-1)), big.NewInt(int64(180)), big.NewInt(int64(180)))
 	if err != nil {
 		if strings.Contains(err.Error(), "insufficient funds") {
 			return "", 0, errors.New("Your account doesn't have enough ETH to pay for the transaction")
@@ -667,21 +667,21 @@ func Open(_proposalID string) error {
 // including the ETH and KNW reward in case of a voting for the winning decision
 // or the losing of ETH and KNW in case of a voting for the losing decision
 // The first caller who executes this will also trigger the calculation whether the vote passed or not
-func Finalize(_proposalID string) (bool, error) {
+func Finalize(_proposalID string) (bool, bool, error) {
 	// Converting the stdin string input of the user into an int
 	proposalID, _ := strconv.Atoi(_proposalID)
 
 	// Searching for this repositories object in the config
 	repoIndex, err := searchForRepoInConfig()
 	if err != nil {
-		return false, err
+		return false, false, err
 	}
 
 	repoHash := GetHashOfString(config.DitConfig.Repositories[repoIndex].Name)
 
 	connection, err := getConnection()
 	if err != nil {
-		return false, err
+		return false, false, err
 	}
 
 	// Convertig the hex-string-formatted address into an address object
@@ -690,19 +690,19 @@ func Finalize(_proposalID string) (bool, error) {
 	// Create a new instance of the ditContract to access it
 	ditCooordinatorInstance, err := getDitCoordinatorInstance(connection)
 	if err != nil {
-		return false, err
+		return false, false, err
 	}
 
 	// Create a new instance of the KNWToken contract to access it
 	KNWTokenInstance, err := getKNWTokenInstance(connection)
 	if err != nil {
-		return false, err
+		return false, false, err
 	}
 
 	// Create a new instance of the KNWVoting contract to access it
 	KNWVotingInstance, err := getKNWVotingInstance(connection)
 	if err != nil {
-		return false, err
+		return false, false, err
 	}
 
 	// Searching for the corresponding vote in the votes stored in the config
@@ -716,62 +716,65 @@ func Finalize(_proposalID string) (bool, error) {
 
 	// If this user already called the Resolve function for this vote it's not possible anymore
 	if config.DitConfig.Repositories[repoIndex].ActiveVotes[voteIndex].Resolved {
-		return false, errors.New("You already finalized this vote")
+		return false, false, errors.New("You already finalized this vote")
 	}
 
 	// Verifying whether the vote has already ended
 	pollEnded, err := KNWVotingInstance.PollEnded(nil, big.NewInt(int64(config.DitConfig.Repositories[repoIndex].ActiveVotes[voteIndex].KNWVoteID)))
 	if err != nil {
-		return false, errors.New("Failed to retrieve vote status")
+		return false, false, errors.New("Failed to retrieve vote status")
 	}
 
 	// If not, we can't resolve it
 	if !pollEnded {
-		return false, errors.New("The vote hasn't ended yet")
+		return false, false, errors.New("The vote hasn't ended yet")
 	}
 
 	// Verifying whether the user is a participant of this vote
 	didCommit, err := KNWVotingInstance.DidCommit(nil, myAddress, big.NewInt(int64(config.DitConfig.Repositories[repoIndex].ActiveVotes[voteIndex].KNWVoteID)))
 	if err != nil {
-		return false, errors.New("Failed to retrieve commit status")
+		return false, false, errors.New("Failed to retrieve commit status")
 	}
 
 	// Retrieve the selected proposal obkect
 	proposal, err := ditCooordinatorInstance.ProposalsOfRepository(nil, repoHash, big.NewInt(int64(proposalID)))
 	if err != nil {
-		return false, errors.New("Failed to retrieve the new proposal")
+		return false, false, errors.New("Failed to retrieve the new proposal")
 	}
+
+	// Indicates whether the called was the proposer or not
+	isProposer := (proposal.Proposer == myAddress)
 
 	// If not, we are not allowed to call this function (it would fail)
 	if !didCommit && myAddress != proposal.Proposer {
-		return false, errors.New("You didn't participate in this vote")
+		return false, false, errors.New("You didn't participate in this vote")
 	}
 
 	// Saving the old ETH balance
 	oldEthBalance, err := connection.BalanceAt(context.Background(), myAddress, nil)
 	if err != nil {
-		return false, errors.New("Failed to retrieve ETH balance")
+		return false, false, errors.New("Failed to retrieve ETH balance")
 	}
 
 	// Saving the old KNW balance
 	oldKNWBalance, err := KNWTokenInstance.BalanceOfLabel(nil, myAddress, config.DitConfig.Repositories[repoIndex].ActiveVotes[voteIndex].KnowledgeLabel)
 	if err != nil {
-		return false, errors.New("Failed to retrieve KNW balance")
+		return false, false, errors.New("Failed to retrieve KNW balance")
 	}
 
 	// Crerating the transaction (basic values)
 	auth, err := populateTx(connection)
 	if err != nil {
-		return false, err
+		return false, false, err
 	}
 
 	// Resolving the vote
 	transaction, err := ditCooordinatorInstance.FinalizeVote(auth, repoHash, big.NewInt(int64(proposalID)))
 	if err != nil {
 		if strings.Contains(err.Error(), "insufficient funds") {
-			return false, errors.New("Your account doesn't have enough ETH to pay for the transaction")
+			return false, false, errors.New("Your account doesn't have enough ETH to pay for the transaction")
 		}
-		return false, errors.New("Failed to finalize the vote: " + err.Error())
+		return false, false, errors.New("Failed to finalize the vote: " + err.Error())
 	}
 
 	// Waiting for the resolve transaction to be mined
@@ -785,7 +788,7 @@ func Finalize(_proposalID string) (bool, error) {
 		// Checking the balance of the user every 5 seconds, if it changed, a transaction was executed
 		newEthBalance, err = connection.BalanceAt(context.Background(), myAddress, nil)
 		if err != nil {
-			return false, errors.New("Failed to retrieve opening status")
+			return false, false, errors.New("Failed to retrieve opening status")
 		}
 		// If we are waiting for more than 2 minutes, the transaction might have failed
 		if waitingFor > 180 {
@@ -800,13 +803,13 @@ func Finalize(_proposalID string) (bool, error) {
 	// Saving the new KNW balance after resolving the vote
 	newKNWBalance, err := KNWTokenInstance.BalanceOfLabel(nil, myAddress, config.DitConfig.Repositories[repoIndex].ActiveVotes[voteIndex].KnowledgeLabel)
 	if err != nil {
-		return false, errors.New("Failed to retrieve KNW balance")
+		return false, false, errors.New("Failed to retrieve KNW balance")
 	}
 
 	// Retrieving the outcome of the vote
 	pollPassed, err := KNWVotingInstance.IsPassed(nil, big.NewInt(int64(config.DitConfig.Repositories[repoIndex].ActiveVotes[voteIndex].KNWVoteID)))
 	if err != nil {
-		return false, errors.New("Failed to retrieve vote outcome")
+		return false, false, errors.New("Failed to retrieve vote outcome")
 	}
 
 	fmt.Printf("\n")
@@ -847,7 +850,7 @@ func Finalize(_proposalID string) (bool, error) {
 	// Saving the config back to the file
 	err = config.Save()
 	if err != nil {
-		return false, nil
+		return false, false, err
 	}
 
 	if config.DitConfig.DemoModeActive && len(config.DitConfig.Repositories[repoIndex].ActiveVotes[voteIndex].DemoChoices) == 3 {
@@ -858,7 +861,7 @@ func Finalize(_proposalID string) (bool, error) {
 			}
 		}
 	}
-	return pollPassed, nil
+	return pollPassed, isProposer, nil
 }
 
 // GetVoteInfo will print information about a vote
@@ -1125,16 +1128,16 @@ func initDitRepository(_ditCoordinatorInstance *ditCoordinator.DitCoordinator, _
 	voteSettings[2] = big.NewInt(0)
 
 	// TODO
-	voteSettings[3] = big.NewInt(120)
+	voteSettings[3] = big.NewInt(150)
 
 	// TODO
-	voteSettings[4] = big.NewInt(121)
+	voteSettings[4] = big.NewInt(86400)
 
 	// TODO
-	voteSettings[5] = big.NewInt(120)
+	voteSettings[5] = big.NewInt(150)
 
 	// TODO
-	voteSettings[6] = big.NewInt(121)
+	voteSettings[6] = big.NewInt(86400)
 
 	// Prompting the user to provide 1 to 3 knowledge-labels for this repository
 	helpers.PrintLine("Please provide knowledge labels that will be used for this repository:", 0)
