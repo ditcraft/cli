@@ -16,7 +16,6 @@ import (
 	"github.com/ditcraft/client/smartcontracts/KNWToken"
 	"github.com/ditcraft/client/smartcontracts/KNWVoting"
 	"github.com/ditcraft/client/smartcontracts/ditCoordinator"
-
 	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"

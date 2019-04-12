@@ -15,15 +15,22 @@ import (
 	"strings"
 
 	"github.com/ditcraft/client/helpers"
-
 	"github.com/ethereum/go-ethereum/crypto"
 	"golang.org/x/crypto/ssh/terminal"
 )
+
+// DitConfig is exported since it needs to be accessed from other packages all the time
+var DitConfig ditConfig
+
+var demoUserAddress = "0x0000000000000000000000000000000000000000"
+var demoUserPrivateKey = "0000000000000000000000000000000000000000000000000000000000000000"
 
 type ditConfig struct {
 	DitCoordinator string       `json:"dit_coordinator"`
 	KNWVoting      string       `json:"knw_voting"`
 	KNWToken       string       `json:"knw_token"`
+	DitToken       string       `json:"dit_token"`
+	Currency       string       `json:"currency"`
 	DemoModeActive bool         `json:"demo_mode_active"`
 	EthereumKeys   ethereumKeys `json:"ethereum_keys"`
 	Repositories   []Repository `json:"repositories"`
@@ -58,12 +65,6 @@ type ActiveVote struct {
 	DemoChoices    []int  `json:"demo_choices"`
 	DemoSalts      []int  `json:"demo_salts"`
 }
-
-// DitConfig is exported since it needs to be accessed from other packages all the time
-var DitConfig ditConfig
-
-var demoUserAddress = "0x0000000000000000000000000000000000000000"
-var demoUserPrivateKey = "0000000000000000000000000000000000000000000000000000000000000000"
 
 // GetPrivateKey will prompt the user for his password and return the decrypted ethereum private key
 func GetPrivateKey() (string, error) {
@@ -128,6 +129,7 @@ func Create(_demoMode bool) error {
 	DitConfig.DemoModeActive = _demoMode
 
 	if !DitConfig.DemoModeActive {
+		DitConfig.Currency = "xDai"
 		helpers.PrintLine("Hint: If you just want to play around with dit, you can also use demo mode with '"+helpers.ColorizeCommand("setup --demo")+"'", 0)
 
 		// Prompting the user for his choice on the ethereum key generation/importing
@@ -165,6 +167,7 @@ func Create(_demoMode bool) error {
 		helpers.PrintLine("Pre-funded private key was chosen due to demo mode being active", 3)
 		DitConfig.EthereumKeys.PrivateKey = demoUserPrivateKey
 		DitConfig.EthereumKeys.Address = demoUserAddress
+		DitConfig.Currency = "xDit"
 	}
 
 	// Prompting the user to set a password for the private keys encryption

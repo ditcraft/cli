@@ -17,7 +17,7 @@ import (
 	"github.com/ditcraft/client/smartcontracts/KNWToken"
 	"github.com/ditcraft/client/smartcontracts/KNWVoting"
 	"github.com/ditcraft/client/smartcontracts/ditCoordinator"
-
+	"github.com/ditcraft/client/smartcontracts/ditToken"
 	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
@@ -212,21 +212,21 @@ func ProposeCommit(_commitMessage string) (string, int, error) {
 		answerKnowledgeLabel, _ = strconv.Atoi(helpers.GetUserInput(userInputString))
 	}
 
-	// Retrieving the ETH balance of the user
-	ethBalance, err := connection.BalanceAt(context.Background(), myAddress, nil)
+	// Retrieving the xDai balance of the user
+	xDaiBalance, err := connection.BalanceAt(context.Background(), myAddress, nil)
 	if err != nil {
-		return "", 0, errors.New("Failed to retrieve ETH balance")
+		return "", 0, errors.New("Failed to retrieve " + config.DitConfig.Currency + " balance")
 	}
 
-	// Formatting the ETH balance to a human-readable format
-	floatBalance := new(big.Float).Quo((new(big.Float).SetInt(ethBalance)), big.NewFloat(1000000000000000000))
+	// Formatting the xDai balance to a human-readable format
+	floatBalance := new(big.Float).Quo((new(big.Float).SetInt(xDaiBalance)), big.NewFloat(1000000000000000000))
 
 	// Prompting the user how much stake he wants to set for this proposal
 	answerStake := "0"
 	floatStakeParsed, _ := strconv.ParseFloat(answerStake, 64)
 	floatStake := big.NewFloat(floatStakeParsed)
 
-	helpers.PrintLine(fmt.Sprintf("You have a balance of %f ETH", floatBalance), 0)
+	helpers.PrintLine(fmt.Sprintf("You have a balance of %f xDai", floatBalance), 0)
 	userInputString = fmt.Sprintf("How much do you want to stake?")
 	for floatStake.Cmp(big.NewFloat(0)) == 0 || floatStake.Cmp(floatBalance) != -1 {
 		answerStake = helpers.GetUserInput(userInputString)
@@ -239,7 +239,7 @@ func ProposeCommit(_commitMessage string) (string, int, error) {
 	helpers.PrintLine("  Proposing the commit with the following settings:", 0)
 	helpers.PrintLine("  Commit Message: "+_commitMessage+"", 0)
 	helpers.PrintLine("  Knowledge Label: "+knowledgeLabels[answerKnowledgeLabel-1], 0)
-	helpers.PrintLine("  The following stake with automatically be deducted: "+floatStakeString+" ETH", 0)
+	helpers.PrintLine("  The following stake with automatically be deducted: "+floatStakeString+"xDai", 0)
 	userIsSure := helpers.GetUserInputChoice("Is that correct?", "y", "n")
 	if userIsSure == "n" {
 		return "", 0, errors.New("Canceled proposal of commit due to users choice")
@@ -267,7 +267,7 @@ func ProposeCommit(_commitMessage string) (string, int, error) {
 	transaction, err := ditCoordinatorInstance.ProposeCommit(auth, repoHash, big.NewInt(int64(answerKnowledgeLabel-1)), big.NewInt(int64(180)), big.NewInt(int64(180)))
 	if err != nil {
 		if strings.Contains(err.Error(), "insufficient funds") {
-			return "", 0, errors.New("Your account doesn't have enough ETH to pay for the transaction")
+			return "", 0, errors.New("Your account doesn't have enough xDai to pay for the transaction")
 		}
 		return "", 0, err
 	}
@@ -289,7 +289,7 @@ func ProposeCommit(_commitMessage string) (string, int, error) {
 		if waitingFor > 180 {
 			fmt.Printf("\n")
 			helpers.PrintLine("Waiting for over 3 minutes, maybe the transaction or the network failed?", 1)
-			helpers.PrintLine("Check at: https://rinkeby.etherscan.io/tx/"+transaction.Hash().Hex(), 1)
+			helpers.PrintLine("Check at: https://blockscout.com/poa/dai/tx/"+transaction.Hash().Hex(), 1)
 			os.Exit(0)
 		}
 	}
@@ -327,7 +327,7 @@ func ProposeCommit(_commitMessage string) (string, int, error) {
 	var responseString string
 	responseString += "---------------------------"
 	responseString += "\nSuccessfully proposed commit. Vote on proposal started with ID " + strconv.Itoa(int(newVote.ID)) + ""
-	responseString += fmt.Sprintf("\nYou staked %f ETH and used %f KNW.", floatETH, floatKNW)
+	responseString += fmt.Sprintf("\nYou staked %f %s and used %f KNW.", floatETH, config.DitConfig.Currency, floatKNW)
 	responseString += "\nThe vote will end at " + timeRevealString
 	if config.DitConfig.Repositories[repoIndex].Provider == "github" {
 		responseString += "\nYour commit is at https://github.com/" + config.DitConfig.Repositories[repoIndex].Name + "/tree/dit_proposal_" + strconv.Itoa(int(newVote.ID))
@@ -468,7 +468,7 @@ func Vote(_proposalID string, _choice string, _salt string) error {
 	transaction, err := ditCooordinatorInstance.VoteOnProposal(auth, repoHash, big.NewInt(int64(proposalID)), voteHash)
 	if err != nil {
 		if strings.Contains(err.Error(), "insufficient funds") {
-			return errors.New("Your account doesn't have enough ETH to pay for the transaction")
+			return errors.New("Your account doesn't have enough xDai to pay for the transaction")
 		}
 		return errors.New("Failed to commit the vote: " + err.Error())
 	}
@@ -490,7 +490,7 @@ func Vote(_proposalID string, _choice string, _salt string) error {
 		if waitingFor > 180 {
 			fmt.Printf("\n")
 			helpers.PrintLine("Waiting for over 3 minutes, maybe the transaction or the network failed?", 1)
-			helpers.PrintLine("Check at: https://rinkeby.etherscan.io/tx/"+transaction.Hash().Hex(), 1)
+			helpers.PrintLine("Check at: https://blockscout.com/poa/dai/tx/"+transaction.Hash().Hex(), 1)
 			os.Exit(0)
 		}
 	}
@@ -625,7 +625,7 @@ func Open(_proposalID string) error {
 	transaction, err := ditCooordinatorInstance.OpenVoteOnProposal(auth, repoHash, big.NewInt(int64(proposalID)), choice, salt)
 	if err != nil {
 		if strings.Contains(err.Error(), "insufficient funds") {
-			return errors.New("Your account doesn't have enough ETH to pay for the transaction")
+			return errors.New("Your account doesn't have enough xDai to pay for the transaction")
 		}
 		return errors.New("Failed to open the vote: " + err.Error())
 	}
@@ -647,7 +647,7 @@ func Open(_proposalID string) error {
 		if waitingFor > 180 {
 			fmt.Printf("\n")
 			helpers.PrintLine("Waiting for over 3 minutes, maybe the transaction or the network failed?", 1)
-			helpers.PrintLine("Check at: https://rinkeby.etherscan.io/tx/"+transaction.Hash().Hex(), 1)
+			helpers.PrintLine("Check at: https://blockscout.com/poa/dai/tx/"+transaction.Hash().Hex(), 1)
 			os.Exit(0)
 		}
 	}
@@ -664,8 +664,8 @@ func Open(_proposalID string) error {
 }
 
 // Finalize will finalize a vote as it will trigger the calculation of the reward of this user
-// including the ETH and KNW reward in case of a voting for the winning decision
-// or the losing of ETH and KNW in case of a voting for the losing decision
+// including the xDai and KNW reward in case of a voting for the winning decision
+// or the losing of xDai and KNW in case of a voting for the losing decision
 // The first caller who executes this will also trigger the calculation whether the vote passed or not
 func Finalize(_proposalID string) (bool, bool, error) {
 	// Converting the stdin string input of the user into an int
@@ -750,10 +750,10 @@ func Finalize(_proposalID string) (bool, bool, error) {
 		return false, false, errors.New("You didn't participate in this vote")
 	}
 
-	// Saving the old ETH balance
-	oldEthBalance, err := connection.BalanceAt(context.Background(), myAddress, nil)
+	// Saving the old xDai balance
+	oldxDaiBalance, err := connection.BalanceAt(context.Background(), myAddress, nil)
 	if err != nil {
-		return false, false, errors.New("Failed to retrieve ETH balance")
+		return false, false, errors.New("Failed to retrieve " + config.DitConfig.Currency + " balance")
 	}
 
 	// Saving the old KNW balance
@@ -772,7 +772,7 @@ func Finalize(_proposalID string) (bool, bool, error) {
 	transaction, err := ditCooordinatorInstance.FinalizeVote(auth, repoHash, big.NewInt(int64(proposalID)))
 	if err != nil {
 		if strings.Contains(err.Error(), "insufficient funds") {
-			return false, false, errors.New("Your account doesn't have enough ETH to pay for the transaction")
+			return false, false, errors.New("Your account doesn't have enough xDai to pay for the transaction")
 		}
 		return false, false, errors.New("Failed to finalize the vote: " + err.Error())
 	}
@@ -780,13 +780,13 @@ func Finalize(_proposalID string) (bool, bool, error) {
 	// Waiting for the resolve transaction to be mined
 	helpers.Printf("Waiting for finalizing transaction to be mined", 0)
 	waitingFor := 0
-	newEthBalance := oldEthBalance
-	for oldEthBalance.Cmp(newEthBalance) == 0 {
+	newxDaiBalance := oldxDaiBalance
+	for oldxDaiBalance.Cmp(newxDaiBalance) == 0 {
 		waitingFor += 5
 		time.Sleep(5 * time.Second)
 		fmt.Printf(".")
 		// Checking the balance of the user every 5 seconds, if it changed, a transaction was executed
-		newEthBalance, err = connection.BalanceAt(context.Background(), myAddress, nil)
+		newxDaiBalance, err = connection.BalanceAt(context.Background(), myAddress, nil)
 		if err != nil {
 			return false, false, errors.New("Failed to retrieve opening status")
 		}
@@ -794,7 +794,7 @@ func Finalize(_proposalID string) (bool, bool, error) {
 		if waitingFor > 180 {
 			fmt.Printf("\n")
 			helpers.PrintLine("Waiting for over 3 minutes, maybe the transaction or the network failed?", 1)
-			helpers.PrintLine("Check at: https://rinkeby.etherscan.io/tx/"+transaction.Hash().Hex(), 1)
+			helpers.PrintLine("Check at: https://blockscout.com/poa/dai/tx/"+transaction.Hash().Hex(), 1)
 			os.Exit(0)
 		}
 	}
@@ -826,9 +826,9 @@ func Finalize(_proposalID string) (bool, bool, error) {
 		}
 	}
 
-	// If the user got some ETH as a reward, this will be shown to the user
-	if newEthBalance.Cmp(oldEthBalance) > 0 {
-		difference := newEthBalance.Sub(newEthBalance, oldEthBalance)
+	// If the user got some xDai as a reward, this will be shown to the user
+	if newxDaiBalance.Cmp(oldxDaiBalance) > 0 {
+		difference := newxDaiBalance.Sub(newxDaiBalance, oldxDaiBalance)
 		floatDifference := new(big.Float).Quo((new(big.Float).SetInt64(difference.Int64())), big.NewFloat(1000000000000000000))
 		helpers.PrintLine(fmt.Sprintf("You gained %f ETH\n", floatDifference), 0)
 	}
@@ -963,7 +963,7 @@ func GetVoteInfo(_proposalID ...int) error {
 			if proposal.Proposer.Hex() != config.DitConfig.EthereumKeys.Address {
 				helpers.PrintLine("Your choice: "+strconv.Itoa(config.DitConfig.Repositories[repoIndex].ActiveVotes[i].Choice), 0)
 			}
-			helpers.PrintLine(fmt.Sprintf("You staked %f ETH and used %f KNW\n", floatETH, floatKNW), 0)
+			helpers.PrintLine(fmt.Sprintf("You staked %f %s and used %f KNW\n", floatETH, config.DitConfig.Currency, floatKNW), 0)
 			break
 		} else {
 			helpers.PrintLine(fmt.Sprintf("Required (gross) stake: %f ETH\n", floatGrossStake), 0)
@@ -979,7 +979,7 @@ func GetVoteInfo(_proposalID ...int) error {
 	return nil
 }
 
-// GetBalances will print the ETH and KNW balances
+// GetBalances will print the xDai and KNW balances
 func GetBalances() error {
 	connection, err := getConnection()
 	if err != nil {
@@ -1020,16 +1020,35 @@ func GetBalances() error {
 		}
 	}
 
-	// Retrieving the ETH balance of the user
-	ethBalance, err := connection.BalanceAt(context.Background(), myAddress, nil)
-	if err != nil {
-		return errors.New("Failed to retrieve ETH balance")
-	}
-	helpers.PrintLine("Balances for address "+config.DitConfig.EthereumKeys.Address+":", 0)
+	var floatBalance *big.Float
+	if !config.DitConfig.DemoModeActive {
+		// Retrieving the xDai balance of the user
+		xDaiBalance, err := connection.BalanceAt(context.Background(), myAddress, nil)
+		if err != nil {
+			return errors.New("Failed to retrieve " + config.DitConfig.Currency + " balance")
+		}
+		helpers.PrintLine("Balances for address "+config.DitConfig.EthereumKeys.Address+":", 0)
 
-	// Formatting the ETH balance to a human-readable format
-	floatBalance := new(big.Float).Quo((new(big.Float).SetInt(ethBalance)), big.NewFloat(1000000000000000000))
-	helpers.PrintLine(fmt.Sprintf("ETH-Balance: %f ETH", floatBalance), 0)
+		// Formatting the xDai balance to a human-readable format
+		floatBalance = new(big.Float).Quo((new(big.Float).SetInt(xDaiBalance)), big.NewFloat(1000000000000000000))
+	} else {
+		// Create a new instance of the ditToken to access it
+		ditTokenInstance, err := getDitTokenInstance(connection)
+		if err != nil {
+			return err
+		}
+
+		// Retrieving the xDit balance of the user
+		xDitBalance, err := ditTokenInstance.BalanceOf(nil, myAddress)
+		if err != nil {
+			return errors.New("Failed to retrieve " + config.DitConfig.Currency + " balance")
+		}
+		helpers.PrintLine("Balances for address "+config.DitConfig.EthereumKeys.Address+":", 0)
+
+		// Formatting the xDai balance to a human-readable format
+		floatBalance = new(big.Float).Quo((new(big.Float).SetInt(xDitBalance)), big.NewFloat(1000000000000000000))
+	}
+	helpers.PrintLine(fmt.Sprintf(config.DitConfig.Currency+"-Balance: %f "+config.DitConfig.Currency, floatBalance), 0)
 	helpers.PrintLine("", 0)
 
 	// Printing each KNW balance
@@ -1083,7 +1102,7 @@ func gatherProposalInfo(_connection *ethclient.Client, _ditCoordinatorInstance *
 	newVote.CommitEnd = int(KNWPoll.CommitEndDate.Int64())
 	newVote.RevealEnd = int(KNWPoll.RevealEndDate.Int64())
 
-	// Retrieving the amount of ETH a user has staked for this vote
+	// Retrieving the amount of xDai a user has staked for this vote
 	numTokens, err := KNWVotingInstance.GetGrossStake(nil, big.NewInt(int64(newVote.KNWVoteID)))
 	if err != nil {
 		return newVote, errors.New("Failed to retrieve grossStake")
@@ -1168,7 +1187,7 @@ func initDitRepository(_ditCoordinatorInstance *ditCoordinator.DitCoordinator, _
 	transaction, err := _ditCoordinatorInstance.InitRepository(auth, _repoHash, knowledgeLabels[0], knowledgeLabels[1], knowledgeLabels[2], voteSettings)
 	if err != nil {
 		if strings.Contains(err.Error(), "insufficient funds") {
-			return errors.New("Your account doesn't have enough ETH to pay for the transaction")
+			return errors.New("Your account doesn't have enough xDai to pay for the transaction")
 		}
 		return err
 	}
@@ -1191,7 +1210,7 @@ func initDitRepository(_ditCoordinatorInstance *ditCoordinator.DitCoordinator, _
 		if waitingFor > 180 {
 			fmt.Printf("\n")
 			helpers.PrintLine("Waiting for over 3 minutes, maybe the transaction or the network failed?", 1)
-			helpers.PrintLine("Check at: https://rinkeby.etherscan.io/tx/"+transaction.Hash().Hex(), 1)
+			helpers.PrintLine("Check at: https://blockscout.com/poa/dai/tx/"+transaction.Hash().Hex(), 1)
 			os.Exit(0)
 		}
 	}
@@ -1290,6 +1309,18 @@ func getKNWTokenInstance(_connection *ethclient.Client) (*KNWToken.KNWToken, err
 	}
 
 	return KNWTokenInstance, nil
+}
+
+func getDitTokenInstance(_connection *ethclient.Client) (*ditToken.MintableERC20, error) {
+	ditTokenAddress := common.HexToAddress(config.DitConfig.DitToken)
+
+	// Create a new instance of the KNWToken contract to access it
+	ditTokenInstance, err := ditToken.NewMintableERC20(ditTokenAddress, _connection)
+	if err != nil {
+		return nil, errors.New("Failed to find ditToken at provided address")
+	}
+
+	return ditTokenInstance, nil
 }
 
 func getKNWVotingInstance(_connection *ethclient.Client) (*KNWVoting.KNWVoting, error) {
