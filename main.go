@@ -14,7 +14,8 @@ import (
 )
 
 // The current dit coordinator address
-var defaultDitCoodinator = "0x8b8571Eb59138aE1EE9D250e6D4f9a858bC75421"
+var liveDitCoodinator = "0x8b8571Eb59138aE1EE9D250e6D4f9a858bC75421"
+var demoDitCoodinator = "0x8b8571Eb59138aE1EE9D250e6D4f9a858bC75421"
 
 func main() {
 	var err error
@@ -40,29 +41,34 @@ func main() {
 		os.Exit(0)
 	}
 
-	if err == nil && config.DitConfig.DitCoordinator != defaultDitCoodinator && command != "setup" {
-		helpers.PrintLine("You are using an old version of the deployed ditCoordinator contract", 1)
-		helpers.PrintLine("To fix this call '"+helpers.ColorizeCommand("setup")+"'", 1)
+	if err == nil && command != "setup" {
+		if (!config.DitConfig.DemoModeActive && config.DitConfig.DitCoordinator != liveDitCoodinator) || (config.DitConfig.DemoModeActive && config.DitConfig.DitCoordinator != demoDitCoodinator) {
+			helpers.PrintLine("You are using an old version of the deployed ditCoordinator contract", 1)
+			helpers.PrintLine("To fix this call '"+helpers.ColorizeCommand("setup")+"'", 1)
+		}
 	}
 
 	switch command {
 	case "setup":
+		var ditCoordinatorAddress string
 		// Create a new config
 		if len(args) == 2 && strings.Contains(args[1], "demo") {
 			err = config.Create(true)
+			ditCoordinatorAddress = demoDitCoodinator
 		} else {
 			err = config.Create(false)
+			ditCoordinatorAddress = liveDitCoodinator
 		}
 
 		if err == nil {
 			// Load the new config
 			config.Load()
 			// Set the DitCoordinator
-			err = ethereum.SetDitCoordinator(defaultDitCoodinator)
+			err = ethereum.SetDitCoordinator(ditCoordinatorAddress)
 			if err == nil {
 				fmt.Println()
-				helpers.PrintLine("ditCoordinator automatically set to the current deployed one at "+defaultDitCoodinator, 0)
-				helpers.PrintLine("If you wish to change this use '"+helpers.ColorizeCommand("set_coordinator <DIT_COORDINATOR_ADDRESS>")+"'", 0)
+				helpers.PrintLine("ditCoordinator automatically set to the current deployed one at "+ditCoordinatorAddress, 0)
+				// helpers.PrintLine("If you wish to change this use '"+helpers.ColorizeCommand("set_coordinator <DIT_COORDINATOR_ADDRESS>")+"'", 0)
 			}
 		}
 		break
