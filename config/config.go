@@ -22,18 +22,17 @@ import (
 // DitConfig is exported since it needs to be accessed from other packages all the time
 var DitConfig ditConfig
 
-var demoUserAddress = "0x0000000000000000000000000000000000000000"
-var demoUserPrivateKey = "0000000000000000000000000000000000000000000000000000000000000000"
-
 type ditConfig struct {
-	DitCoordinator string       `json:"dit_coordinator"`
-	KNWVoting      string       `json:"knw_voting"`
-	KNWToken       string       `json:"knw_token"`
-	DitToken       string       `json:"dit_token"`
-	Currency       string       `json:"currency"`
-	DemoModeActive bool         `json:"demo_mode_active"`
-	EthereumKeys   ethereumKeys `json:"ethereum_keys"`
-	Repositories   []Repository `json:"repositories"`
+	DitCoordinator   string       `json:"dit_coordinator"`
+	KNWVoting        string       `json:"knw_voting"`
+	KNWToken         string       `json:"knw_token"`
+	DitToken         string       `json:"dit_token,omitempty"`
+	Currency         string       `json:"currency"`
+	PassedKYC        bool         `json:"passed_kyc"`
+	DemoModeActive   bool         `json:"demo_mode_active"`
+	EthereumKeys     ethereumKeys `json:"ethereum_keys"`
+	LiveRepositories []Repository `json:"live_repositories"`
+	DemoRepositories []Repository `json:"demo_repositories"`
 }
 
 type ethereumKeys struct {
@@ -126,48 +125,48 @@ func Load() error {
 // Create will create a new config file
 func Create(_demoMode bool) error {
 	helpers.PrintLine("Initializing the ditClient...", 0)
+	DitConfig = ditConfig{}
 	DitConfig.DemoModeActive = _demoMode
 
 	if !DitConfig.DemoModeActive {
-		DitConfig.Currency = "xDai"
-		helpers.PrintLine("Hint: If you just want to play around with dit, you can also use demo mode with '"+helpers.ColorizeCommand("setup --demo")+"'", 0)
+		helpers.PrintLine("You are initializing the client in live mode, you will be staking real xDai.", 1)
+		helpers.PrintLine("If you just want to play around with dit, you can also use the demo mode with '"+helpers.ColorizeCommand("setup --demo")+"'", 0)
+		fmt.Println()
+	} else {
+		helpers.PrintLine("You are initializing the client in demo mode, feel free to play around with it!", 0)
+		helpers.PrintLine("If you want to switch to the live mode later on, you can do so with '"+helpers.ColorizeCommand("mode live")+"'", 0)
+		fmt.Println()
+	}
+	// Prompting the user for his choice on the ethereum key generation/importing
+	answerPrivateKeySelection := helpers.GetUserInputChoice("You can either (a) sample a new ethereum private-key or (b) provide your own one", "a", "b")
 
-		// Prompting the user for his choice on the ethereum key generation/importing
-		answerPrivateKeySelection := helpers.GetUserInputChoice("You can either (a) sample a new ethereum private-key or (b) provide your own one", "a", "b")
-
-		// Sample new ethereum Keys
-		if answerPrivateKeySelection == "a" {
-			address, privateKey, err := sampleEthereumKeys()
+	// Sample new ethereum Keys
+	if answerPrivateKeySelection == "a" {
+		address, privateKey, err := sampleEthereumKeys()
+		if err != nil {
+			return err
+		}
+		DitConfig.EthereumKeys.PrivateKey = privateKey
+		DitConfig.EthereumKeys.Address = address
+	} else {
+		// Import existing ones, prompting the user for input
+		answerPrivateKeyInput := helpers.GetUserInput("Please provide a hex-formatted ethereum private-key")
+		if len(answerPrivateKeyInput) == 64 || len(answerPrivateKeyInput) == 66 {
+			// Remove possible "0x" at the beginning
+			if strings.Contains(answerPrivateKeyInput, "0x") && len(answerPrivateKeyInput) == 66 {
+				answerPrivateKeyInput = answerPrivateKeyInput[2:]
+			}
+			// Import the ethereum private key
+			address, privateKey, err := importEthereumKey(answerPrivateKeyInput)
 			if err != nil {
 				return err
 			}
+
 			DitConfig.EthereumKeys.PrivateKey = privateKey
 			DitConfig.EthereumKeys.Address = address
 		} else {
-			// Import existing ones, prompting the user for input
-			answerPrivateKeyInput := helpers.GetUserInput("Please provide a hex-formatted ethereum private-key")
-			if len(answerPrivateKeyInput) == 64 || len(answerPrivateKeyInput) == 66 {
-				// Remove possible "0x" at the beginning
-				if strings.Contains(answerPrivateKeyInput, "0x") && len(answerPrivateKeyInput) == 66 {
-					answerPrivateKeyInput = answerPrivateKeyInput[2:]
-				}
-				// Import the ethereum private key
-				address, privateKey, err := importEthereumKey(answerPrivateKeyInput)
-				if err != nil {
-					return err
-				}
-
-				DitConfig.EthereumKeys.PrivateKey = privateKey
-				DitConfig.EthereumKeys.Address = address
-			} else {
-				return errors.New("Invalid ethereum private-key")
-			}
+			return errors.New("Invalid ethereum private-key")
 		}
-	} else {
-		helpers.PrintLine("Pre-funded private key was chosen due to demo mode being active", 3)
-		DitConfig.EthereumKeys.PrivateKey = demoUserPrivateKey
-		DitConfig.EthereumKeys.Address = demoUserAddress
-		DitConfig.Currency = "xDit"
 	}
 
 	// Prompting the user to set a password for the private keys encryption
@@ -208,7 +207,8 @@ func Create(_demoMode bool) error {
 	}
 
 	DitConfig.EthereumKeys.PrivateKey = hex.EncodeToString(encryptedPrivateKey)
-	DitConfig.Repositories = make([]Repository, 0)
+	DitConfig.LiveRepositories = make([]Repository, 0)
+	DitConfig.DemoRepositories = make([]Repository, 0)
 
 	// Write the config to the file
 	err = Save()

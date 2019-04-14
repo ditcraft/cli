@@ -14,8 +14,8 @@ import (
 )
 
 // The current dit coordinator address
-var liveDitCoodinator = "0x8b8571Eb59138aE1EE9D250e6D4f9a858bC75421"
-var demoDitCoodinator = "0x8b8571Eb59138aE1EE9D250e6D4f9a858bC75421"
+var liveDitCoodinator = "0x991f901E1Fc151D13ba8C0E27a7f8c6ea3C524Cb"
+var demoDitCoodinator = "0x44388b9DbcB190B74006dB4FD868d44FDAF2a288"
 
 func main() {
 	var err error
@@ -52,12 +52,12 @@ func main() {
 	case "setup":
 		var ditCoordinatorAddress string
 		// Create a new config
-		if len(args) == 2 && strings.Contains(args[1], "demo") {
-			err = config.Create(true)
-			ditCoordinatorAddress = demoDitCoodinator
-		} else {
+		if len(args) == 2 && strings.Contains(args[1], "live") {
 			err = config.Create(false)
 			ditCoordinatorAddress = liveDitCoodinator
+		} else {
+			err = config.Create(true)
+			ditCoordinatorAddress = demoDitCoodinator
 		}
 
 		if err == nil {
@@ -67,11 +67,44 @@ func main() {
 			err = ethereum.SetDitCoordinator(ditCoordinatorAddress)
 			if err == nil {
 				fmt.Println()
-				helpers.PrintLine("ditCoordinator automatically set to the current deployed one at "+ditCoordinatorAddress, 0)
-				// helpers.PrintLine("If you wish to change this use '"+helpers.ColorizeCommand("set_coordinator <DIT_COORDINATOR_ADDRESS>")+"'", 0)
+				helpers.PrintLine("ditCoordinator automatically set to the current deployed one", 0)
+				passedKYC, err := ethereum.CheckForKYC()
+				if err == nil && !passedKYC {
+					fmt.Println()
+					helpers.PrintLine("You didn't pass the KYC yet. Please do the KYC now:", 0)
+					helpers.PrintLine("Go to our Twitter @ditcraft and tweet the following at us:", 0)
+					helpers.PrintLine("@ditcraft I want to use your client, please verify me "+config.DitConfig.EthereumKeys.Address+"!", 0)
+				}
 			}
 		}
 		break
+	case "mode":
+		checkIfExists(args, 1, "the mode that you want to switch to (live/demo)")
+		var ditCoordinatorAddress string
+		if args[1] == "live" {
+			ditCoordinatorAddress = liveDitCoodinator
+			config.DitConfig.DemoModeActive = false
+		} else if args[1] == "demo" {
+			ditCoordinatorAddress = demoDitCoodinator
+			config.DitConfig.DemoModeActive = true
+		} else {
+			printUsage()
+			os.Exit(0)
+		}
+		err = ethereum.SetDitCoordinator(ditCoordinatorAddress)
+		if err == nil {
+			helpers.PrintLine("dit client switched to the "+args[1]+" mode", 0)
+			if args[1] == "live" {
+				helpers.PrintLine("You are now using the client in live mode, you will be staking real xDai!", 1)
+			}
+			passedKYC, err := ethereum.CheckForKYC()
+			if err == nil && !passedKYC {
+				fmt.Println()
+				helpers.PrintLine("You didn't pass the KYC yet. Please do the KYC now:", 0)
+				helpers.PrintLine("Go to our Twitter @ditcraft and tweet the following at us:", 0)
+				helpers.PrintLine("@ditcraft I want to try dit, the decentralized git. Please verify me "+config.DitConfig.EthereumKeys.Address+"!", 0)
+			}
+		}
 	case "set_coordinator":
 		checkIfExists(args, 1, "the address of the ditCoordinator contract")
 		// Set the DitCoordinator to a provided address
@@ -119,7 +152,11 @@ func main() {
 			err = git.CheckForChanges()
 			if err == nil {
 				// Propose a new commit
-				voteDetails, proposalID, err = ethereum.ProposeCommit(args[1])
+				if config.DitConfig.DemoModeActive {
+					voteDetails, proposalID, err = demo.ProposeCommit(args[1])
+				} else {
+					voteDetails, proposalID, err = ethereum.ProposeCommit(args[1])
+				}
 				if err == nil {
 					// Push the commit into a proposal branch
 					err = git.Commit(proposalID, args[1])
@@ -213,14 +250,15 @@ func checkIfExists(_arguments []string, _index int, _description string) {
 }
 
 func printUsage() {
-	fmt.Println("--------- dit client v0.1 --------")
+	fmt.Println("--------- dit client v0.2 --------")
 	if config.DitConfig.DemoModeActive {
 		fmt.Println("--------- demo mode active -------")
+	} else {
+		fmt.Println("--------- live mode active -------")
 	}
 	fmt.Println("------------- General ------------")
 	fmt.Println(" - dit setup\t\t\t\t\tCreates or imports the ethereum keys and creates a config")
-	fmt.Println(" - dit set_coordinator <ADDRESS>\t\tSaves the ditCoordinator address and retrieves the")
-	fmt.Println("\t\t\t\t\t\tKNWToken and KNWVoting addresses")
+	fmt.Println(" - dit mode <MODE>\t\t\t\tSwitch between the modes of the client (live or demo)")
 	fmt.Println("")
 	fmt.Println("------------- Ethereum ------------")
 	fmt.Println(" - dit get_address\t\t\t\tReturns ethereum address of the account")
@@ -231,7 +269,7 @@ func printUsage() {
 	fmt.Println("\t\t\t\t\t\tcalls 'dit init' afterwards")
 	fmt.Println(" - dit init\t\t\t\t\tRetrieves the address of the ditContract for the repository")
 	fmt.Println("\t\t\t\t\t\tyou are using (GitHub only)")
-	fmt.Println(" - dit commit <COMMIT_MESSAGE>—\t\t\tProposes a new commit with the specified")
+	fmt.Println(" - dit commit <COMMIT_MESSAGE>\t\t\tProposes a new commit with the specified")
 	fmt.Println("\t\t\t\t\t\tcommit message (This will start a vote)")
 	fmt.Println("")
 	fmt.Println("------------- Voting --------------")

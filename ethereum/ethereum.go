@@ -17,6 +17,7 @@ import (
 	"github.com/ditcraft/client/smartcontracts/KNWToken"
 	"github.com/ditcraft/client/smartcontracts/KNWVoting"
 	"github.com/ditcraft/client/smartcontracts/ditCoordinator"
+	"github.com/ditcraft/client/smartcontracts/ditDemoCoordinator"
 	"github.com/ditcraft/client/smartcontracts/ditToken"
 	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
@@ -63,10 +64,31 @@ func SetDitCoordinator(_ditCoordinatorAddressString string) error {
 		return errors.New("Received an invalid address of the KNWToken contract")
 	}
 
+	// If in demo mode, also retrieve the xDit token address
+	if config.DitConfig.DemoModeActive {
+		// Create a new instance of the ditDemoCoordinator to access it
+		ditDemoCoordinatorInstance, err := getDitDemoCoordinatorInstance(connection, _ditCoordinatorAddressString)
+		if err != nil {
+			return err
+		}
+
+		// Retrieving the ditToken contracts address from the ditDemoCoordinator
+		ditTokenAddress, err := ditDemoCoordinatorInstance.XDitTokenAddress(nil)
+		if err != nil {
+			return errors.New("Failed to retrieve address of the KNWToken contract")
+		}
+		config.DitConfig.DitToken = ditTokenAddress.Hex()
+		config.DitConfig.Currency = "xDit"
+	} else {
+		config.DitConfig.DitToken = ""
+		config.DitConfig.Currency = "xDai"
+	}
+
 	// Setting the retrieved addresses to the config object
 	config.DitConfig.DitCoordinator = _ditCoordinatorAddressString
 	config.DitConfig.KNWVoting = KNWVotingAddress.Hex()
 	config.DitConfig.KNWToken = KNWTokenAddress.Hex()
+	config.DitConfig.PassedKYC = false
 
 	// Saving the config back to the file
 	err = config.Save()
@@ -81,6 +103,15 @@ func SetDitCoordinator(_ditCoordinatorAddressString string) error {
 // together with additional information into the config
 // When there is no ditContract for this repository, the user will be prompted to deploy one
 func InitDitRepository(_optionalRepository ...string) error {
+	if !config.DitConfig.PassedKYC {
+		passedKYC, err := CheckForKYC()
+		if err != nil {
+			return err
+		} else if !passedKYC {
+			return errors.New("You didn't pass the KYC yet")
+		}
+	}
+
 	var repository string
 
 	// If a repository name is already provided with the call of this function we will use it...
@@ -95,11 +126,18 @@ func InitDitRepository(_optionalRepository ...string) error {
 		}
 	}
 
+	var repositoryArray []config.Repository
+	if config.DitConfig.DemoModeActive {
+		repositoryArray = config.DitConfig.DemoRepositories
+	} else {
+		repositoryArray = config.DitConfig.LiveRepositories
+	}
+
 	// Searching through the repositories that are in our config
-	for i := 0; i < len(config.DitConfig.Repositories); i++ {
+	for i := 0; i < len(repositoryArray); i++ {
 		// If the repository was found in our config it has already been initialized
 		// In that case we don't need to proceed further
-		if config.DitConfig.Repositories[i].Name == repository {
+		if repositoryArray[i].Name == repository {
 			if len(_optionalRepository) > 0 {
 				return nil
 			}
@@ -164,7 +202,12 @@ func InitDitRepository(_optionalRepository ...string) error {
 	}
 	newRepository.KnowledgeLabels = knowledgeLabels
 	newRepository.ActiveVotes = make([]config.ActiveVote, 0)
-	config.DitConfig.Repositories = append(config.DitConfig.Repositories, newRepository)
+	repositoryArray = append(repositoryArray, newRepository)
+	if config.DitConfig.DemoModeActive {
+		config.DitConfig.DemoRepositories = repositoryArray
+	} else {
+		config.DitConfig.LiveRepositories = repositoryArray
+	}
 
 	// Saving the config back to the file
 	err = config.Save()
@@ -177,16 +220,25 @@ func InitDitRepository(_optionalRepository ...string) error {
 
 // ProposeCommit will start a new proposal on the ditContract of this repository
 func ProposeCommit(_commitMessage string) (string, int, error) {
+	if !config.DitConfig.PassedKYC {
+		passedKYC, err := CheckForKYC()
+		if err != nil {
+			return "", 0, err
+		} else if !passedKYC {
+			return "", 0, errors.New("You didn't pass the KYC yet")
+		}
+	}
+
 	// Searching for this repositories object in the config
 	repoIndex, err := searchForRepoInConfig()
 	if err != nil {
 		return "", 0, err
 	}
 
-	repoHash := GetHashOfString(config.DitConfig.Repositories[repoIndex].Name)
+	repoHash := GetHashOfString(config.DitConfig.LiveRepositories[repoIndex].Name)
 
 	// Gathering the the knowledge-labels from the config
-	knowledgeLabels := config.DitConfig.Repositories[repoIndex].KnowledgeLabels
+	knowledgeLabels := config.DitConfig.LiveRepositories[repoIndex].KnowledgeLabels
 
 	connection, err := getConnection()
 	if err != nil {
@@ -226,7 +278,7 @@ func ProposeCommit(_commitMessage string) (string, int, error) {
 	floatStakeParsed, _ := strconv.ParseFloat(answerStake, 64)
 	floatStake := big.NewFloat(floatStakeParsed)
 
-	helpers.PrintLine(fmt.Sprintf("You have a balance of %f xDai", floatBalance), 0)
+	helpers.PrintLine(fmt.Sprintf("You have a balance of %.2f xDai", floatBalance), 0)
 	userInputString = fmt.Sprintf("How much do you want to stake?")
 	for floatStake.Cmp(big.NewFloat(0)) == 0 || floatStake.Cmp(floatBalance) != -1 {
 		answerStake = helpers.GetUserInput(userInputString)
@@ -235,7 +287,7 @@ func ProposeCommit(_commitMessage string) (string, int, error) {
 	}
 
 	// Prompting the user whether he is sure of this proposal and its details
-	floatStakeString := fmt.Sprintf("%f", floatStakeParsed)
+	floatStakeString := fmt.Sprintf("%.2f", floatStakeParsed)
 	helpers.PrintLine("  Proposing the commit with the following settings:", 0)
 	helpers.PrintLine("  Commit Message: "+_commitMessage+"", 0)
 	helpers.PrintLine("  Knowledge Label: "+knowledgeLabels[answerKnowledgeLabel-1], 0)
@@ -302,7 +354,7 @@ func ProposeCommit(_commitMessage string) (string, int, error) {
 	}
 
 	// Adding the new vote to the config object
-	config.DitConfig.Repositories[repoIndex].ActiveVotes = append(config.DitConfig.Repositories[repoIndex].ActiveVotes, newVote)
+	config.DitConfig.LiveRepositories[repoIndex].ActiveVotes = append(config.DitConfig.LiveRepositories[repoIndex].ActiveVotes, newVote)
 
 	// Saving the config back to the file
 	err = config.Save()
@@ -311,7 +363,7 @@ func ProposeCommit(_commitMessage string) (string, int, error) {
 	}
 
 	// Conwerting the stake and used KNW count into a float so that it's human-readable
-	floatETH := new(big.Float).Quo((new(big.Float).SetInt(big.NewInt(int64(newVote.NumTokens)))), big.NewFloat(1000000000000000000))
+	floatxDai := new(big.Float).Quo((new(big.Float).SetInt(big.NewInt(int64(newVote.NumTokens)))), big.NewFloat(1000000000000000000))
 	floatKNW := new(big.Float).Quo((new(big.Float).SetInt(big.NewInt(int64(newVote.NumKNW)))), big.NewFloat(1000000000000000000))
 
 	// Formatting the time of the commit and reveal phase into a readable format
@@ -327,10 +379,10 @@ func ProposeCommit(_commitMessage string) (string, int, error) {
 	var responseString string
 	responseString += "---------------------------"
 	responseString += "\nSuccessfully proposed commit. Vote on proposal started with ID " + strconv.Itoa(int(newVote.ID)) + ""
-	responseString += fmt.Sprintf("\nYou staked %f %s and used %f KNW.", floatETH, config.DitConfig.Currency, floatKNW)
+	responseString += fmt.Sprintf("\nYou staked %.2f %s and used %f KNW.", floatxDai, config.DitConfig.Currency, floatKNW)
 	responseString += "\nThe vote will end at " + timeRevealString
-	if config.DitConfig.Repositories[repoIndex].Provider == "github" {
-		responseString += "\nYour commit is at https://github.com/" + config.DitConfig.Repositories[repoIndex].Name + "/tree/dit_proposal_" + strconv.Itoa(int(newVote.ID))
+	if config.DitConfig.LiveRepositories[repoIndex].Provider == "github" {
+		responseString += "\nYour commit is at https://github.com/" + config.DitConfig.LiveRepositories[repoIndex].Name + "/tree/dit_proposal_" + strconv.Itoa(int(newVote.ID))
 	}
 	responseString += "\n---------------------------"
 
@@ -344,6 +396,15 @@ func ProposeCommit(_commitMessage string) (string, int, error) {
 
 // Vote will cast a users vote on a proposal
 func Vote(_proposalID string, _choice string, _salt string) error {
+	if !config.DitConfig.PassedKYC {
+		passedKYC, err := CheckForKYC()
+		if err != nil {
+			return err
+		} else if !passedKYC {
+			return errors.New("You didn't pass the KYC yet")
+		}
+	}
+
 	// Converting the stdin string input of the user into Ints
 	proposalID, _ := strconv.Atoi(_proposalID)
 	choice, _ := strconv.Atoi(_choice)
@@ -355,7 +416,14 @@ func Vote(_proposalID string, _choice string, _salt string) error {
 		return err
 	}
 
-	repoHash := GetHashOfString(config.DitConfig.Repositories[repoIndex].Name)
+	var repositoryArray []config.Repository
+	if config.DitConfig.DemoModeActive {
+		repositoryArray = config.DitConfig.DemoRepositories
+	} else {
+		repositoryArray = config.DitConfig.LiveRepositories
+	}
+
+	repoHash := GetHashOfString(repositoryArray[repoIndex].Name)
 
 	connection, err := getConnection()
 	if err != nil {
@@ -401,7 +469,7 @@ func Vote(_proposalID string, _choice string, _salt string) error {
 	floatStake := new(big.Float).Quo((new(big.Float).SetInt(requiredStake)), big.NewFloat(1000000000000000000))
 
 	helpers.PrintLine("Voting on this proposal will automatically deduct the required stake from you account.", 0)
-	helpers.PrintLine(fmt.Sprintf("Required stake: %f", floatStake), 0)
+	helpers.PrintLine(fmt.Sprintf("Required stake: %.2f", floatStake), 0)
 	helpers.PrintLine("All participants of the vote will counter-stake the proposer.", 0)
 	helpers.PrintLine("You will receive the remaining stake back, no matter how the vote ends.", 0)
 
@@ -508,7 +576,12 @@ func Vote(_proposalID string, _choice string, _salt string) error {
 	newVote.Salt = salt
 
 	// Adding the new vote to the config object
-	config.DitConfig.Repositories[repoIndex].ActiveVotes = append(config.DitConfig.Repositories[repoIndex].ActiveVotes, newVote)
+	repositoryArray[repoIndex].ActiveVotes = append(repositoryArray[repoIndex].ActiveVotes, newVote)
+	if config.DitConfig.DemoModeActive {
+		config.DitConfig.DemoRepositories = repositoryArray
+	} else {
+		config.DitConfig.LiveRepositories = repositoryArray
+	}
 
 	// Saving the config back to the file
 	err = config.Save()
@@ -538,6 +611,15 @@ func Vote(_proposalID string, _choice string, _salt string) error {
 
 // Open will open and thus reveal a vote (that was commited through a hash) to the public during the opening phase
 func Open(_proposalID string) error {
+	if !config.DitConfig.PassedKYC {
+		passedKYC, err := CheckForKYC()
+		if err != nil {
+			return err
+		} else if !passedKYC {
+			return errors.New("You didn't pass the KYC yet")
+		}
+	}
+
 	// Converting the stdin string input of the user into an int
 	proposalID, _ := strconv.Atoi(_proposalID)
 
@@ -547,7 +629,14 @@ func Open(_proposalID string) error {
 		return err
 	}
 
-	repoHash := GetHashOfString(config.DitConfig.Repositories[repoIndex].Name)
+	var repositoryArray []config.Repository
+	if config.DitConfig.DemoModeActive {
+		repositoryArray = config.DitConfig.DemoRepositories
+	} else {
+		repositoryArray = config.DitConfig.LiveRepositories
+	}
+
+	repoHash := GetHashOfString(repositoryArray[repoIndex].Name)
 
 	connection, err := getConnection()
 	if err != nil {
@@ -571,15 +660,15 @@ func Open(_proposalID string) error {
 
 	// Searching for the corresponding vote in the votes stored in the config
 	var voteIndex int
-	for i := range config.DitConfig.Repositories[repoIndex].ActiveVotes {
-		if config.DitConfig.Repositories[repoIndex].ActiveVotes[i].ID == proposalID {
+	for i := range repositoryArray[repoIndex].ActiveVotes {
+		if repositoryArray[repoIndex].ActiveVotes[i].ID == proposalID {
 			voteIndex = i
 			break
 		}
 	}
 
 	// Verifying whether the reveal period of this vote is active
-	revealPeriodActive, err := KNWVotingInstance.RevealPeriodActive(nil, big.NewInt(int64(config.DitConfig.Repositories[repoIndex].ActiveVotes[voteIndex].KNWVoteID)))
+	revealPeriodActive, err := KNWVotingInstance.RevealPeriodActive(nil, big.NewInt(int64(repositoryArray[repoIndex].ActiveVotes[voteIndex].KNWVoteID)))
 	if err != nil {
 		return errors.New("Failed to retrieve opening status")
 	}
@@ -590,7 +679,7 @@ func Open(_proposalID string) error {
 	}
 
 	// Verifying whether the user has commited a vote on this proposal
-	didCommit, err := KNWVotingInstance.DidCommit(nil, myAddress, big.NewInt(int64(config.DitConfig.Repositories[repoIndex].ActiveVotes[voteIndex].KNWVoteID)))
+	didCommit, err := KNWVotingInstance.DidCommit(nil, myAddress, big.NewInt(int64(repositoryArray[repoIndex].ActiveVotes[voteIndex].KNWVoteID)))
 	if err != nil {
 		return errors.New("Failed to retrieve commit status")
 	}
@@ -601,7 +690,7 @@ func Open(_proposalID string) error {
 	}
 
 	// Verifying whether the user has revealed his vote on this proposal
-	oldDidReveal, err := KNWVotingInstance.DidReveal(nil, myAddress, big.NewInt(int64(config.DitConfig.Repositories[repoIndex].ActiveVotes[voteIndex].KNWVoteID)))
+	oldDidReveal, err := KNWVotingInstance.DidReveal(nil, myAddress, big.NewInt(int64(repositoryArray[repoIndex].ActiveVotes[voteIndex].KNWVoteID)))
 	if err != nil {
 		return errors.New("Failed to retrieve opening status")
 	}
@@ -618,8 +707,8 @@ func Open(_proposalID string) error {
 	}
 
 	// Gathering the original choice and the salt from the config
-	choice := big.NewInt(int64(config.DitConfig.Repositories[repoIndex].ActiveVotes[voteIndex].Choice))
-	salt := big.NewInt(int64(config.DitConfig.Repositories[repoIndex].ActiveVotes[voteIndex].Salt))
+	choice := big.NewInt(int64(repositoryArray[repoIndex].ActiveVotes[voteIndex].Choice))
+	salt := big.NewInt(int64(repositoryArray[repoIndex].ActiveVotes[voteIndex].Salt))
 
 	// Revealing the vote on the proposal
 	transaction, err := ditCooordinatorInstance.OpenVoteOnProposal(auth, repoHash, big.NewInt(int64(proposalID)), choice, salt)
@@ -639,7 +728,7 @@ func Open(_proposalID string) error {
 		time.Sleep(5 * time.Second)
 		fmt.Printf(".")
 		// Checking the reveal status of the user every 5 seconds
-		newDidReveal, err = KNWVotingInstance.DidReveal(nil, myAddress, big.NewInt(int64(config.DitConfig.Repositories[repoIndex].ActiveVotes[voteIndex].KNWVoteID)))
+		newDidReveal, err = KNWVotingInstance.DidReveal(nil, myAddress, big.NewInt(int64(repositoryArray[repoIndex].ActiveVotes[voteIndex].KNWVoteID)))
 		if err != nil {
 			return errors.New("Failed to retrieve opening status")
 		}
@@ -654,7 +743,7 @@ func Open(_proposalID string) error {
 	fmt.Printf("\n")
 
 	// Formatting the time of the reveal phase into a readable format
-	timeReveal := time.Unix(int64(config.DitConfig.Repositories[repoIndex].ActiveVotes[voteIndex].RevealEnd), 0)
+	timeReveal := time.Unix(int64(repositoryArray[repoIndex].ActiveVotes[voteIndex].RevealEnd), 0)
 	timeRevealString := timeReveal.Format("15:04:05 on 2006/01/02")
 
 	helpers.PrintLine("Successfully opened your vote", 0)
@@ -668,6 +757,15 @@ func Open(_proposalID string) error {
 // or the losing of xDai and KNW in case of a voting for the losing decision
 // The first caller who executes this will also trigger the calculation whether the vote passed or not
 func Finalize(_proposalID string) (bool, bool, error) {
+	if !config.DitConfig.PassedKYC {
+		passedKYC, err := CheckForKYC()
+		if err != nil {
+			return false, false, err
+		} else if !passedKYC {
+			return false, false, errors.New("You didn't pass the KYC yet")
+		}
+	}
+
 	// Converting the stdin string input of the user into an int
 	proposalID, _ := strconv.Atoi(_proposalID)
 
@@ -677,7 +775,14 @@ func Finalize(_proposalID string) (bool, bool, error) {
 		return false, false, err
 	}
 
-	repoHash := GetHashOfString(config.DitConfig.Repositories[repoIndex].Name)
+	var repositoryArray []config.Repository
+	if config.DitConfig.DemoModeActive {
+		repositoryArray = config.DitConfig.DemoRepositories
+	} else {
+		repositoryArray = config.DitConfig.LiveRepositories
+	}
+
+	repoHash := GetHashOfString(repositoryArray[repoIndex].Name)
 
 	connection, err := getConnection()
 	if err != nil {
@@ -707,20 +812,20 @@ func Finalize(_proposalID string) (bool, bool, error) {
 
 	// Searching for the corresponding vote in the votes stored in the config
 	var voteIndex int
-	for i := range config.DitConfig.Repositories[repoIndex].ActiveVotes {
-		if config.DitConfig.Repositories[repoIndex].ActiveVotes[i].ID == proposalID {
+	for i := range repositoryArray[repoIndex].ActiveVotes {
+		if repositoryArray[repoIndex].ActiveVotes[i].ID == proposalID {
 			voteIndex = i
 			break
 		}
 	}
 
 	// If this user already called the Resolve function for this vote it's not possible anymore
-	if config.DitConfig.Repositories[repoIndex].ActiveVotes[voteIndex].Resolved {
+	if repositoryArray[repoIndex].ActiveVotes[voteIndex].Resolved {
 		return false, false, errors.New("You already finalized this vote")
 	}
 
 	// Verifying whether the vote has already ended
-	pollEnded, err := KNWVotingInstance.PollEnded(nil, big.NewInt(int64(config.DitConfig.Repositories[repoIndex].ActiveVotes[voteIndex].KNWVoteID)))
+	pollEnded, err := KNWVotingInstance.PollEnded(nil, big.NewInt(int64(repositoryArray[repoIndex].ActiveVotes[voteIndex].KNWVoteID)))
 	if err != nil {
 		return false, false, errors.New("Failed to retrieve vote status")
 	}
@@ -731,7 +836,7 @@ func Finalize(_proposalID string) (bool, bool, error) {
 	}
 
 	// Verifying whether the user is a participant of this vote
-	didCommit, err := KNWVotingInstance.DidCommit(nil, myAddress, big.NewInt(int64(config.DitConfig.Repositories[repoIndex].ActiveVotes[voteIndex].KNWVoteID)))
+	didCommit, err := KNWVotingInstance.DidCommit(nil, myAddress, big.NewInt(int64(repositoryArray[repoIndex].ActiveVotes[voteIndex].KNWVoteID)))
 	if err != nil {
 		return false, false, errors.New("Failed to retrieve commit status")
 	}
@@ -757,7 +862,7 @@ func Finalize(_proposalID string) (bool, bool, error) {
 	}
 
 	// Saving the old KNW balance
-	oldKNWBalance, err := KNWTokenInstance.BalanceOfLabel(nil, myAddress, config.DitConfig.Repositories[repoIndex].ActiveVotes[voteIndex].KnowledgeLabel)
+	oldKNWBalance, err := KNWTokenInstance.BalanceOfLabel(nil, myAddress, repositoryArray[repoIndex].ActiveVotes[voteIndex].KnowledgeLabel)
 	if err != nil {
 		return false, false, errors.New("Failed to retrieve KNW balance")
 	}
@@ -801,13 +906,13 @@ func Finalize(_proposalID string) (bool, bool, error) {
 	fmt.Printf("\n")
 
 	// Saving the new KNW balance after resolving the vote
-	newKNWBalance, err := KNWTokenInstance.BalanceOfLabel(nil, myAddress, config.DitConfig.Repositories[repoIndex].ActiveVotes[voteIndex].KnowledgeLabel)
+	newKNWBalance, err := KNWTokenInstance.BalanceOfLabel(nil, myAddress, repositoryArray[repoIndex].ActiveVotes[voteIndex].KnowledgeLabel)
 	if err != nil {
 		return false, false, errors.New("Failed to retrieve KNW balance")
 	}
 
 	// Retrieving the outcome of the vote
-	pollPassed, err := KNWVotingInstance.IsPassed(nil, big.NewInt(int64(config.DitConfig.Repositories[repoIndex].ActiveVotes[voteIndex].KNWVoteID)))
+	pollPassed, err := KNWVotingInstance.IsPassed(nil, big.NewInt(int64(repositoryArray[repoIndex].ActiveVotes[voteIndex].KNWVoteID)))
 	if err != nil {
 		return false, false, errors.New("Failed to retrieve vote outcome")
 	}
@@ -830,22 +935,28 @@ func Finalize(_proposalID string) (bool, bool, error) {
 	if newxDaiBalance.Cmp(oldxDaiBalance) > 0 {
 		difference := newxDaiBalance.Sub(newxDaiBalance, oldxDaiBalance)
 		floatDifference := new(big.Float).Quo((new(big.Float).SetInt64(difference.Int64())), big.NewFloat(1000000000000000000))
-		helpers.PrintLine(fmt.Sprintf("You gained %f ETH\n", floatDifference), 0)
+		helpers.PrintLine(fmt.Sprintf("You gained %.2f "+config.DitConfig.Currency+"\n", floatDifference), 0)
 	}
 
 	// Also shwoing the user how man KNW tokens he got/lost
 	if oldKNWBalance.Cmp(newKNWBalance) < 0 {
 		difference := newKNWBalance.Sub(newKNWBalance, oldKNWBalance)
 		floatDifference := new(big.Float).Quo((new(big.Float).SetInt64(difference.Int64())), big.NewFloat(1000000000000000000))
-		helpers.PrintLine(fmt.Sprintf("You earned %f KNW Tokens for the knowledge label '%s'\n", floatDifference, config.DitConfig.Repositories[repoIndex].ActiveVotes[voteIndex].KnowledgeLabel), 0)
+		helpers.PrintLine(fmt.Sprintf("You earned %f KNW Tokens for the knowledge label '%s'\n", floatDifference, repositoryArray[repoIndex].ActiveVotes[voteIndex].KnowledgeLabel), 0)
 	} else if oldKNWBalance.Cmp(newKNWBalance) > 0 {
 		difference := oldKNWBalance.Sub(oldKNWBalance, newKNWBalance)
 		floatDifference := new(big.Float).Quo((new(big.Float).SetInt64(difference.Int64())), big.NewFloat(1000000000000000000))
-		helpers.PrintLine(fmt.Sprintf("You lost %f KNW Tokens for the knowledge label '%s'\n", floatDifference, config.DitConfig.Repositories[repoIndex].ActiveVotes[voteIndex].KnowledgeLabel), 0)
+		helpers.PrintLine(fmt.Sprintf("You lost %f KNW Tokens for the knowledge label '%s'\n", floatDifference, repositoryArray[repoIndex].ActiveVotes[voteIndex].KnowledgeLabel), 0)
 	}
 
 	// Saving the resolved-status in the config
-	config.DitConfig.Repositories[repoIndex].ActiveVotes[voteIndex].Resolved = true
+	repositoryArray[repoIndex].ActiveVotes[voteIndex].Resolved = true
+
+	if config.DitConfig.DemoModeActive {
+		config.DitConfig.DemoRepositories = repositoryArray
+	} else {
+		config.DitConfig.LiveRepositories = repositoryArray
+	}
 
 	// Saving the config back to the file
 	err = config.Save()
@@ -853,7 +964,7 @@ func Finalize(_proposalID string) (bool, bool, error) {
 		return false, false, err
 	}
 
-	if config.DitConfig.DemoModeActive && len(config.DitConfig.Repositories[repoIndex].ActiveVotes[voteIndex].DemoChoices) == 3 {
+	if config.DitConfig.DemoModeActive && len(config.DitConfig.DemoRepositories[repoIndex].ActiveVotes[voteIndex].DemoChoices) == 3 {
 		for i := 0; i < 3; i++ {
 			_, err := demo.Finalize(_proposalID, i)
 			if err != nil {
@@ -872,7 +983,14 @@ func GetVoteInfo(_proposalID ...int) error {
 		return err
 	}
 
-	repoHash := GetHashOfString(config.DitConfig.Repositories[repoIndex].Name)
+	var repositoryArray []config.Repository
+	if config.DitConfig.DemoModeActive {
+		repositoryArray = config.DitConfig.DemoRepositories
+	} else {
+		repositoryArray = config.DitConfig.LiveRepositories
+	}
+
+	repoHash := GetHashOfString(repositoryArray[repoIndex].Name)
 
 	connection, err := getConnection()
 	if err != nil {
@@ -951,25 +1069,25 @@ func GetVoteInfo(_proposalID ...int) error {
 	// Printing the information about this vote
 	helpers.PrintLine("---------------------------", 0)
 	helpers.PrintLine("Proposal ID: "+strconv.Itoa(proposalID), 0)
-	helpers.PrintLine("URL: https://github.com/"+config.DitConfig.Repositories[repoIndex].Name+"/tree/dit_proposal_"+strconv.Itoa(proposalID), 0)
+	helpers.PrintLine("URL: https://github.com/"+repositoryArray[repoIndex].Name+"/tree/dit_proposal_"+strconv.Itoa(proposalID), 0)
 	helpers.PrintLine("Proposer: "+proposal.Proposer.Hex(), 0)
 	helpers.PrintLine("Knowledge-Label: "+proposal.KnowledgeLabel, 0)
 
 	// If the user participated in this vote, the choice and stake/KNW are also printed
-	for i := range config.DitConfig.Repositories[repoIndex].ActiveVotes {
-		if config.DitConfig.Repositories[repoIndex].ActiveVotes[i].ID == proposalID {
-			floatETH := new(big.Float).Quo((new(big.Float).SetInt(big.NewInt(int64(config.DitConfig.Repositories[repoIndex].ActiveVotes[i].NumTokens)))), big.NewFloat(1000000000000000000))
-			floatKNW := new(big.Float).Quo((new(big.Float).SetInt(big.NewInt(int64(config.DitConfig.Repositories[repoIndex].ActiveVotes[i].NumKNW)))), big.NewFloat(1000000000000000000))
+	for i := range repositoryArray[repoIndex].ActiveVotes {
+		if repositoryArray[repoIndex].ActiveVotes[i].ID == proposalID {
+			floatxDai := new(big.Float).Quo((new(big.Float).SetInt(big.NewInt(int64(repositoryArray[repoIndex].ActiveVotes[i].NumTokens)))), big.NewFloat(1000000000000000000))
+			floatKNW := new(big.Float).Quo((new(big.Float).SetInt(big.NewInt(int64(repositoryArray[repoIndex].ActiveVotes[i].NumKNW)))), big.NewFloat(1000000000000000000))
 			if proposal.Proposer.Hex() != config.DitConfig.EthereumKeys.Address {
-				helpers.PrintLine("Your choice: "+strconv.Itoa(config.DitConfig.Repositories[repoIndex].ActiveVotes[i].Choice), 0)
+				helpers.PrintLine("Your choice: "+strconv.Itoa(repositoryArray[repoIndex].ActiveVotes[i].Choice), 0)
 			}
-			helpers.PrintLine(fmt.Sprintf("You staked %f %s and used %f KNW\n", floatETH, config.DitConfig.Currency, floatKNW), 0)
+			helpers.PrintLine(fmt.Sprintf("You staked %.2f %s and used %f KNW\n", floatxDai, config.DitConfig.Currency, floatKNW), 0)
 			break
 		} else {
-			helpers.PrintLine(fmt.Sprintf("Required (gross) stake: %f ETH\n", floatGrossStake), 0)
+			helpers.PrintLine(fmt.Sprintf("Required (gross) stake: %.2f "+config.DitConfig.Currency+"\n", floatGrossStake), 0)
 		}
 	}
-	helpers.PrintLine(fmt.Sprintf("Current net stake: %f ETH\n", floatNetStake), 0)
+	helpers.PrintLine(fmt.Sprintf("Current net stake: %.2f "+config.DitConfig.Currency+"\n", floatNetStake), 0)
 	helpers.PrintLine("Vote phase end: "+timeCommitString, 0)
 	helpers.PrintLine("Opening phase end: "+timeRevealString, 0)
 	helpers.PrintLine("Resolved? "+strconv.FormatBool(proposal.IsFinalized), 0)
@@ -1048,7 +1166,7 @@ func GetBalances() error {
 		// Formatting the xDai balance to a human-readable format
 		floatBalance = new(big.Float).Quo((new(big.Float).SetInt(xDitBalance)), big.NewFloat(1000000000000000000))
 	}
-	helpers.PrintLine(fmt.Sprintf(config.DitConfig.Currency+"-Balance: %f "+config.DitConfig.Currency, floatBalance), 0)
+	helpers.PrintLine(fmt.Sprintf(config.DitConfig.Currency+"-Balance: %.2f "+config.DitConfig.Currency, floatBalance), 0)
 	helpers.PrintLine("", 0)
 
 	// Printing each KNW balance
@@ -1064,11 +1182,46 @@ func GetBalances() error {
 			}
 			// Formatting each KNW balance to a human-readable format
 			floatBalance := new(big.Float).Quo((new(big.Float).SetInt(balanceOfLabel)), big.NewFloat(1000000000000000000))
-			helpers.PrintLine(fmt.Sprintf(" - "+labelsOfAddress[i]+": %f KNW", floatBalance), 0)
+			helpers.PrintLine(fmt.Sprintf(" - "+labelsOfAddress[i]+": %.2f KNW", floatBalance), 0)
 		}
 	}
 
 	return nil
+}
+
+// CheckForKYC will return whether a user has already passed the KYC
+func CheckForKYC() (bool, error) {
+	connection, err := getConnection()
+	if err != nil {
+		return false, err
+	}
+
+	// Convertig the hex-string-formatted address into an address object
+	myAddress := common.HexToAddress(config.DitConfig.EthereumKeys.Address)
+
+	// Create a new instance of the KNWToken to access it
+	ditCoordinatorInstance, err := getDitCoordinatorInstance(connection)
+	if err != nil {
+		return false, err
+	}
+
+	passedKYC, err := ditCoordinatorInstance.PassedKYC(nil, myAddress)
+	if err != nil {
+		return false, err
+	}
+
+	if !passedKYC {
+		return false, nil
+	}
+
+	config.DitConfig.PassedKYC = true
+
+	err = config.Save()
+	if err != nil {
+		return false, err
+	}
+
+	return true, nil
 }
 
 // gatherProposalInfo will retrieve necessary information about a proposal from the ditContract
@@ -1299,6 +1452,30 @@ func getDitCoordinatorInstance(_connection *ethclient.Client, _ditCoordinatorAdd
 	return ditCoordinatorInstance, nil
 }
 
+func getDitDemoCoordinatorInstance(_connection *ethclient.Client, _ditDemoCoordinatorAddress ...string) (*ditDemoCoordinator.DitDemoCoordinator, error) {
+	var ditDemoCoordinatorAddressString string
+
+	if len(_ditDemoCoordinatorAddress) > 0 {
+		ditDemoCoordinatorAddressString = _ditDemoCoordinatorAddress[0]
+	} else {
+		if len(config.DitConfig.DitCoordinator) != correctETHAddressLength {
+			return nil, errors.New("Invalid ditDemoCoordinator address, please do '" + helpers.ColorizeCommand("set_coordinator") + "' first")
+		}
+		ditDemoCoordinatorAddressString = config.DitConfig.DitCoordinator
+	}
+
+	// Convertig the hex-string-formatted address into an address object
+	ditDemoCoordinatorAddress := common.HexToAddress(ditDemoCoordinatorAddressString)
+
+	// Create a new instance of the ditDemoCoordinator to access it
+	ditDemoCoordinatorInstance, err := ditDemoCoordinator.NewDitDemoCoordinator(ditDemoCoordinatorAddress, _connection)
+	if err != nil {
+		return nil, errors.New("Failed to find ditDemoCoordinator at provided address")
+	}
+
+	return ditDemoCoordinatorInstance, nil
+}
+
 func getKNWTokenInstance(_connection *ethclient.Client) (*KNWToken.KNWToken, error) {
 	KNWTokenAddress := common.HexToAddress(config.DitConfig.KNWToken)
 
@@ -1338,7 +1515,7 @@ func getKNWVotingInstance(_connection *ethclient.Client) (*KNWVoting.KNWVoting, 
 // getConnection will return a connection to the ethereum blockchain
 func getConnection() (*ethclient.Client, error) {
 	// Connecting to rinkeby via infura
-	connection, err := ethclient.Dial("https://rinkeby.infura.io/v3/e0c6c62366d14f509033c919f2c72767")
+	connection, err := ethclient.Dial("https://sokol.poa.network")
 	if err != nil {
 		return nil, errors.New("Failed to connect to the ethereum network")
 	}
@@ -1354,9 +1531,16 @@ func searchForRepoInConfig() (int64, error) {
 		return 0, err
 	}
 
+	var repositoryArray []config.Repository
+	if config.DitConfig.DemoModeActive {
+		repositoryArray = config.DitConfig.DemoRepositories
+	} else {
+		repositoryArray = config.DitConfig.LiveRepositories
+	}
+
 	// Search for the repo in our config
-	for i := range config.DitConfig.Repositories {
-		if config.DitConfig.Repositories[i].Name == repository {
+	for i := range repositoryArray {
+		if repositoryArray[i].Name == repository {
 			// Return the index of this repository if it was found
 			return int64(i), nil
 		}
