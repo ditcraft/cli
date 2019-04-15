@@ -15,7 +15,7 @@ import (
 
 // The current dit coordinator address
 var liveDitCoodinator = "0x991f901E1Fc151D13ba8C0E27a7f8c6ea3C524Cb"
-var demoDitCoodinator = "0x44388b9DbcB190B74006dB4FD868d44FDAF2a288"
+var demoDitCoodinator = "0x841cA7196C2cf3d9ACBc719fE8Ace4778F0Ecb19"
 
 func main() {
 	var err error
@@ -187,23 +187,23 @@ func main() {
 		// Votes on a proposal
 		err = ethereum.Vote(args[1], args[2], args[3])
 		break
-	case "demo_vote":
-		checkIfExists(args, 1, "a proposal ID - dit demo_vote <PROPOSAL_ID>")
-		// Demo-Votes on a proposal
-		err = demo.Vote(args[1])
-		break
+	// case "demo_vote":
+	// 	checkIfExists(args, 1, "a proposal ID - dit demo_vote <PROPOSAL_ID>")
+	// 	// Demo-Votes on a proposal
+	// 	err = demo.Vote(args[1])
+	// 	break
 	case "open", "open_vote", "reveal_vote", "reveal":
 		checkIfExists(args, 1, "a proposal ID")
 		// Reveals the vote on a proposal
 		err = ethereum.Open(args[1])
 		break
-	case "demo_open", "demo_open_vote", "demo_reveal_vote", "demo_reveal":
-		checkIfExists(args, 1, "a proposal ID")
-		// Reveals the votes of the demo voters on a proposal
-		for i := 0; i < 3; i++ {
-			err = demo.Open(args[1], i)
-		}
-		break
+	// case "demo_open", "demo_open_vote", "demo_reveal_vote", "demo_reveal":
+	// 	checkIfExists(args, 1, "a proposal ID")
+	// 	// Reveals the votes of the demo voters on a proposal
+	// 	for i := 0; i < 3; i++ {
+	// 		err = demo.Open(args[1], i)
+	// 	}
+	// 	break
 	case "finalize", "finalize_vote":
 		checkIfExists(args, 1, "a proposal ID")
 		err = git.Validate()

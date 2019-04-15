@@ -11,7 +11,6 @@ import (
 	"time"
 
 	"github.com/ditcraft/client/config"
-	"github.com/ditcraft/client/demo"
 	"github.com/ditcraft/client/git"
 	"github.com/ditcraft/client/helpers"
 	"github.com/ditcraft/client/smartcontracts/KNWToken"
@@ -964,14 +963,14 @@ func Finalize(_proposalID string) (bool, bool, error) {
 		return false, false, err
 	}
 
-	if config.DitConfig.DemoModeActive && len(config.DitConfig.DemoRepositories[repoIndex].ActiveVotes[voteIndex].DemoChoices) == 3 {
-		for i := 0; i < 3; i++ {
-			_, err := demo.Finalize(_proposalID, i)
-			if err != nil {
-				helpers.PrintLine("Error during vote finalizing of demo voter "+strconv.Itoa(i), 2)
-			}
-		}
-	}
+	// if config.DitConfig.DemoModeActive && len(config.DitConfig.DemoRepositories[repoIndex].ActiveVotes[voteIndex].DemoChoices) == 3 {
+	// 	for i := 0; i < 3; i++ {
+	// 		_, err := demo.Finalize(_proposalID, i)
+	// 		if err != nil {
+	// 			helpers.PrintLine("Error during vote finalizing of demo voter "+strconv.Itoa(i), 2)
+	// 		}
+	// 	}
+	// }
 	return pollPassed, isProposer, nil
 }
 
@@ -1300,13 +1299,13 @@ func initDitRepository(_ditCoordinatorInstance *ditCoordinator.DitCoordinator, _
 	voteSettings[2] = big.NewInt(0)
 
 	// TODO
-	voteSettings[3] = big.NewInt(150)
+	voteSettings[3] = big.NewInt(120)
 
 	// TODO
 	voteSettings[4] = big.NewInt(86400)
 
 	// TODO
-	voteSettings[5] = big.NewInt(150)
+	voteSettings[5] = big.NewInt(120)
 
 	// TODO
 	voteSettings[6] = big.NewInt(86400)
@@ -1413,7 +1412,7 @@ func populateTx(_connection *ethclient.Client) (*bind.TransactOpts, error) {
 
 	// Minimum gas price is 10 gwei for now, which works best for rinkeby
 	// Will be changed later on
-	defaultGasPrice := big.NewInt(10000000000)
+	defaultGasPrice := big.NewInt(1000000000)
 	if gasPrice.Cmp(defaultGasPrice) != 1 {
 		gasPrice = defaultGasPrice
 	}
@@ -1422,7 +1421,7 @@ func populateTx(_connection *ethclient.Client) (*bind.TransactOpts, error) {
 	auth.Nonce = big.NewInt(int64(nonce))
 
 	auth.Value = big.NewInt(0)
-	auth.GasLimit = uint64(6000000)
+	auth.GasLimit = uint64(1000000)
 	auth.GasPrice = gasPrice
 
 	return auth, nil

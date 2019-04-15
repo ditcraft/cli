@@ -22,9 +22,6 @@ func GetRepository() (string, error) {
 	}
 
 	cmdOutString := string(cmdOut)[0 : len(string(cmdOut))-1]
-	if !strings.Contains(cmdOutString, "github.com") {
-		return "", errors.New("Invalid repository - currently only GitHub repositories are supported")
-	}
 
 	// Removing unecessary stuff from the url
 	cmdOutString = sanitizeURL(cmdOutString)
@@ -118,6 +115,7 @@ func Validate() error {
 	if err != nil {
 		return err
 	}
+	repoName = strings.SplitN(repoName, "/", 2)[1]
 
 	// Verifying whether a master branch (or any branch) exists
 	cmdName := "git"
