@@ -250,6 +250,12 @@ func ProposeCommit(_commitMessage string) (string, int, error) {
 		return "", 0, err
 	}
 
+	// Create a new instance of the KNWToken to access it
+	KNWTokenInstance, err := getKNWTokenInstance(connection)
+	if err != nil {
+		return "", 0, err
+	}
+
 	// Convertig the hex-string-formatted address into address object
 	myAddress := common.HexToAddress(config.DitConfig.EthereumKeys.Address)
 
@@ -272,6 +278,15 @@ func ProposeCommit(_commitMessage string) (string, int, error) {
 	// Formatting the xDai balance to a human-readable format
 	floatBalance := new(big.Float).Quo((new(big.Float).SetInt(xDaiBalance)), big.NewFloat(1000000000000000000))
 
+	// Retrieving the xDit balance of the user
+	freeKNWBalance, err := KNWTokenInstance.FreeBalanceOfLabel(nil, myAddress, knowledgeLabels[answerKnowledgeLabel-1])
+	if err != nil {
+		return "", 0, errors.New("Failed to retrieve free KNW balance")
+	}
+
+	// Formatting the xDit balance to a human-readable format
+	floatKNWBalance := new(big.Float).Quo((new(big.Float).SetInt(freeKNWBalance)), big.NewFloat(1000000000000000000))
+
 	// Prompting the user how much stake he wants to set for this proposal
 	answerStake := "0"
 	floatStakeParsed, _ := strconv.ParseFloat(answerStake, 64)
@@ -283,6 +298,21 @@ func ProposeCommit(_commitMessage string) (string, int, error) {
 		answerStake = helpers.GetUserInput(userInputString)
 		floatStakeParsed, _ = strconv.ParseFloat(answerStake, 64)
 		floatStake = big.NewFloat(floatStakeParsed)
+	}
+
+	// Prompting the user how much KNW he wants to use for this proposal
+	answerKNW := "0"
+	floatKNWParsed, _ := strconv.ParseFloat(answerKNW, 64)
+	floatKNW := big.NewFloat(floatKNWParsed)
+
+	helpers.PrintLine(fmt.Sprintf("You have a balance of %.2f KNW for the label '%s'", floatKNWBalance, knowledgeLabels[answerKnowledgeLabel-1]), 0)
+	if floatKNW.Cmp(big.NewFloat(0)) == 1 {
+		userInputString = fmt.Sprintf("How much do you want to use?")
+		for floatKNW.Cmp(big.NewFloat(0)) == -1 || floatStake.Cmp(floatKNWBalance) != -1 {
+			answerKNW = helpers.GetUserInput(userInputString)
+			floatKNWParsed, _ = strconv.ParseFloat(answerKNW, 64)
+			floatKNW = big.NewFloat(floatKNWParsed)
+		}
 	}
 
 	// Prompting the user whether he is sure of this proposal and its details
@@ -307,6 +337,9 @@ func ProposeCommit(_commitMessage string) (string, int, error) {
 	intStake := big.NewInt(weiFloatStake)
 	auth.Value = intStake
 
+	weiFloatKNW, _ := (new(big.Float).Mul(floatKNW, big.NewFloat(1000000000000000000))).Int64()
+	intKNW := big.NewInt(weiFloatKNW)
+
 	// Retrieving the last/current proposalID of the ditContract
 	// (This will increment after a proposal, so we can see when the proposal is live)
 	lastProposalID, err := ditCoordinatorInstance.GetCurrentProposalID(nil, repoHash)
@@ -315,7 +348,7 @@ func ProposeCommit(_commitMessage string) (string, int, error) {
 	}
 
 	// Proposing the commit
-	transaction, err := ditCoordinatorInstance.ProposeCommit(auth, repoHash, big.NewInt(int64(answerKnowledgeLabel-1)), big.NewInt(int64(180)), big.NewInt(int64(180)))
+	transaction, err := ditCoordinatorInstance.ProposeCommit(auth, repoHash, big.NewInt(int64(answerKnowledgeLabel-1)), intKNW, big.NewInt(int64(180)), big.NewInt(int64(180)))
 	if err != nil {
 		if strings.Contains(err.Error(), "insufficient funds") {
 			return "", 0, errors.New("Your account doesn't have enough xDai to pay for the transaction")
@@ -363,7 +396,7 @@ func ProposeCommit(_commitMessage string) (string, int, error) {
 
 	// Conwerting the stake and used KNW count into a float so that it's human-readable
 	floatxDai := new(big.Float).Quo((new(big.Float).SetInt(big.NewInt(int64(newVote.NumTokens)))), big.NewFloat(1000000000000000000))
-	floatKNW := new(big.Float).Quo((new(big.Float).SetInt(big.NewInt(int64(newVote.NumKNW)))), big.NewFloat(1000000000000000000))
+	floatKNW = new(big.Float).Quo((new(big.Float).SetInt(big.NewInt(int64(newVote.NumKNW)))), big.NewFloat(1000000000000000000))
 
 	// Formatting the time of the commit and reveal phase into a readable format
 	timeReveal := time.Unix(int64(newVote.RevealEnd), 0)
@@ -444,6 +477,12 @@ func Vote(_proposalID string, _choice string, _salt string) error {
 		return err
 	}
 
+	// Create a new instance of the KNWToken to access it
+	KNWTokenInstance, err := getKNWTokenInstance(connection)
+	if err != nil {
+		return err
+	}
+
 	// Retrieving the proposal object from the ditContract
 	proposal, err := ditCooordinatorInstance.ProposalsOfRepository(nil, repoHash, big.NewInt(int64(proposalID)))
 	if err != nil {
@@ -467,6 +506,37 @@ func Vote(_proposalID string, _choice string, _salt string) error {
 
 	floatStake := new(big.Float).Quo((new(big.Float).SetInt(requiredStake)), big.NewFloat(1000000000000000000))
 
+	// Retrieving the xDit balance of the user
+	freeKNWBalance, err := KNWTokenInstance.FreeBalanceOfLabel(nil, myAddress, proposal.KnowledgeLabel)
+	if err != nil {
+		return errors.New("Failed to retrieve free KNW balance")
+	}
+
+	// Formatting the xDit balance to a human-readable format
+	floatKNWBalance := new(big.Float).Quo((new(big.Float).SetInt(freeKNWBalance)), big.NewFloat(1000000000000000000))
+
+	// Prompting the user how much KNW he wants to use for this proposal
+	answerKNW := "0"
+	floatKNWParsed, _ := strconv.ParseFloat(answerKNW, 64)
+	floatKNW := big.NewFloat(floatKNWParsed)
+
+	helpers.PrintLine(fmt.Sprintf("You have a balance of %.2f KNW for the label '%s'", floatKNWBalance, proposal.KnowledgeLabel), 0)
+	if floatKNW.Cmp(big.NewFloat(0)) == 1 {
+		userInputString := fmt.Sprintf("How much do you want to use?")
+		for floatKNW.Cmp(big.NewFloat(0)) == -1 || floatStake.Cmp(floatKNWBalance) != -1 {
+			answerKNW = helpers.GetUserInput(userInputString)
+			floatKNWParsed, _ = strconv.ParseFloat(answerKNW, 64)
+			floatKNW = big.NewFloat(floatKNWParsed)
+		}
+	}
+
+	// Prompting the user whether he is sure of this vote and its details
+	floatKNWString := fmt.Sprintf("%.2f", floatKNWParsed)
+
+	helpers.PrintLine("Voting on the commit with the following settings:", 0)
+	helpers.PrintLine("Knowledge Label: "+proposal.KnowledgeLabel, 0)
+	helpers.PrintLine("Amount of KNW Tokens: "+floatKNWString+" KNW", 0)
+	fmt.Println()
 	helpers.PrintLine("Voting on this proposal will automatically deduct the required stake from you account.", 0)
 	helpers.PrintLine(fmt.Sprintf("Required stake: %.2f", floatStake), 0)
 	helpers.PrintLine("All participants of the vote will counter-stake the proposer.", 0)
@@ -531,8 +601,11 @@ func Vote(_proposalID string, _choice string, _salt string) error {
 	// Setting the value of the transaction to be the default stake
 	auth.Value = requiredStake
 
+	weiFloatKNW, _ := (new(big.Float).Mul(floatKNW, big.NewFloat(1000000000000000000))).Int64()
+	intKNW := big.NewInt(weiFloatKNW)
+
 	// Voting on the proposal
-	transaction, err := ditCooordinatorInstance.VoteOnProposal(auth, repoHash, big.NewInt(int64(proposalID)), voteHash)
+	transaction, err := ditCooordinatorInstance.VoteOnProposal(auth, repoHash, big.NewInt(int64(proposalID)), voteHash, intKNW)
 	if err != nil {
 		if strings.Contains(err.Error(), "insufficient funds") {
 			return errors.New("Your account doesn't have enough xDai to pay for the transaction")
@@ -667,7 +740,7 @@ func Open(_proposalID string) error {
 	}
 
 	// Verifying whether the reveal period of this vote is active
-	revealPeriodActive, err := KNWVotingInstance.RevealPeriodActive(nil, big.NewInt(int64(repositoryArray[repoIndex].ActiveVotes[voteIndex].KNWVoteID)))
+	revealPeriodActive, err := KNWVotingInstance.OpenPeriodActive(nil, big.NewInt(int64(repositoryArray[repoIndex].ActiveVotes[voteIndex].KNWVoteID)))
 	if err != nil {
 		return errors.New("Failed to retrieve opening status")
 	}
@@ -689,7 +762,7 @@ func Open(_proposalID string) error {
 	}
 
 	// Verifying whether the user has revealed his vote on this proposal
-	oldDidReveal, err := KNWVotingInstance.DidReveal(nil, myAddress, big.NewInt(int64(repositoryArray[repoIndex].ActiveVotes[voteIndex].KNWVoteID)))
+	oldDidReveal, err := KNWVotingInstance.DidOpen(nil, myAddress, big.NewInt(int64(repositoryArray[repoIndex].ActiveVotes[voteIndex].KNWVoteID)))
 	if err != nil {
 		return errors.New("Failed to retrieve opening status")
 	}
@@ -727,7 +800,7 @@ func Open(_proposalID string) error {
 		time.Sleep(5 * time.Second)
 		fmt.Printf(".")
 		// Checking the reveal status of the user every 5 seconds
-		newDidReveal, err = KNWVotingInstance.DidReveal(nil, myAddress, big.NewInt(int64(repositoryArray[repoIndex].ActiveVotes[voteIndex].KNWVoteID)))
+		newDidReveal, err = KNWVotingInstance.DidOpen(nil, myAddress, big.NewInt(int64(repositoryArray[repoIndex].ActiveVotes[voteIndex].KNWVoteID)))
 		if err != nil {
 			return errors.New("Failed to retrieve opening status")
 		}
@@ -824,7 +897,7 @@ func Finalize(_proposalID string) (bool, bool, error) {
 	}
 
 	// Verifying whether the vote has already ended
-	pollEnded, err := KNWVotingInstance.PollEnded(nil, big.NewInt(int64(repositoryArray[repoIndex].ActiveVotes[voteIndex].KNWVoteID)))
+	pollEnded, err := KNWVotingInstance.VoteEnded(nil, big.NewInt(int64(repositoryArray[repoIndex].ActiveVotes[voteIndex].KNWVoteID)))
 	if err != nil {
 		return false, false, errors.New("Failed to retrieve vote status")
 	}
@@ -1040,7 +1113,7 @@ func GetVoteInfo(_proposalID ...int) error {
 	}
 
 	// Retrieving information about this vote from the KNWVoting contract itself
-	KNWPoll, err := KNWVotingInstance.PollMap(nil, proposal.KNWVoteID)
+	KNWPoll, err := KNWVotingInstance.Votes(nil, proposal.KNWVoteID)
 	if err != nil {
 		return errors.New("Failed to retrieve vote information")
 	}
@@ -1062,7 +1135,7 @@ func GetVoteInfo(_proposalID ...int) error {
 	// Formatting the commit and reveal time to a human-readable format
 	timeCommit := time.Unix(KNWPoll.CommitEndDate.Int64(), 0)
 	timeCommitString := timeCommit.Format("15:04:05 on 2006/01/02")
-	timeReveal := time.Unix(KNWPoll.RevealEndDate.Int64(), 0)
+	timeReveal := time.Unix(KNWPoll.OpenEndDate.Int64(), 0)
 	timeRevealString := timeReveal.Format("15:04:05 on 2006/01/02")
 
 	// Printing the information about this vote
@@ -1244,7 +1317,7 @@ func gatherProposalInfo(_connection *ethclient.Client, _ditCoordinatorInstance *
 	}
 
 	// Retrieving the information about this vote from the KNWVOting contract itself
-	KNWPoll, err := KNWVotingInstance.PollMap(nil, big.NewInt(int64(newVote.KNWVoteID)))
+	KNWPoll, err := KNWVotingInstance.Votes(nil, big.NewInt(int64(newVote.KNWVoteID)))
 	if err != nil {
 		return newVote, errors.New("Failed to retrieve vote information")
 	}
@@ -1252,7 +1325,7 @@ func gatherProposalInfo(_connection *ethclient.Client, _ditCoordinatorInstance *
 	ethereumAddress := config.DitConfig.EthereumKeys.Address
 
 	newVote.CommitEnd = int(KNWPoll.CommitEndDate.Int64())
-	newVote.RevealEnd = int(KNWPoll.RevealEndDate.Int64())
+	newVote.RevealEnd = int(KNWPoll.OpenEndDate.Int64())
 
 	// Retrieving the amount of xDai a user has staked for this vote
 	numTokens, err := KNWVotingInstance.GetGrossStake(nil, big.NewInt(int64(newVote.KNWVoteID)))
@@ -1261,13 +1334,13 @@ func gatherProposalInfo(_connection *ethclient.Client, _ditCoordinatorInstance *
 	}
 
 	// Retrieving the number of votes a user has for this vote
-	numVotes, err := KNWVotingInstance.GetNumVotes(nil, common.HexToAddress(ethereumAddress), big.NewInt(int64(newVote.KNWVoteID)))
+	numVotes, err := KNWVotingInstance.GetAmountOfVotes(nil, common.HexToAddress(ethereumAddress), big.NewInt(int64(newVote.KNWVoteID)))
 	if err != nil {
 		return newVote, errors.New("Failed to retrieve numVotes")
 	}
 
 	// Retrieving the number of KNW tokens a user has staked for this vote
-	numKNW, err := KNWVotingInstance.GetNumKNW(nil, common.HexToAddress(ethereumAddress), big.NewInt(int64(newVote.KNWVoteID)))
+	numKNW, err := KNWVotingInstance.GetUsedKNW(nil, common.HexToAddress(ethereumAddress), big.NewInt(int64(newVote.KNWVoteID)))
 	if err != nil {
 		return newVote, errors.New("Failed to retrieve numKNW")
 	}
@@ -1286,29 +1359,7 @@ func initDitRepository(_ditCoordinatorInstance *ditCoordinator.DitCoordinator, _
 		return err
 	}
 
-	// Setting the voting setting for this repository
-	var voteSettings [7]*big.Int
-
-	// Majority (in percent)
-	voteSettings[0] = big.NewInt(50)
-
-	// KNW minting method (0 = regular)
-	voteSettings[1] = big.NewInt(0)
-
-	// KNW burning method (0 = square-root based, 1 = divide by 2 each time, 2 = proportial to the winning percentage)
-	voteSettings[2] = big.NewInt(0)
-
-	// TODO
-	voteSettings[3] = big.NewInt(120)
-
-	// TODO
-	voteSettings[4] = big.NewInt(86400)
-
-	// TODO
-	voteSettings[5] = big.NewInt(120)
-
-	// TODO
-	voteSettings[6] = big.NewInt(86400)
+	neededMajority := big.NewInt(50)
 
 	// Prompting the user to provide 1 to 3 knowledge-labels for this repository
 	helpers.PrintLine("Please provide knowledge labels that will be used for this repository:", 0)
@@ -1336,7 +1387,7 @@ func initDitRepository(_ditCoordinatorInstance *ditCoordinator.DitCoordinator, _
 	}
 
 	// Initializing the repository = deploying a new ditContract
-	transaction, err := _ditCoordinatorInstance.InitRepository(auth, _repoHash, knowledgeLabels[0], knowledgeLabels[1], knowledgeLabels[2], voteSettings)
+	transaction, err := _ditCoordinatorInstance.InitRepository(auth, _repoHash, knowledgeLabels[0], knowledgeLabels[1], knowledgeLabels[2], neededMajority)
 	if err != nil {
 		if strings.Contains(err.Error(), "insufficient funds") {
 			return errors.New("Your account doesn't have enough xDai to pay for the transaction")

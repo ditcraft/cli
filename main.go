@@ -14,8 +14,8 @@ import (
 )
 
 // The current dit coordinator address
-var liveDitCoodinator = "0x991f901E1Fc151D13ba8C0E27a7f8c6ea3C524Cb"
-var demoDitCoodinator = "0x841cA7196C2cf3d9ACBc719fE8Ace4778F0Ecb19"
+var liveDitCoodinator = "0x049e4E2b99A6004a73a6c6E61d57f3b576f30aB6"
+var demoDitCoodinator = "0xf5Df1fa5Fbb7DCE71E2C7ceaC7D5632593cc6d15"
 
 func main() {
 	var err error

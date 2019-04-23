@@ -69,6 +69,12 @@ func ProposeCommit(_commitMessage string) (string, int, error) {
 		return "", 0, err
 	}
 
+	// Create a new instance of the KNWToken to access it
+	KNWTokenInstance, err := getKNWTokenInstance(connection)
+	if err != nil {
+		return "", 0, err
+	}
+
 	// Create a new instance of the ditToken to access it
 	ditTokenInstance, err := getDitTokenInstance(connection)
 	if err != nil {
@@ -97,6 +103,15 @@ func ProposeCommit(_commitMessage string) (string, int, error) {
 	// Formatting the xDit balance to a human-readable format
 	floatBalance := new(big.Float).Quo((new(big.Float).SetInt(xDitBalance)), big.NewFloat(1000000000000000000))
 
+	// Retrieving the xDit balance of the user
+	freeKNWBalance, err := KNWTokenInstance.FreeBalanceOfLabel(nil, myAddress, knowledgeLabels[answerKnowledgeLabel-1])
+	if err != nil {
+		return "", 0, errors.New("Failed to retrieve free KNW balance")
+	}
+
+	// Formatting the xDit balance to a human-readable format
+	floatKNWBalance := new(big.Float).Quo((new(big.Float).SetInt(freeKNWBalance)), big.NewFloat(1000000000000000000))
+
 	// Prompting the user how much stake he wants to set for this proposal
 	answerStake := "0"
 	floatStakeParsed, _ := strconv.ParseFloat(answerStake, 64)
@@ -110,11 +125,28 @@ func ProposeCommit(_commitMessage string) (string, int, error) {
 		floatStake = big.NewFloat(floatStakeParsed)
 	}
 
+	// Prompting the user how much KNW he wants to use for this proposal
+	answerKNW := "0"
+	floatKNWParsed, _ := strconv.ParseFloat(answerKNW, 64)
+	floatKNW := big.NewFloat(floatKNWParsed)
+
+	helpers.PrintLine(fmt.Sprintf("You have a balance of %.2f KNW for the label '%s'", floatKNWBalance, knowledgeLabels[answerKnowledgeLabel-1]), 0)
+	if floatKNW.Cmp(big.NewFloat(0)) == 1 {
+		userInputString = fmt.Sprintf("How much do you want to use?")
+		for floatKNW.Cmp(big.NewFloat(0)) == -1 || floatStake.Cmp(floatKNWBalance) != -1 {
+			answerKNW = helpers.GetUserInput(userInputString)
+			floatKNWParsed, _ = strconv.ParseFloat(answerKNW, 64)
+			floatKNW = big.NewFloat(floatKNWParsed)
+		}
+	}
+
 	// Prompting the user whether he is sure of this proposal and its details
 	floatStakeString := fmt.Sprintf("%.2f", floatStakeParsed)
+	floatKNWString := fmt.Sprintf("%.2f", floatKNWParsed)
 	helpers.PrintLine("  Proposing the commit with the following settings:", 0)
 	helpers.PrintLine("  Commit Message: "+_commitMessage+"", 0)
 	helpers.PrintLine("  Knowledge Label: "+knowledgeLabels[answerKnowledgeLabel-1], 0)
+	helpers.PrintLine("  Amount of KNW Tokens: "+floatKNWString+" KNW", 0)
 	helpers.PrintLine("  The following stake with automatically be deducted: "+floatStakeString+" xDit", 0)
 	userIsSure := helpers.GetUserInputChoice("Is that correct?", "y", "n")
 	if userIsSure == "n" {
@@ -125,6 +157,9 @@ func ProposeCommit(_commitMessage string) (string, int, error) {
 	// Setting the value of the transaction to be the selected stake
 	weiFloatStake, _ := (new(big.Float).Mul(floatStake, big.NewFloat(1000000000000000000))).Int64()
 	intStake := big.NewInt(weiFloatStake)
+
+	weiFloatKNW, _ := (new(big.Float).Mul(floatKNW, big.NewFloat(1000000000000000000))).Int64()
+	intKNW := big.NewInt(weiFloatKNW)
 
 	approvedBalance, err := ditTokenInstance.Allowance(nil, myAddress, common.HexToAddress(config.DitConfig.DitCoordinator))
 	if err != nil {
@@ -155,6 +190,8 @@ func ProposeCommit(_commitMessage string) (string, int, error) {
 		fmt.Println()
 	}
 
+	helpers.PrintLine("Now the actual commit proposal will be executed", 0)
+
 	// Crerating the transaction (basic values)
 	auth, err := populateTx(connection)
 	if err != nil {
@@ -168,10 +205,8 @@ func ProposeCommit(_commitMessage string) (string, int, error) {
 		return "", 0, errors.New("Failed to retrieve the current proposal id")
 	}
 
-	helpers.PrintLine("Now the actual commit proposal will be executed", 0)
-
 	// Proposing the commit
-	transaction, err := ditCoordinatorInstance.ProposeCommit(auth, repoHash, big.NewInt(int64(answerKnowledgeLabel-1)), big.NewInt(int64(120)), big.NewInt(int64(120)), intStake)
+	transaction, err := ditCoordinatorInstance.ProposeCommit(auth, repoHash, big.NewInt(int64(answerKnowledgeLabel-1)), intKNW, big.NewInt(int64(60)), big.NewInt(int64(60)), intStake)
 	if err != nil {
 		if strings.Contains(err.Error(), "insufficient funds") {
 			return "", 0, errors.New("Your account doesn't have enough xDai to pay for the transaction")
@@ -219,7 +254,7 @@ func ProposeCommit(_commitMessage string) (string, int, error) {
 
 	// Conwerting the stake and used KNW count into a float so that it's human-readable
 	floatETH := new(big.Float).Quo((new(big.Float).SetInt(big.NewInt(int64(newVote.NumTokens)))), big.NewFloat(1000000000000000000))
-	floatKNW := new(big.Float).Quo((new(big.Float).SetInt(big.NewInt(int64(newVote.NumKNW)))), big.NewFloat(1000000000000000000))
+	floatKNW = new(big.Float).Quo((new(big.Float).SetInt(big.NewInt(int64(newVote.NumKNW)))), big.NewFloat(1000000000000000000))
 
 	// Formatting the time of the commit and reveal phase into a readable format
 	timeReveal := time.Unix(int64(newVote.RevealEnd), 0)
@@ -250,424 +285,6 @@ func ProposeCommit(_commitMessage string) (string, int, error) {
 	}
 	return responseString, int(newProposalID.Int64()), nil
 }
-
-// // Vote will cast the demo accounts' votes on a proposal
-// func Vote(_proposalID string) error {
-// 	if !config.DitConfig.PassedKYC {
-// 		passedKYC, err := CheckForKYC()
-// 		if err != nil {
-// 			return err
-// 		} else if !passedKYC {
-// 			return errors.New("You didn't pass the KYC yet")
-// 		}
-// 	}
-
-// 	helpers.PrintLine("Starting demo voters to simulate participants", 3)
-// 	for i := 0; i < 3; i++ {
-// 		rand.Seed(time.Now().UnixNano())
-// 		randomSelection := rand.Intn(2)
-// 		randomSalt := rand.Intn(123456789)
-// 		err := _executeVote(_proposalID, strconv.Itoa(randomSelection), strconv.Itoa(randomSalt), i)
-// 		if err != nil {
-// 			helpers.PrintLine("Error during vote commiting of demo voter "+strconv.Itoa(i), 2)
-// 		}
-// 	}
-// 	return nil
-// }
-
-// func _executeVote(_proposalID string, _choice string, _salt string, _demoVoter int) error {
-// 	// Converting the stdin string input of the user into Ints
-// 	proposalID, _ := strconv.Atoi(_proposalID)
-// 	choice, _ := strconv.Atoi(_choice)
-// 	salt, _ := strconv.Atoi(_salt)
-
-// 	// Searching for this repositories object in the config
-// 	ditContractIndex, err := searchForRepoInConfig()
-// 	if err != nil {
-// 		return err
-// 	}
-
-// 	repoHash := getHashOfString(config.DitConfig.DemoRepositories[ditContractIndex].Name)
-
-// 	connection, err := getConnection()
-// 	if err != nil {
-// 		return err
-// 	}
-
-// 	// Convertig the hex-string-formatted address into address object
-// 	myAddress := common.HexToAddress(demoVoterAddresses[_demoVoter])
-
-// 	// Create a new instance of the ditContract to access it
-// 	ditCoordingatorInstance, err := getDitDemoCoordinatorInstance(connection)
-// 	if err != nil {
-// 		return err
-// 	}
-
-// 	// Create a new instance of the KNWVoting contract to access it
-// 	KNWVotingInstance, err := getKNWVotingInstance(connection)
-// 	if err != nil {
-// 		return err
-// 	}
-
-// 	// Searching for the corresponding vote in the votes stored in the config
-// 	var voteIndex int
-// 	for i := range config.DitConfig.DemoRepositories[ditContractIndex].ActiveVotes {
-// 		if config.DitConfig.DemoRepositories[ditContractIndex].ActiveVotes[i].ID == proposalID {
-// 			voteIndex = i
-// 			break
-// 		}
-// 	}
-
-// 	// Retrieving the proposal object from the ditContract
-
-// 	proposal, err := ditCoordingatorInstance.ProposalsOfRepository(nil, repoHash, big.NewInt(int64(proposalID)))
-// 	if err != nil {
-// 		return errors.New("Failed to retrieve proposal")
-// 	}
-
-// 	// Verifiying whether the proposal is valid (if KNWVoteID is zero its not valid or non existent)
-// 	if proposal.KNWVoteID.Int64() == 0 {
-// 		return errors.New("Invalid proposalID")
-// 	}
-
-// 	if proposal.Proposer == myAddress {
-// 		return errors.New("The demo voter can't vote on his own proposal")
-// 	}
-
-// 	// Retrieving the default stake from the ditContract
-// 	requiredStake, err := KNWVotingInstance.GetGrossStake(nil, proposal.KNWVoteID)
-// 	if err != nil {
-// 		return errors.New("Failed to retrieve the required stake of the vote")
-// 	}
-
-// 	// In order to create a valid abi-encoded hash of the vote choice and salt
-// 	// we need to create an abi object
-// 	uint256Type, _ := abi.NewType("uint256")
-// 	arguments := abi.Arguments{
-// 		{
-// 			Type: uint256Type,
-// 		},
-// 		{
-// 			Type: uint256Type,
-// 		},
-// 	}
-
-// 	// We will now put pack this abi object into a bytearray
-// 	bytes, _ := arguments.Pack(
-// 		big.NewInt(int64(choice)),
-// 		big.NewInt(int64(salt)),
-// 	)
-
-// 	// And finally hash this bytearray with keccak256, resulting in the votehash
-// 	voteHash := crypto.Keccak256Hash(bytes)
-
-// 	// Verifying whether the commit period of this vote is active
-// 	commitPeriodActive, err := KNWVotingInstance.CommitPeriodActive(nil, proposal.KNWVoteID)
-// 	if err != nil {
-// 		return errors.New("Failed to retrieve opening status")
-// 	}
-
-// 	// If it is now active it's probably over
-// 	if !commitPeriodActive {
-// 		return errors.New("The commit phase of this vote has ended")
-// 	}
-
-// 	// Verifying whether the user has already commited a vote on this proposal
-// 	oldDidCommit, err := KNWVotingInstance.DidCommit(nil, myAddress, proposal.KNWVoteID)
-// 	if err != nil {
-// 		return errors.New("Failed to retrieve commit status")
-// 	}
-
-// 	// If this is the case, the user can not vote again
-// 	if oldDidCommit {
-// 		return errors.New("The demo voter already voted on this proposal")
-// 	}
-
-// 	var auth *bind.TransactOpts
-// 	// Crerating the transaction (basic values)
-// 	auth, err = populateTx(connection, demoVoterPrivateKeys[_demoVoter], demoVoterAddresses[_demoVoter])
-// 	if err != nil {
-// 		return err
-// 	}
-
-// 	// Setting the value of the transaction to be the default stake
-// 	auth.Value = requiredStake
-
-// 	// Voting on the proposal
-// 	_, err = ditCoordingatorInstance.VoteOnProposal(auth, repoHash, big.NewInt(int64(proposalID)), voteHash)
-// 	if err != nil {
-// 		if strings.Contains(err.Error(), "insufficient funds") {
-// 			return errors.New("The demo voters account doesn't have enough ETH to pay for the transaction")
-// 		}
-// 		return errors.New("Failed to commit the vote: " + err.Error())
-// 	}
-
-// 	// We will also store the users choice and salt, so that the user doesn't need to remember the salt
-// 	// when he will reveal the vote later on
-// 	if _demoVoter == 0 {
-// 		config.DitConfig.DemoRepositories[ditContractIndex].ActiveVotes[voteIndex].DemoChoices = make([]int, 3)
-// 		config.DitConfig.DemoRepositories[ditContractIndex].ActiveVotes[voteIndex].DemoSalts = make([]int, 3)
-// 	}
-// 	config.DitConfig.DemoRepositories[ditContractIndex].ActiveVotes[voteIndex].DemoChoices[_demoVoter] = choice
-// 	config.DitConfig.DemoRepositories[ditContractIndex].ActiveVotes[voteIndex].DemoSalts[_demoVoter] = salt
-
-// 	// Saving the config back to the file
-// 	err = config.Save()
-// 	if err != nil {
-// 		return err
-// 	}
-
-// 	// Formatting the time of the commit and reveal phase into a readable format
-// 	timeCommit := time.Unix(int64(config.DitConfig.DemoRepositories[ditContractIndex].ActiveVotes[voteIndex].CommitEnd), 0)
-// 	timeCommitString := timeCommit.Format("15:04:05 on 2006/01/02")
-// 	timeReveal := time.Unix(int64(config.DitConfig.DemoRepositories[ditContractIndex].ActiveVotes[voteIndex].RevealEnd), 0)
-// 	timeRevealString := timeReveal.Format("15:04:05 on 2006/01/02")
-
-// 	helpers.PrintLine("Demo-Voter "+strconv.Itoa(_demoVoter)+" casted a vote on the proposed commit", 3)
-// 	if _demoVoter == 2 {
-// 		fmt.Println()
-// 		helpers.PrintLine("With dit, votes are casted in a concealed manner through a commitment scheme.", 3)
-// 		helpers.PrintLine("This means that votes have to be opened and thus revealed to the public once the commit-phase is over.", 3)
-// 		helpers.PrintLine("Please open the concealed demo votes with '"+helpers.ColorizeCommand("demo_open "+strconv.Itoa(int(proposalID)))+"' between "+timeCommitString+" and "+timeRevealString, 3)
-// 	}
-
-// 	return nil
-// }
-
-// // Open will reveal the demo voters' conceal votes
-// func Open(_proposalID string, _demoVoter int) error {
-// 	if !config.DitConfig.PassedKYC {
-// 		passedKYC, err := CheckForKYC()
-// 		if err != nil {
-// 			return err
-// 		} else if !passedKYC {
-// 			return errors.New("You didn't pass the KYC yet")
-// 		}
-// 	}
-
-// 	// Converting the stdin string input of the user into an int
-// 	proposalID, _ := strconv.Atoi(_proposalID)
-
-// 	// Searching for this repositories object in the config
-// 	ditContractIndex, err := searchForRepoInConfig()
-// 	if err != nil {
-// 		return err
-// 	}
-
-// 	repoHash := getHashOfString(config.DitConfig.DemoRepositories[ditContractIndex].Name)
-
-// 	connection, err := getConnection()
-// 	if err != nil {
-// 		return err
-// 	}
-
-// 	// Convertig the hex-string-formatted address into an address object
-// 	myAddress := common.HexToAddress(demoVoterAddresses[_demoVoter])
-
-// 	// Create a new instance of the ditContract to access it
-// 	ditCoordinatorInstance, err := getDitDemoCoordinatorInstance(connection)
-// 	if err != nil {
-// 		return err
-// 	}
-
-// 	// Create a new instance of the KNWVoting contract to access it
-// 	KNWVotingInstance, err := getKNWVotingInstance(connection)
-// 	if err != nil {
-// 		return err
-// 	}
-
-// 	// Searching for the corresponding vote in the votes stored in the config
-// 	var voteIndex int
-// 	for i := range config.DitConfig.DemoRepositories[ditContractIndex].ActiveVotes {
-// 		if config.DitConfig.DemoRepositories[ditContractIndex].ActiveVotes[i].ID == proposalID {
-// 			voteIndex = i
-// 			break
-// 		}
-// 	}
-
-// 	if len(config.DitConfig.DemoRepositories[ditContractIndex].ActiveVotes[voteIndex].DemoChoices) != 3 || len(config.DitConfig.DemoRepositories[ditContractIndex].ActiveVotes[voteIndex].DemoSalts) != 3 {
-// 		return errors.New("No demo voters voted on this vote")
-// 	}
-
-// 	// Verifying whether the reveal period of this vote is active
-// 	revealPeriodActive, err := KNWVotingInstance.RevealPeriodActive(nil, big.NewInt(int64(config.DitConfig.DemoRepositories[ditContractIndex].ActiveVotes[voteIndex].KNWVoteID)))
-// 	if err != nil {
-// 		return errors.New("Failed to retrieve opening status")
-// 	}
-
-// 	// If it is now active it hasn't started yet or it's over
-// 	if !revealPeriodActive {
-// 		return errors.New("The opening phase of this vote is not active")
-// 	}
-
-// 	// Verifying whether the user has commited a vote on this proposal
-// 	didCommit, err := KNWVotingInstance.DidCommit(nil, myAddress, big.NewInt(int64(config.DitConfig.DemoRepositories[ditContractIndex].ActiveVotes[voteIndex].KNWVoteID)))
-// 	if err != nil {
-// 		return errors.New("Failed to retrieve commit status")
-// 	}
-
-// 	// If this is not the case the user never participated in this proposal through a vote
-// 	if !didCommit {
-// 		return errors.New("The demo voter didn't vote on this proposal")
-// 	}
-
-// 	// Verifying whether the user has revealed his vote on this proposal
-// 	oldDidReveal, err := KNWVotingInstance.DidReveal(nil, myAddress, big.NewInt(int64(config.DitConfig.DemoRepositories[ditContractIndex].ActiveVotes[voteIndex].KNWVoteID)))
-// 	if err != nil {
-// 		return errors.New("Failed to retrieve opening status")
-// 	}
-
-// 	// If this is the case, the user already revealed his vote
-// 	if oldDidReveal {
-// 		return errors.New("The demo voter already opened the vote on this proposal")
-// 	}
-
-// 	// Crerating the transaction (basic values)
-// 	auth, err := populateTx(connection, demoVoterPrivateKeys[_demoVoter], demoVoterAddresses[_demoVoter])
-// 	if err != nil {
-// 		return err
-// 	}
-
-// 	// Gathering the original choice and the salt from the config
-// 	choice := big.NewInt(int64(config.DitConfig.DemoRepositories[ditContractIndex].ActiveVotes[voteIndex].DemoChoices[_demoVoter]))
-// 	salt := big.NewInt(int64(config.DitConfig.DemoRepositories[ditContractIndex].ActiveVotes[voteIndex].DemoSalts[_demoVoter]))
-
-// 	// Revealing the vote on the proposal
-// 	_, err = ditCoordinatorInstance.OpenVoteOnProposal(auth, repoHash, big.NewInt(int64(proposalID)), choice, salt)
-// 	if err != nil {
-// 		if strings.Contains(err.Error(), "insufficient funds") {
-// 			return errors.New("The demo voters account doesn't have enough ETH to pay for the transaction")
-// 		}
-// 		return errors.New("Failed to open the vote: " + err.Error())
-// 	}
-
-// 	var stringChoice string
-// 	if config.DitConfig.DemoRepositories[ditContractIndex].ActiveVotes[voteIndex].DemoChoices[_demoVoter] == 1 {
-// 		stringChoice = "for"
-// 	} else {
-// 		stringChoice = "against"
-// 	}
-// 	helpers.PrintLine("Demo-Voter "+strconv.Itoa(_demoVoter)+" opened his vote commitment (voted "+stringChoice+" the proposal) ", 3)
-
-// 	if _demoVoter == 2 {
-// 		// Formatting the time of the reveal phase into a readable format
-// 		timeReveal := time.Unix(int64(config.DitConfig.DemoRepositories[ditContractIndex].ActiveVotes[voteIndex].RevealEnd), 0)
-// 		timeRevealString := timeReveal.Format("15:04:05 on 2006/01/02")
-
-// 		helpers.PrintLine("Successfully opened all the concealed demo votes.", 3)
-// 		fmt.Println("")
-// 		helpers.PrintLine("After the vote ended, the vote has to be finalized. This includes", 3)
-// 		helpers.PrintLine("calculating the outcome and distributing KNW tokens and ETH stakes.", 3)
-// 		helpers.PrintLine("To do so when the vote is over, execute '"+helpers.ColorizeCommand("finalize "+_proposalID)+"' after "+timeRevealString, 3)
-// 	}
-// 	return nil
-// }
-
-// // Finalize will finalize a demo voters' vote as it will trigger the calculation of the reward
-// // of this user including the ETH and KNW reward in case of a voting for the winning decision
-// // or the losing of ETH and KNW in case of a voting for the losing decision
-// // The first caller who executes this will also trigger the calculation whether the vote passed or not
-// func Finalize(_proposalID string) (bool, error) {
-// 	if !config.DitConfig.PassedKYC {
-// 		passedKYC, err := CheckForKYC()
-// 		if err != nil {
-// 			return false, err
-// 		} else if !passedKYC {
-// 			return false, errors.New("You didn't pass the KYC yet")
-// 		}
-// 	}
-
-// 	// Converting the stdin string input of the user into an int
-// 	proposalID, _ := strconv.Atoi(_proposalID)
-
-// 	// Searching for this repositories object in the config
-// 	ditContractIndex, err := searchForRepoInConfig()
-// 	if err != nil {
-// 		return false, err
-// 	}
-
-// 	repoHash := getHashOfString(config.DitConfig.DemoRepositories[ditContractIndex].Name)
-
-// 	connection, err := getConnection()
-// 	if err != nil {
-// 		return false, err
-// 	}
-
-// 	// Convertig the hex-string-formatted address into an address object
-// 	myAddress := common.HexToAddress(demoVoterAddresses[_demoVoter])
-
-// 	// Create a new instance of the ditContract to access it
-// 	ditCoordinatorInstance, err := getDitDemoCoordinatorInstance(connection)
-// 	if err != nil {
-// 		return false, err
-// 	}
-
-// 	// Create a new instance of the KNWVoting contract to access it
-// 	KNWVotingInstance, err := getKNWVotingInstance(connection)
-// 	if err != nil {
-// 		return false, err
-// 	}
-
-// 	// Searching for the corresponding vote in the votes stored in the config
-// 	var voteIndex int
-// 	for i := range config.DitConfig.DemoRepositories[ditContractIndex].ActiveVotes {
-// 		if config.DitConfig.DemoRepositories[ditContractIndex].ActiveVotes[i].ID == proposalID {
-// 			voteIndex = i
-// 			break
-// 		}
-// 	}
-
-// 	if len(config.DitConfig.DemoRepositories[ditContractIndex].ActiveVotes[voteIndex].DemoChoices) != 3 || len(config.DitConfig.DemoRepositories[ditContractIndex].ActiveVotes[voteIndex].DemoSalts) != 3 {
-// 		return false, errors.New("No demo voters voted on this vote")
-// 	}
-
-// 	// Verifying whether the vote has already ended
-// 	pollEnded, err := KNWVotingInstance.PollEnded(nil, big.NewInt(int64(config.DitConfig.DemoRepositories[ditContractIndex].ActiveVotes[voteIndex].KNWVoteID)))
-// 	if err != nil {
-// 		return false, errors.New("Failed to retrieve vote status")
-// 	}
-
-// 	// If not, we can't resolve it
-// 	if !pollEnded {
-// 		return false, errors.New("The vote hasn't ended yet")
-// 	}
-
-// 	// Verifying whether the user is a participant of this vote
-// 	didCommit, err := KNWVotingInstance.DidCommit(nil, myAddress, big.NewInt(int64(config.DitConfig.DemoRepositories[ditContractIndex].ActiveVotes[voteIndex].KNWVoteID)))
-// 	if err != nil {
-// 		return false, errors.New("Failed to retrieve commit status")
-// 	}
-
-// 	// Retrieve the selected proposal obkect
-// 	proposal, err := ditCoordinatorInstance.ProposalsOfRepository(nil, repoHash, big.NewInt(int64(proposalID)))
-// 	if err != nil {
-// 		return false, errors.New("Failed to retrieve the new proposal")
-// 	}
-
-// 	// If not, we are not allowed to call this function (it would fail)
-// 	if !didCommit && myAddress != proposal.Proposer {
-// 		return false, errors.New("The demo voter didn't participate in this vote")
-// 	}
-
-// 	// Crerating the transaction (basic values)
-// 	auth, err := populateTx(connection, demoVoterPrivateKeys[_demoVoter], demoVoterAddresses[_demoVoter])
-// 	if err != nil {
-// 		return false, err
-// 	}
-
-// 	// Resolving the vote
-// 	_, err = ditCoordinatorInstance.FinalizeVote(auth, repoHash, big.NewInt(int64(proposalID)))
-// 	if err != nil {
-// 		if strings.Contains(err.Error(), "insufficient funds") {
-// 			return false, errors.New("The demo voters account doesn't have enough ETH to pay for the transaction")
-// 		}
-// 		return false, errors.New("Failed to finalize the vote: " + err.Error())
-// 	}
-
-// 	helpers.PrintLine("Finalized vote for demo voter "+strconv.Itoa(_demoVoter), 3)
-
-// 	return true, nil
-// }
 
 // CheckForKYC will return whether a user has already passed the KYC
 func CheckForKYC() (bool, error) {
@@ -867,7 +484,7 @@ func gatherProposalInfo(_connection *ethclient.Client, _ditCoordinatorInstance *
 	}
 
 	// Retrieving the information about this vote from the KNWVOting contract itself
-	KNWPoll, err := KNWVotingInstance.PollMap(nil, big.NewInt(int64(newVote.KNWVoteID)))
+	KNWPoll, err := KNWVotingInstance.Votes(nil, big.NewInt(int64(newVote.KNWVoteID)))
 	if err != nil {
 		return newVote, errors.New("Failed to retrieve vote information")
 	}
@@ -875,7 +492,7 @@ func gatherProposalInfo(_connection *ethclient.Client, _ditCoordinatorInstance *
 	ethereumAddress := config.DitConfig.EthereumKeys.Address
 
 	newVote.CommitEnd = int(KNWPoll.CommitEndDate.Int64())
-	newVote.RevealEnd = int(KNWPoll.RevealEndDate.Int64())
+	newVote.RevealEnd = int(KNWPoll.OpenEndDate.Int64())
 
 	// Retrieving the amount of xDit a user has staked for this vote
 	numTokens, err := KNWVotingInstance.GetGrossStake(nil, big.NewInt(int64(newVote.KNWVoteID)))
@@ -884,13 +501,13 @@ func gatherProposalInfo(_connection *ethclient.Client, _ditCoordinatorInstance *
 	}
 
 	// Retrieving the number of votes a user has for this vote
-	numVotes, err := KNWVotingInstance.GetNumVotes(nil, common.HexToAddress(ethereumAddress), big.NewInt(int64(newVote.KNWVoteID)))
+	numVotes, err := KNWVotingInstance.GetAmountOfVotes(nil, common.HexToAddress(ethereumAddress), big.NewInt(int64(newVote.KNWVoteID)))
 	if err != nil {
 		return newVote, errors.New("Failed to retrieve numVotes")
 	}
 
 	// Retrieving the number of KNW tokens a user has staked for this vote
-	numKNW, err := KNWVotingInstance.GetNumKNW(nil, common.HexToAddress(ethereumAddress), big.NewInt(int64(newVote.KNWVoteID)))
+	numKNW, err := KNWVotingInstance.GetUsedKNW(nil, common.HexToAddress(ethereumAddress), big.NewInt(int64(newVote.KNWVoteID)))
 	if err != nil {
 		return newVote, errors.New("Failed to retrieve numKNW")
 	}

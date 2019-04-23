@@ -28,7 +28,7 @@ var (
 )
 
 // KNWTokenContractABI is the input ABI used to generate the binding from.
-const KNWTokenContractABI = "[{\"constant\":false,\"inputs\":[{\"name\":\"_newVotingAddress\",\"type\":\"address\"}],\"name\":\"setVotingAddress\",\"outputs\":[],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"}]"
+const KNWTokenContractABI = "[{\"constant\":false,\"inputs\":[{\"name\":\"_newContractAddress\",\"type\":\"address\"}],\"name\":\"addVotingContract\",\"outputs\":[],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"}]"
 
 // KNWTokenContractBin is the compiled bytecode used for deploying new contracts.
 const KNWTokenContractBin = `0x`
@@ -188,29 +188,29 @@ func (_KNWTokenContract *KNWTokenContractTransactorRaw) Transact(opts *bind.Tran
 	return _KNWTokenContract.Contract.contract.Transact(opts, method, params...)
 }
 
-// SetVotingAddress is a paid mutator transaction binding the contract method 0x7a6cfcab.
+// AddVotingContract is a paid mutator transaction binding the contract method 0x20c7ad57.
 //
-// Solidity: function setVotingAddress(address _newVotingAddress) returns()
-func (_KNWTokenContract *KNWTokenContractTransactor) SetVotingAddress(opts *bind.TransactOpts, _newVotingAddress common.Address) (*types.Transaction, error) {
-	return _KNWTokenContract.contract.Transact(opts, "setVotingAddress", _newVotingAddress)
+// Solidity: function addVotingContract(address _newContractAddress) returns()
+func (_KNWTokenContract *KNWTokenContractTransactor) AddVotingContract(opts *bind.TransactOpts, _newContractAddress common.Address) (*types.Transaction, error) {
+	return _KNWTokenContract.contract.Transact(opts, "addVotingContract", _newContractAddress)
 }
 
-// SetVotingAddress is a paid mutator transaction binding the contract method 0x7a6cfcab.
+// AddVotingContract is a paid mutator transaction binding the contract method 0x20c7ad57.
 //
-// Solidity: function setVotingAddress(address _newVotingAddress) returns()
-func (_KNWTokenContract *KNWTokenContractSession) SetVotingAddress(_newVotingAddress common.Address) (*types.Transaction, error) {
-	return _KNWTokenContract.Contract.SetVotingAddress(&_KNWTokenContract.TransactOpts, _newVotingAddress)
+// Solidity: function addVotingContract(address _newContractAddress) returns()
+func (_KNWTokenContract *KNWTokenContractSession) AddVotingContract(_newContractAddress common.Address) (*types.Transaction, error) {
+	return _KNWTokenContract.Contract.AddVotingContract(&_KNWTokenContract.TransactOpts, _newContractAddress)
 }
 
-// SetVotingAddress is a paid mutator transaction binding the contract method 0x7a6cfcab.
+// AddVotingContract is a paid mutator transaction binding the contract method 0x20c7ad57.
 //
-// Solidity: function setVotingAddress(address _newVotingAddress) returns()
-func (_KNWTokenContract *KNWTokenContractTransactorSession) SetVotingAddress(_newVotingAddress common.Address) (*types.Transaction, error) {
-	return _KNWTokenContract.Contract.SetVotingAddress(&_KNWTokenContract.TransactOpts, _newVotingAddress)
+// Solidity: function addVotingContract(address _newContractAddress) returns()
+func (_KNWTokenContract *KNWTokenContractTransactorSession) AddVotingContract(_newContractAddress common.Address) (*types.Transaction, error) {
+	return _KNWTokenContract.Contract.AddVotingContract(&_KNWTokenContract.TransactOpts, _newContractAddress)
 }
 
 // KNWVotingContractABI is the input ABI used to generate the binding from.
-const KNWVotingContractABI = "[{\"constant\":false,\"inputs\":[{\"name\":\"_newKNWTokenAddress\",\"type\":\"address\"}],\"name\":\"setTokenAddress\",\"outputs\":[],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"name\":\"_pollID\",\"type\":\"uint256\"},{\"name\":\"_address\",\"type\":\"address\"},{\"name\":\"_voteOption\",\"type\":\"uint256\"},{\"name\":\"_salt\",\"type\":\"uint256\"}],\"name\":\"revealVote\",\"outputs\":[],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"name\":\"_pollID\",\"type\":\"uint256\"},{\"name\":\"_address\",\"type\":\"address\"},{\"name\":\"_secretHash\",\"type\":\"bytes32\"}],\"name\":\"commitVote\",\"outputs\":[{\"name\":\"numVotes\",\"type\":\"uint256\"}],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"name\":\"_repository\",\"type\":\"bytes32\"},{\"name\":\"_address\",\"type\":\"address\"},{\"name\":\"_knowledgeLabel\",\"type\":\"string\"},{\"name\":\"_commitDuration\",\"type\":\"uint256\"},{\"name\":\"_revealDuration\",\"type\":\"uint256\"},{\"name\":\"_proposersStake\",\"type\":\"uint256\"}],\"name\":\"startPoll\",\"outputs\":[{\"name\":\"pollID\",\"type\":\"uint256\"}],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"name\":\"_newRepository\",\"type\":\"bytes32\"},{\"name\":\"_majority\",\"type\":\"uint256\"},{\"name\":\"_mintingMethod\",\"type\":\"uint256\"},{\"name\":\"_burningMethod\",\"type\":\"uint256\"}],\"name\":\"addNewRepository\",\"outputs\":[],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[{\"name\":\"_pollID\",\"type\":\"uint256\"},{\"name\":\"_voteOption\",\"type\":\"uint256\"},{\"name\":\"_address\",\"type\":\"address\"}],\"name\":\"resolveVote\",\"outputs\":[{\"name\":\"reward\",\"type\":\"uint256\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"name\":\"_pollID\",\"type\":\"uint256\"}],\"name\":\"resolvePoll\",\"outputs\":[{\"name\":\"votePassed\",\"type\":\"bool\"}],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"name\":\"_newCoordinatorAddress\",\"type\":\"address\"}],\"name\":\"setCoordinatorAddress\",\"outputs\":[],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"}]"
+const KNWVotingContractABI = "[{\"constant\":false,\"inputs\":[{\"name\":\"_voteID\",\"type\":\"uint256\"},{\"name\":\"_voteOption\",\"type\":\"uint256\"},{\"name\":\"_address\",\"type\":\"address\"}],\"name\":\"finalizeVote\",\"outputs\":[{\"name\":\"reward\",\"type\":\"uint256\"},{\"name\":\"winningSide\",\"type\":\"bool\"},{\"name\":\"amountOfKNW\",\"type\":\"uint256\"}],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"name\":\"_repository\",\"type\":\"bytes32\"},{\"name\":\"_address\",\"type\":\"address\"},{\"name\":\"_knowledgeLabel\",\"type\":\"string\"},{\"name\":\"_commitDuration\",\"type\":\"uint256\"},{\"name\":\"_revealDuration\",\"type\":\"uint256\"},{\"name\":\"_proposersStake\",\"type\":\"uint256\"},{\"name\":\"_numberOfKNW\",\"type\":\"uint256\"}],\"name\":\"startVote\",\"outputs\":[{\"name\":\"voteID\",\"type\":\"uint256\"}],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"name\":\"_newRepository\",\"type\":\"bytes32\"},{\"name\":\"_majority\",\"type\":\"uint256\"}],\"name\":\"addNewRepository\",\"outputs\":[{\"name\":\"success\",\"type\":\"bool\"}],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"name\":\"_voteID\",\"type\":\"uint256\"}],\"name\":\"endVote\",\"outputs\":[{\"name\":\"votePassed\",\"type\":\"bool\"}],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"name\":\"_voteID\",\"type\":\"uint256\"},{\"name\":\"_address\",\"type\":\"address\"},{\"name\":\"_voteOption\",\"type\":\"uint256\"},{\"name\":\"_salt\",\"type\":\"uint256\"}],\"name\":\"openVote\",\"outputs\":[{\"name\":\"success\",\"type\":\"bool\"}],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"name\":\"_voteID\",\"type\":\"uint256\"},{\"name\":\"_address\",\"type\":\"address\"},{\"name\":\"_secretHash\",\"type\":\"bytes32\"},{\"name\":\"_numberOfKNW\",\"type\":\"uint256\"}],\"name\":\"commitVote\",\"outputs\":[{\"name\":\"amountOfVotes\",\"type\":\"uint256\"}],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"}]"
 
 // KNWVotingContractBin is the compiled bytecode used for deploying new contracts.
 const KNWVotingContractBin = `0x`
@@ -370,177 +370,130 @@ func (_KNWVotingContract *KNWVotingContractTransactorRaw) Transact(opts *bind.Tr
 	return _KNWVotingContract.Contract.contract.Transact(opts, method, params...)
 }
 
-// ResolveVote is a free data retrieval call binding the contract method 0xce729fd2.
+// AddNewRepository is a paid mutator transaction binding the contract method 0x828c1653.
 //
-// Solidity: function resolveVote(uint256 _pollID, uint256 _voteOption, address _address) constant returns(uint256 reward)
-func (_KNWVotingContract *KNWVotingContractCaller) ResolveVote(opts *bind.CallOpts, _pollID *big.Int, _voteOption *big.Int, _address common.Address) (*big.Int, error) {
-	var (
-		ret0 = new(*big.Int)
-	)
-	out := ret0
-	err := _KNWVotingContract.contract.Call(opts, out, "resolveVote", _pollID, _voteOption, _address)
-	return *ret0, err
+// Solidity: function addNewRepository(bytes32 _newRepository, uint256 _majority) returns(bool success)
+func (_KNWVotingContract *KNWVotingContractTransactor) AddNewRepository(opts *bind.TransactOpts, _newRepository [32]byte, _majority *big.Int) (*types.Transaction, error) {
+	return _KNWVotingContract.contract.Transact(opts, "addNewRepository", _newRepository, _majority)
 }
 
-// ResolveVote is a free data retrieval call binding the contract method 0xce729fd2.
+// AddNewRepository is a paid mutator transaction binding the contract method 0x828c1653.
 //
-// Solidity: function resolveVote(uint256 _pollID, uint256 _voteOption, address _address) constant returns(uint256 reward)
-func (_KNWVotingContract *KNWVotingContractSession) ResolveVote(_pollID *big.Int, _voteOption *big.Int, _address common.Address) (*big.Int, error) {
-	return _KNWVotingContract.Contract.ResolveVote(&_KNWVotingContract.CallOpts, _pollID, _voteOption, _address)
+// Solidity: function addNewRepository(bytes32 _newRepository, uint256 _majority) returns(bool success)
+func (_KNWVotingContract *KNWVotingContractSession) AddNewRepository(_newRepository [32]byte, _majority *big.Int) (*types.Transaction, error) {
+	return _KNWVotingContract.Contract.AddNewRepository(&_KNWVotingContract.TransactOpts, _newRepository, _majority)
 }
 
-// ResolveVote is a free data retrieval call binding the contract method 0xce729fd2.
+// AddNewRepository is a paid mutator transaction binding the contract method 0x828c1653.
 //
-// Solidity: function resolveVote(uint256 _pollID, uint256 _voteOption, address _address) constant returns(uint256 reward)
-func (_KNWVotingContract *KNWVotingContractCallerSession) ResolveVote(_pollID *big.Int, _voteOption *big.Int, _address common.Address) (*big.Int, error) {
-	return _KNWVotingContract.Contract.ResolveVote(&_KNWVotingContract.CallOpts, _pollID, _voteOption, _address)
+// Solidity: function addNewRepository(bytes32 _newRepository, uint256 _majority) returns(bool success)
+func (_KNWVotingContract *KNWVotingContractTransactorSession) AddNewRepository(_newRepository [32]byte, _majority *big.Int) (*types.Transaction, error) {
+	return _KNWVotingContract.Contract.AddNewRepository(&_KNWVotingContract.TransactOpts, _newRepository, _majority)
 }
 
-// AddNewRepository is a paid mutator transaction binding the contract method 0xa3fba060.
+// CommitVote is a paid mutator transaction binding the contract method 0xd4e0ac95.
 //
-// Solidity: function addNewRepository(bytes32 _newRepository, uint256 _majority, uint256 _mintingMethod, uint256 _burningMethod) returns()
-func (_KNWVotingContract *KNWVotingContractTransactor) AddNewRepository(opts *bind.TransactOpts, _newRepository [32]byte, _majority *big.Int, _mintingMethod *big.Int, _burningMethod *big.Int) (*types.Transaction, error) {
-	return _KNWVotingContract.contract.Transact(opts, "addNewRepository", _newRepository, _majority, _mintingMethod, _burningMethod)
+// Solidity: function commitVote(uint256 _voteID, address _address, bytes32 _secretHash, uint256 _numberOfKNW) returns(uint256 amountOfVotes)
+func (_KNWVotingContract *KNWVotingContractTransactor) CommitVote(opts *bind.TransactOpts, _voteID *big.Int, _address common.Address, _secretHash [32]byte, _numberOfKNW *big.Int) (*types.Transaction, error) {
+	return _KNWVotingContract.contract.Transact(opts, "commitVote", _voteID, _address, _secretHash, _numberOfKNW)
 }
 
-// AddNewRepository is a paid mutator transaction binding the contract method 0xa3fba060.
+// CommitVote is a paid mutator transaction binding the contract method 0xd4e0ac95.
 //
-// Solidity: function addNewRepository(bytes32 _newRepository, uint256 _majority, uint256 _mintingMethod, uint256 _burningMethod) returns()
-func (_KNWVotingContract *KNWVotingContractSession) AddNewRepository(_newRepository [32]byte, _majority *big.Int, _mintingMethod *big.Int, _burningMethod *big.Int) (*types.Transaction, error) {
-	return _KNWVotingContract.Contract.AddNewRepository(&_KNWVotingContract.TransactOpts, _newRepository, _majority, _mintingMethod, _burningMethod)
+// Solidity: function commitVote(uint256 _voteID, address _address, bytes32 _secretHash, uint256 _numberOfKNW) returns(uint256 amountOfVotes)
+func (_KNWVotingContract *KNWVotingContractSession) CommitVote(_voteID *big.Int, _address common.Address, _secretHash [32]byte, _numberOfKNW *big.Int) (*types.Transaction, error) {
+	return _KNWVotingContract.Contract.CommitVote(&_KNWVotingContract.TransactOpts, _voteID, _address, _secretHash, _numberOfKNW)
 }
 
-// AddNewRepository is a paid mutator transaction binding the contract method 0xa3fba060.
+// CommitVote is a paid mutator transaction binding the contract method 0xd4e0ac95.
 //
-// Solidity: function addNewRepository(bytes32 _newRepository, uint256 _majority, uint256 _mintingMethod, uint256 _burningMethod) returns()
-func (_KNWVotingContract *KNWVotingContractTransactorSession) AddNewRepository(_newRepository [32]byte, _majority *big.Int, _mintingMethod *big.Int, _burningMethod *big.Int) (*types.Transaction, error) {
-	return _KNWVotingContract.Contract.AddNewRepository(&_KNWVotingContract.TransactOpts, _newRepository, _majority, _mintingMethod, _burningMethod)
+// Solidity: function commitVote(uint256 _voteID, address _address, bytes32 _secretHash, uint256 _numberOfKNW) returns(uint256 amountOfVotes)
+func (_KNWVotingContract *KNWVotingContractTransactorSession) CommitVote(_voteID *big.Int, _address common.Address, _secretHash [32]byte, _numberOfKNW *big.Int) (*types.Transaction, error) {
+	return _KNWVotingContract.Contract.CommitVote(&_KNWVotingContract.TransactOpts, _voteID, _address, _secretHash, _numberOfKNW)
 }
 
-// CommitVote is a paid mutator transaction binding the contract method 0x7eb2ff52.
+// EndVote is a paid mutator transaction binding the contract method 0x865df0ad.
 //
-// Solidity: function commitVote(uint256 _pollID, address _address, bytes32 _secretHash) returns(uint256 numVotes)
-func (_KNWVotingContract *KNWVotingContractTransactor) CommitVote(opts *bind.TransactOpts, _pollID *big.Int, _address common.Address, _secretHash [32]byte) (*types.Transaction, error) {
-	return _KNWVotingContract.contract.Transact(opts, "commitVote", _pollID, _address, _secretHash)
+// Solidity: function endVote(uint256 _voteID) returns(bool votePassed)
+func (_KNWVotingContract *KNWVotingContractTransactor) EndVote(opts *bind.TransactOpts, _voteID *big.Int) (*types.Transaction, error) {
+	return _KNWVotingContract.contract.Transact(opts, "endVote", _voteID)
 }
 
-// CommitVote is a paid mutator transaction binding the contract method 0x7eb2ff52.
+// EndVote is a paid mutator transaction binding the contract method 0x865df0ad.
 //
-// Solidity: function commitVote(uint256 _pollID, address _address, bytes32 _secretHash) returns(uint256 numVotes)
-func (_KNWVotingContract *KNWVotingContractSession) CommitVote(_pollID *big.Int, _address common.Address, _secretHash [32]byte) (*types.Transaction, error) {
-	return _KNWVotingContract.Contract.CommitVote(&_KNWVotingContract.TransactOpts, _pollID, _address, _secretHash)
+// Solidity: function endVote(uint256 _voteID) returns(bool votePassed)
+func (_KNWVotingContract *KNWVotingContractSession) EndVote(_voteID *big.Int) (*types.Transaction, error) {
+	return _KNWVotingContract.Contract.EndVote(&_KNWVotingContract.TransactOpts, _voteID)
 }
 
-// CommitVote is a paid mutator transaction binding the contract method 0x7eb2ff52.
+// EndVote is a paid mutator transaction binding the contract method 0x865df0ad.
 //
-// Solidity: function commitVote(uint256 _pollID, address _address, bytes32 _secretHash) returns(uint256 numVotes)
-func (_KNWVotingContract *KNWVotingContractTransactorSession) CommitVote(_pollID *big.Int, _address common.Address, _secretHash [32]byte) (*types.Transaction, error) {
-	return _KNWVotingContract.Contract.CommitVote(&_KNWVotingContract.TransactOpts, _pollID, _address, _secretHash)
+// Solidity: function endVote(uint256 _voteID) returns(bool votePassed)
+func (_KNWVotingContract *KNWVotingContractTransactorSession) EndVote(_voteID *big.Int) (*types.Transaction, error) {
+	return _KNWVotingContract.Contract.EndVote(&_KNWVotingContract.TransactOpts, _voteID)
 }
 
-// ResolvePoll is a paid mutator transaction binding the contract method 0xe74fef37.
+// FinalizeVote is a paid mutator transaction binding the contract method 0x36bf4c91.
 //
-// Solidity: function resolvePoll(uint256 _pollID) returns(bool votePassed)
-func (_KNWVotingContract *KNWVotingContractTransactor) ResolvePoll(opts *bind.TransactOpts, _pollID *big.Int) (*types.Transaction, error) {
-	return _KNWVotingContract.contract.Transact(opts, "resolvePoll", _pollID)
+// Solidity: function finalizeVote(uint256 _voteID, uint256 _voteOption, address _address) returns(uint256 reward, bool winningSide, uint256 amountOfKNW)
+func (_KNWVotingContract *KNWVotingContractTransactor) FinalizeVote(opts *bind.TransactOpts, _voteID *big.Int, _voteOption *big.Int, _address common.Address) (*types.Transaction, error) {
+	return _KNWVotingContract.contract.Transact(opts, "finalizeVote", _voteID, _voteOption, _address)
 }
 
-// ResolvePoll is a paid mutator transaction binding the contract method 0xe74fef37.
+// FinalizeVote is a paid mutator transaction binding the contract method 0x36bf4c91.
 //
-// Solidity: function resolvePoll(uint256 _pollID) returns(bool votePassed)
-func (_KNWVotingContract *KNWVotingContractSession) ResolvePoll(_pollID *big.Int) (*types.Transaction, error) {
-	return _KNWVotingContract.Contract.ResolvePoll(&_KNWVotingContract.TransactOpts, _pollID)
+// Solidity: function finalizeVote(uint256 _voteID, uint256 _voteOption, address _address) returns(uint256 reward, bool winningSide, uint256 amountOfKNW)
+func (_KNWVotingContract *KNWVotingContractSession) FinalizeVote(_voteID *big.Int, _voteOption *big.Int, _address common.Address) (*types.Transaction, error) {
+	return _KNWVotingContract.Contract.FinalizeVote(&_KNWVotingContract.TransactOpts, _voteID, _voteOption, _address)
 }
 
-// ResolvePoll is a paid mutator transaction binding the contract method 0xe74fef37.
+// FinalizeVote is a paid mutator transaction binding the contract method 0x36bf4c91.
 //
-// Solidity: function resolvePoll(uint256 _pollID) returns(bool votePassed)
-func (_KNWVotingContract *KNWVotingContractTransactorSession) ResolvePoll(_pollID *big.Int) (*types.Transaction, error) {
-	return _KNWVotingContract.Contract.ResolvePoll(&_KNWVotingContract.TransactOpts, _pollID)
+// Solidity: function finalizeVote(uint256 _voteID, uint256 _voteOption, address _address) returns(uint256 reward, bool winningSide, uint256 amountOfKNW)
+func (_KNWVotingContract *KNWVotingContractTransactorSession) FinalizeVote(_voteID *big.Int, _voteOption *big.Int, _address common.Address) (*types.Transaction, error) {
+	return _KNWVotingContract.Contract.FinalizeVote(&_KNWVotingContract.TransactOpts, _voteID, _voteOption, _address)
 }
 
-// RevealVote is a paid mutator transaction binding the contract method 0x34f2f2d2.
+// OpenVote is a paid mutator transaction binding the contract method 0xcdd6ceb9.
 //
-// Solidity: function revealVote(uint256 _pollID, address _address, uint256 _voteOption, uint256 _salt) returns()
-func (_KNWVotingContract *KNWVotingContractTransactor) RevealVote(opts *bind.TransactOpts, _pollID *big.Int, _address common.Address, _voteOption *big.Int, _salt *big.Int) (*types.Transaction, error) {
-	return _KNWVotingContract.contract.Transact(opts, "revealVote", _pollID, _address, _voteOption, _salt)
+// Solidity: function openVote(uint256 _voteID, address _address, uint256 _voteOption, uint256 _salt) returns(bool success)
+func (_KNWVotingContract *KNWVotingContractTransactor) OpenVote(opts *bind.TransactOpts, _voteID *big.Int, _address common.Address, _voteOption *big.Int, _salt *big.Int) (*types.Transaction, error) {
+	return _KNWVotingContract.contract.Transact(opts, "openVote", _voteID, _address, _voteOption, _salt)
 }
 
-// RevealVote is a paid mutator transaction binding the contract method 0x34f2f2d2.
+// OpenVote is a paid mutator transaction binding the contract method 0xcdd6ceb9.
 //
-// Solidity: function revealVote(uint256 _pollID, address _address, uint256 _voteOption, uint256 _salt) returns()
-func (_KNWVotingContract *KNWVotingContractSession) RevealVote(_pollID *big.Int, _address common.Address, _voteOption *big.Int, _salt *big.Int) (*types.Transaction, error) {
-	return _KNWVotingContract.Contract.RevealVote(&_KNWVotingContract.TransactOpts, _pollID, _address, _voteOption, _salt)
+// Solidity: function openVote(uint256 _voteID, address _address, uint256 _voteOption, uint256 _salt) returns(bool success)
+func (_KNWVotingContract *KNWVotingContractSession) OpenVote(_voteID *big.Int, _address common.Address, _voteOption *big.Int, _salt *big.Int) (*types.Transaction, error) {
+	return _KNWVotingContract.Contract.OpenVote(&_KNWVotingContract.TransactOpts, _voteID, _address, _voteOption, _salt)
 }
 
-// RevealVote is a paid mutator transaction binding the contract method 0x34f2f2d2.
+// OpenVote is a paid mutator transaction binding the contract method 0xcdd6ceb9.
 //
-// Solidity: function revealVote(uint256 _pollID, address _address, uint256 _voteOption, uint256 _salt) returns()
-func (_KNWVotingContract *KNWVotingContractTransactorSession) RevealVote(_pollID *big.Int, _address common.Address, _voteOption *big.Int, _salt *big.Int) (*types.Transaction, error) {
-	return _KNWVotingContract.Contract.RevealVote(&_KNWVotingContract.TransactOpts, _pollID, _address, _voteOption, _salt)
+// Solidity: function openVote(uint256 _voteID, address _address, uint256 _voteOption, uint256 _salt) returns(bool success)
+func (_KNWVotingContract *KNWVotingContractTransactorSession) OpenVote(_voteID *big.Int, _address common.Address, _voteOption *big.Int, _salt *big.Int) (*types.Transaction, error) {
+	return _KNWVotingContract.Contract.OpenVote(&_KNWVotingContract.TransactOpts, _voteID, _address, _voteOption, _salt)
 }
 
-// SetCoordinatorAddress is a paid mutator transaction binding the contract method 0xf354b838.
+// StartVote is a paid mutator transaction binding the contract method 0x6766b4a4.
 //
-// Solidity: function setCoordinatorAddress(address _newCoordinatorAddress) returns()
-func (_KNWVotingContract *KNWVotingContractTransactor) SetCoordinatorAddress(opts *bind.TransactOpts, _newCoordinatorAddress common.Address) (*types.Transaction, error) {
-	return _KNWVotingContract.contract.Transact(opts, "setCoordinatorAddress", _newCoordinatorAddress)
+// Solidity: function startVote(bytes32 _repository, address _address, string _knowledgeLabel, uint256 _commitDuration, uint256 _revealDuration, uint256 _proposersStake, uint256 _numberOfKNW) returns(uint256 voteID)
+func (_KNWVotingContract *KNWVotingContractTransactor) StartVote(opts *bind.TransactOpts, _repository [32]byte, _address common.Address, _knowledgeLabel string, _commitDuration *big.Int, _revealDuration *big.Int, _proposersStake *big.Int, _numberOfKNW *big.Int) (*types.Transaction, error) {
+	return _KNWVotingContract.contract.Transact(opts, "startVote", _repository, _address, _knowledgeLabel, _commitDuration, _revealDuration, _proposersStake, _numberOfKNW)
 }
 
-// SetCoordinatorAddress is a paid mutator transaction binding the contract method 0xf354b838.
+// StartVote is a paid mutator transaction binding the contract method 0x6766b4a4.
 //
-// Solidity: function setCoordinatorAddress(address _newCoordinatorAddress) returns()
-func (_KNWVotingContract *KNWVotingContractSession) SetCoordinatorAddress(_newCoordinatorAddress common.Address) (*types.Transaction, error) {
-	return _KNWVotingContract.Contract.SetCoordinatorAddress(&_KNWVotingContract.TransactOpts, _newCoordinatorAddress)
+// Solidity: function startVote(bytes32 _repository, address _address, string _knowledgeLabel, uint256 _commitDuration, uint256 _revealDuration, uint256 _proposersStake, uint256 _numberOfKNW) returns(uint256 voteID)
+func (_KNWVotingContract *KNWVotingContractSession) StartVote(_repository [32]byte, _address common.Address, _knowledgeLabel string, _commitDuration *big.Int, _revealDuration *big.Int, _proposersStake *big.Int, _numberOfKNW *big.Int) (*types.Transaction, error) {
+	return _KNWVotingContract.Contract.StartVote(&_KNWVotingContract.TransactOpts, _repository, _address, _knowledgeLabel, _commitDuration, _revealDuration, _proposersStake, _numberOfKNW)
 }
 
-// SetCoordinatorAddress is a paid mutator transaction binding the contract method 0xf354b838.
+// StartVote is a paid mutator transaction binding the contract method 0x6766b4a4.
 //
-// Solidity: function setCoordinatorAddress(address _newCoordinatorAddress) returns()
-func (_KNWVotingContract *KNWVotingContractTransactorSession) SetCoordinatorAddress(_newCoordinatorAddress common.Address) (*types.Transaction, error) {
-	return _KNWVotingContract.Contract.SetCoordinatorAddress(&_KNWVotingContract.TransactOpts, _newCoordinatorAddress)
-}
-
-// SetTokenAddress is a paid mutator transaction binding the contract method 0x26a4e8d2.
-//
-// Solidity: function setTokenAddress(address _newKNWTokenAddress) returns()
-func (_KNWVotingContract *KNWVotingContractTransactor) SetTokenAddress(opts *bind.TransactOpts, _newKNWTokenAddress common.Address) (*types.Transaction, error) {
-	return _KNWVotingContract.contract.Transact(opts, "setTokenAddress", _newKNWTokenAddress)
-}
-
-// SetTokenAddress is a paid mutator transaction binding the contract method 0x26a4e8d2.
-//
-// Solidity: function setTokenAddress(address _newKNWTokenAddress) returns()
-func (_KNWVotingContract *KNWVotingContractSession) SetTokenAddress(_newKNWTokenAddress common.Address) (*types.Transaction, error) {
-	return _KNWVotingContract.Contract.SetTokenAddress(&_KNWVotingContract.TransactOpts, _newKNWTokenAddress)
-}
-
-// SetTokenAddress is a paid mutator transaction binding the contract method 0x26a4e8d2.
-//
-// Solidity: function setTokenAddress(address _newKNWTokenAddress) returns()
-func (_KNWVotingContract *KNWVotingContractTransactorSession) SetTokenAddress(_newKNWTokenAddress common.Address) (*types.Transaction, error) {
-	return _KNWVotingContract.Contract.SetTokenAddress(&_KNWVotingContract.TransactOpts, _newKNWTokenAddress)
-}
-
-// StartPoll is a paid mutator transaction binding the contract method 0x9156cd07.
-//
-// Solidity: function startPoll(bytes32 _repository, address _address, string _knowledgeLabel, uint256 _commitDuration, uint256 _revealDuration, uint256 _proposersStake) returns(uint256 pollID)
-func (_KNWVotingContract *KNWVotingContractTransactor) StartPoll(opts *bind.TransactOpts, _repository [32]byte, _address common.Address, _knowledgeLabel string, _commitDuration *big.Int, _revealDuration *big.Int, _proposersStake *big.Int) (*types.Transaction, error) {
-	return _KNWVotingContract.contract.Transact(opts, "startPoll", _repository, _address, _knowledgeLabel, _commitDuration, _revealDuration, _proposersStake)
-}
-
-// StartPoll is a paid mutator transaction binding the contract method 0x9156cd07.
-//
-// Solidity: function startPoll(bytes32 _repository, address _address, string _knowledgeLabel, uint256 _commitDuration, uint256 _revealDuration, uint256 _proposersStake) returns(uint256 pollID)
-func (_KNWVotingContract *KNWVotingContractSession) StartPoll(_repository [32]byte, _address common.Address, _knowledgeLabel string, _commitDuration *big.Int, _revealDuration *big.Int, _proposersStake *big.Int) (*types.Transaction, error) {
-	return _KNWVotingContract.Contract.StartPoll(&_KNWVotingContract.TransactOpts, _repository, _address, _knowledgeLabel, _commitDuration, _revealDuration, _proposersStake)
-}
-
-// StartPoll is a paid mutator transaction binding the contract method 0x9156cd07.
-//
-// Solidity: function startPoll(bytes32 _repository, address _address, string _knowledgeLabel, uint256 _commitDuration, uint256 _revealDuration, uint256 _proposersStake) returns(uint256 pollID)
-func (_KNWVotingContract *KNWVotingContractTransactorSession) StartPoll(_repository [32]byte, _address common.Address, _knowledgeLabel string, _commitDuration *big.Int, _revealDuration *big.Int, _proposersStake *big.Int) (*types.Transaction, error) {
-	return _KNWVotingContract.Contract.StartPoll(&_KNWVotingContract.TransactOpts, _repository, _address, _knowledgeLabel, _commitDuration, _revealDuration, _proposersStake)
+// Solidity: function startVote(bytes32 _repository, address _address, string _knowledgeLabel, uint256 _commitDuration, uint256 _revealDuration, uint256 _proposersStake, uint256 _numberOfKNW) returns(uint256 voteID)
+func (_KNWVotingContract *KNWVotingContractTransactorSession) StartVote(_repository [32]byte, _address common.Address, _knowledgeLabel string, _commitDuration *big.Int, _revealDuration *big.Int, _proposersStake *big.Int, _numberOfKNW *big.Int) (*types.Transaction, error) {
+	return _KNWVotingContract.Contract.StartVote(&_KNWVotingContract.TransactOpts, _repository, _address, _knowledgeLabel, _commitDuration, _revealDuration, _proposersStake, _numberOfKNW)
 }
 
 // SafeMathABI is the input ABI used to generate the binding from.
@@ -731,18 +684,18 @@ func (_SafeMath *SafeMathCallerSession) Sqrt(a *big.Int) (*big.Int, error) {
 }
 
 // DitCoordinatorABI is the input ABI used to generate the binding from.
-const DitCoordinatorABI = "[{\"constant\":true,\"inputs\":[{\"name\":\"_repository\",\"type\":\"bytes32\"},{\"name\":\"_proposalID\",\"type\":\"uint256\"}],\"name\":\"getKNWVoteIDFromProposalID\",\"outputs\":[{\"name\":\"\",\"type\":\"uint256\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"name\":\"_repository\",\"type\":\"bytes32\"},{\"name\":\"_knowledgeLabelIndex\",\"type\":\"uint256\"},{\"name\":\"_voteCommitDuration\",\"type\":\"uint256\"},{\"name\":\"_voteOpenDuration\",\"type\":\"uint256\"}],\"name\":\"proposeCommit\",\"outputs\":[],\"payable\":true,\"stateMutability\":\"payable\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[{\"name\":\"_repository\",\"type\":\"bytes32\"}],\"name\":\"getCurrentProposalID\",\"outputs\":[{\"name\":\"\",\"type\":\"uint256\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"name\":\"_repository\",\"type\":\"bytes32\"},{\"name\":\"_proposalID\",\"type\":\"uint256\"},{\"name\":\"_voteOption\",\"type\":\"uint256\"},{\"name\":\"_voteSalt\",\"type\":\"uint256\"}],\"name\":\"openVoteOnProposal\",\"outputs\":[],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[{\"name\":\"\",\"type\":\"address\"}],\"name\":\"isKYCValidator\",\"outputs\":[{\"name\":\"\",\"type\":\"bool\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[{\"name\":\"\",\"type\":\"bytes32\"}],\"name\":\"repositories\",\"outputs\":[{\"name\":\"votingMajority\",\"type\":\"uint256\"},{\"name\":\"mintingMethod\",\"type\":\"uint256\"},{\"name\":\"burningMethod\",\"type\":\"uint256\"},{\"name\":\"currentProposalID\",\"type\":\"uint256\"},{\"name\":\"minVoteCommitDuration\",\"type\":\"uint256\"},{\"name\":\"maxVoteCommitDuration\",\"type\":\"uint256\"},{\"name\":\"minVoteOpenDuration\",\"type\":\"uint256\"},{\"name\":\"maxVoteOpenDuration\",\"type\":\"uint256\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"name\":\"_repository\",\"type\":\"bytes32\"},{\"name\":\"_proposalID\",\"type\":\"uint256\"}],\"name\":\"finalizeVote\",\"outputs\":[],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"name\":\"_address\",\"type\":\"address\"}],\"name\":\"revokeKYC\",\"outputs\":[],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[{\"name\":\"\",\"type\":\"bytes32\"},{\"name\":\"\",\"type\":\"uint256\"}],\"name\":\"proposalsOfRepository\",\"outputs\":[{\"name\":\"KNWVoteID\",\"type\":\"uint256\"},{\"name\":\"knowledgeLabel\",\"type\":\"string\"},{\"name\":\"proposer\",\"type\":\"address\"},{\"name\":\"isFinalized\",\"type\":\"bool\"},{\"name\":\"proposalAccepted\",\"type\":\"bool\"},{\"name\":\"individualStake\",\"type\":\"uint256\"},{\"name\":\"totalStake\",\"type\":\"uint256\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"name\":\"_repository\",\"type\":\"bytes32\"},{\"name\":\"_label1\",\"type\":\"string\"},{\"name\":\"_label2\",\"type\":\"string\"},{\"name\":\"_label3\",\"type\":\"string\"},{\"name\":\"_voteSettings\",\"type\":\"uint256[7]\"}],\"name\":\"initRepository\",\"outputs\":[{\"name\":\"\",\"type\":\"bool\"}],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[{\"name\":\"_repository\",\"type\":\"bytes32\"},{\"name\":\"_proposalID\",\"type\":\"uint256\"}],\"name\":\"getIndividualStake\",\"outputs\":[{\"name\":\"individualStake\",\"type\":\"uint256\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"name\":\"_address\",\"type\":\"address\"}],\"name\":\"removeKYCValidator\",\"outputs\":[],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[{\"name\":\"_repository\",\"type\":\"bytes32\"},{\"name\":\"_proposalID\",\"type\":\"uint256\"}],\"name\":\"proposalHasPassed\",\"outputs\":[{\"name\":\"hasPassed\",\"type\":\"bool\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[{\"name\":\"_repository\",\"type\":\"bytes32\"},{\"name\":\"_knowledgeLabelID\",\"type\":\"uint256\"}],\"name\":\"getKnowledgeLabels\",\"outputs\":[{\"name\":\"knowledgeLabel\",\"type\":\"string\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[],\"name\":\"KNWTokenAddress\",\"outputs\":[{\"name\":\"\",\"type\":\"address\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"name\":\"_repository\",\"type\":\"bytes32\"},{\"name\":\"_proposalID\",\"type\":\"uint256\"},{\"name\":\"_voteHash\",\"type\":\"bytes32\"}],\"name\":\"voteOnProposal\",\"outputs\":[],\"payable\":true,\"stateMutability\":\"payable\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[{\"name\":\"\",\"type\":\"address\"}],\"name\":\"passedKYC\",\"outputs\":[{\"name\":\"\",\"type\":\"bool\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"name\":\"_address\",\"type\":\"address\"}],\"name\":\"addKYCValidator\",\"outputs\":[],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[{\"name\":\"_repository\",\"type\":\"bytes32\"}],\"name\":\"repositoryIsInitialized\",\"outputs\":[{\"name\":\"\",\"type\":\"bool\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[],\"name\":\"KNWVotingAddress\",\"outputs\":[{\"name\":\"\",\"type\":\"address\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"name\":\"_address\",\"type\":\"address\"}],\"name\":\"passKYC\",\"outputs\":[],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"name\":\"_KNWTokenAddress\",\"type\":\"address\"},{\"name\":\"_KNWVotingAddress\",\"type\":\"address\"}],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"constructor\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"name\":\"repository\",\"type\":\"bytes32\"},{\"indexed\":true,\"name\":\"proposal\",\"type\":\"uint256\"},{\"indexed\":true,\"name\":\"who\",\"type\":\"address\"},{\"indexed\":false,\"name\":\"label\",\"type\":\"string\"}],\"name\":\"ProposeCommit\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"name\":\"repository\",\"type\":\"bytes32\"},{\"indexed\":true,\"name\":\"proposal\",\"type\":\"uint256\"},{\"indexed\":true,\"name\":\"who\",\"type\":\"address\"},{\"indexed\":false,\"name\":\"label\",\"type\":\"string\"},{\"indexed\":false,\"name\":\"stake\",\"type\":\"uint256\"},{\"indexed\":false,\"name\":\"numberOfVotes\",\"type\":\"uint256\"}],\"name\":\"CommitVote\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"name\":\"repository\",\"type\":\"bytes32\"},{\"indexed\":true,\"name\":\"proposal\",\"type\":\"uint256\"},{\"indexed\":true,\"name\":\"who\",\"type\":\"address\"},{\"indexed\":false,\"name\":\"label\",\"type\":\"string\"},{\"indexed\":false,\"name\":\"accept\",\"type\":\"bool\"},{\"indexed\":false,\"name\":\"numberOfVotes\",\"type\":\"uint256\"}],\"name\":\"OpenVote\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"name\":\"repository\",\"type\":\"bytes32\"},{\"indexed\":true,\"name\":\"proposal\",\"type\":\"uint256\"},{\"indexed\":false,\"name\":\"label\",\"type\":\"string\"},{\"indexed\":false,\"name\":\"accepted\",\"type\":\"bool\"}],\"name\":\"FinalizeVote\",\"type\":\"event\"}]"
+const DitCoordinatorABI = "[{\"constant\":true,\"inputs\":[{\"name\":\"_repository\",\"type\":\"bytes32\"},{\"name\":\"_proposalID\",\"type\":\"uint256\"}],\"name\":\"getKNWVoteIDFromProposalID\",\"outputs\":[{\"name\":\"KNWVoteID\",\"type\":\"uint256\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[{\"name\":\"_repository\",\"type\":\"bytes32\"}],\"name\":\"getCurrentProposalID\",\"outputs\":[{\"name\":\"currentProposalID\",\"type\":\"uint256\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"name\":\"_repository\",\"type\":\"bytes32\"},{\"name\":\"_proposalID\",\"type\":\"uint256\"},{\"name\":\"_voteOption\",\"type\":\"uint256\"},{\"name\":\"_voteSalt\",\"type\":\"uint256\"}],\"name\":\"openVoteOnProposal\",\"outputs\":[{\"name\":\"\",\"type\":\"bool\"}],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[{\"name\":\"\",\"type\":\"address\"}],\"name\":\"isKYCValidator\",\"outputs\":[{\"name\":\"\",\"type\":\"bool\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[],\"name\":\"MAX_VOTE_DURATION\",\"outputs\":[{\"name\":\"\",\"type\":\"uint256\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[{\"name\":\"\",\"type\":\"bytes32\"}],\"name\":\"repositories\",\"outputs\":[{\"name\":\"currentProposalID\",\"type\":\"uint256\"},{\"name\":\"votingMajority\",\"type\":\"uint256\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"name\":\"_repository\",\"type\":\"bytes32\"},{\"name\":\"_proposalID\",\"type\":\"uint256\"}],\"name\":\"finalizeVote\",\"outputs\":[{\"name\":\"\",\"type\":\"bool\"}],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"name\":\"_address\",\"type\":\"address\"}],\"name\":\"revokeKYC\",\"outputs\":[{\"name\":\"\",\"type\":\"bool\"}],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[{\"name\":\"\",\"type\":\"bytes32\"},{\"name\":\"\",\"type\":\"uint256\"}],\"name\":\"proposalsOfRepository\",\"outputs\":[{\"name\":\"KNWVoteID\",\"type\":\"uint256\"},{\"name\":\"knowledgeLabel\",\"type\":\"string\"},{\"name\":\"proposer\",\"type\":\"address\"},{\"name\":\"isFinalized\",\"type\":\"bool\"},{\"name\":\"proposalAccepted\",\"type\":\"bool\"},{\"name\":\"individualStake\",\"type\":\"uint256\"},{\"name\":\"totalStake\",\"type\":\"uint256\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[],\"name\":\"MIN_VOTE_DURATION\",\"outputs\":[{\"name\":\"\",\"type\":\"uint256\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[{\"name\":\"_repository\",\"type\":\"bytes32\"}],\"name\":\"getVotingMajority\",\"outputs\":[{\"name\":\"votingMajority\",\"type\":\"uint256\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[],\"name\":\"MAX_OPEN_DURATION\",\"outputs\":[{\"name\":\"\",\"type\":\"uint256\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[{\"name\":\"_repository\",\"type\":\"bytes32\"},{\"name\":\"_proposalID\",\"type\":\"uint256\"}],\"name\":\"getIndividualStake\",\"outputs\":[{\"name\":\"individualStake\",\"type\":\"uint256\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[],\"name\":\"MIN_OPEN_DURATION\",\"outputs\":[{\"name\":\"\",\"type\":\"uint256\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"name\":\"_address\",\"type\":\"address\"}],\"name\":\"removeKYCValidator\",\"outputs\":[{\"name\":\"\",\"type\":\"bool\"}],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[{\"name\":\"_repository\",\"type\":\"bytes32\"},{\"name\":\"_proposalID\",\"type\":\"uint256\"}],\"name\":\"proposalHasPassed\",\"outputs\":[{\"name\":\"hasPassed\",\"type\":\"bool\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"name\":\"_newManager\",\"type\":\"address\"}],\"name\":\"replaceDitManager\",\"outputs\":[{\"name\":\"\",\"type\":\"bool\"}],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[{\"name\":\"_repository\",\"type\":\"bytes32\"},{\"name\":\"_knowledgeLabelID\",\"type\":\"uint256\"}],\"name\":\"getKnowledgeLabels\",\"outputs\":[{\"name\":\"knowledgeLabel\",\"type\":\"string\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[],\"name\":\"KNWTokenAddress\",\"outputs\":[{\"name\":\"\",\"type\":\"address\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[],\"name\":\"nextDitCoordinator\",\"outputs\":[{\"name\":\"\",\"type\":\"address\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"name\":\"_repository\",\"type\":\"bytes32\"},{\"name\":\"_label1\",\"type\":\"string\"},{\"name\":\"_label2\",\"type\":\"string\"},{\"name\":\"_label3\",\"type\":\"string\"},{\"name\":\"_votingMajority\",\"type\":\"uint256\"}],\"name\":\"initRepository\",\"outputs\":[{\"name\":\"\",\"type\":\"bool\"}],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"name\":\"_repository\",\"type\":\"bytes32\"},{\"name\":\"_proposalID\",\"type\":\"uint256\"},{\"name\":\"_voteHash\",\"type\":\"bytes32\"},{\"name\":\"_numberOfKNW\",\"type\":\"uint256\"}],\"name\":\"voteOnProposal\",\"outputs\":[{\"name\":\"\",\"type\":\"bool\"}],\"payable\":true,\"stateMutability\":\"payable\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"name\":\"_repository\",\"type\":\"bytes32\"},{\"name\":\"_knowledgeLabelIndex\",\"type\":\"uint256\"},{\"name\":\"_numberOfKNW\",\"type\":\"uint256\"},{\"name\":\"_voteCommitDuration\",\"type\":\"uint256\"},{\"name\":\"_voteOpenDuration\",\"type\":\"uint256\"}],\"name\":\"proposeCommit\",\"outputs\":[{\"name\":\"proposalID\",\"type\":\"uint256\"}],\"payable\":true,\"stateMutability\":\"payable\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[],\"name\":\"BURNING_METHOD\",\"outputs\":[{\"name\":\"\",\"type\":\"uint256\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[{\"name\":\"\",\"type\":\"address\"}],\"name\":\"passedKYC\",\"outputs\":[{\"name\":\"\",\"type\":\"bool\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"name\":\"_address\",\"type\":\"address\"}],\"name\":\"addKYCValidator\",\"outputs\":[{\"name\":\"\",\"type\":\"bool\"}],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[],\"name\":\"lastDitCoordinator\",\"outputs\":[{\"name\":\"\",\"type\":\"address\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[{\"name\":\"_repository\",\"type\":\"bytes32\"}],\"name\":\"repositoryIsInitialized\",\"outputs\":[{\"name\":\"\",\"type\":\"bool\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"name\":\"_repository\",\"type\":\"bytes32\"}],\"name\":\"migrateRepository\",\"outputs\":[{\"name\":\"\",\"type\":\"bool\"}],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"name\":\"_address\",\"type\":\"address\"}],\"name\":\"upgradeContract\",\"outputs\":[{\"name\":\"\",\"type\":\"bool\"}],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[],\"name\":\"KNWVotingAddress\",\"outputs\":[{\"name\":\"\",\"type\":\"address\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"name\":\"_address\",\"type\":\"address\"}],\"name\":\"passKYC\",\"outputs\":[{\"name\":\"\",\"type\":\"bool\"}],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[],\"name\":\"MINTING_METHOD\",\"outputs\":[{\"name\":\"\",\"type\":\"uint256\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"name\":\"_KNWTokenAddress\",\"type\":\"address\"},{\"name\":\"_KNWVotingAddress\",\"type\":\"address\"},{\"name\":\"_lastDitCoordinator\",\"type\":\"address\"}],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"constructor\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"name\":\"repository\",\"type\":\"bytes32\"},{\"indexed\":true,\"name\":\"proposal\",\"type\":\"uint256\"},{\"indexed\":true,\"name\":\"who\",\"type\":\"address\"},{\"indexed\":false,\"name\":\"label\",\"type\":\"string\"},{\"indexed\":false,\"name\":\"numberOfKNW\",\"type\":\"uint256\"}],\"name\":\"ProposeCommit\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"name\":\"repository\",\"type\":\"bytes32\"},{\"indexed\":true,\"name\":\"proposal\",\"type\":\"uint256\"},{\"indexed\":true,\"name\":\"who\",\"type\":\"address\"},{\"indexed\":false,\"name\":\"label\",\"type\":\"string\"},{\"indexed\":false,\"name\":\"stake\",\"type\":\"uint256\"},{\"indexed\":false,\"name\":\"numberOfKNW\",\"type\":\"uint256\"},{\"indexed\":false,\"name\":\"numberOfVotes\",\"type\":\"uint256\"}],\"name\":\"CommitVote\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"name\":\"repository\",\"type\":\"bytes32\"},{\"indexed\":true,\"name\":\"proposal\",\"type\":\"uint256\"},{\"indexed\":true,\"name\":\"who\",\"type\":\"address\"},{\"indexed\":false,\"name\":\"label\",\"type\":\"string\"},{\"indexed\":false,\"name\":\"accept\",\"type\":\"bool\"},{\"indexed\":false,\"name\":\"numberOfVotes\",\"type\":\"uint256\"}],\"name\":\"OpenVote\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"name\":\"repository\",\"type\":\"bytes32\"},{\"indexed\":true,\"name\":\"proposal\",\"type\":\"uint256\"},{\"indexed\":true,\"name\":\"who\",\"type\":\"address\"},{\"indexed\":false,\"name\":\"label\",\"type\":\"string\"},{\"indexed\":false,\"name\":\"votedRight\",\"type\":\"bool\"},{\"indexed\":false,\"name\":\"numberOfKNW\",\"type\":\"uint256\"}],\"name\":\"FinalizeVote\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"name\":\"repository\",\"type\":\"bytes32\"},{\"indexed\":true,\"name\":\"proposal\",\"type\":\"uint256\"},{\"indexed\":false,\"name\":\"label\",\"type\":\"string\"},{\"indexed\":false,\"name\":\"accepted\",\"type\":\"bool\"}],\"name\":\"FinalizeProposal\",\"type\":\"event\"}]"
 
 // DitCoordinatorBin is the compiled bytecode used for deploying new contracts.
-const DitCoordinatorBin = `0x608060405234801561001057600080fd5b506040516040806121f3833981016040528051602090910151600160a060020a038116158015906100495750600160a060020a03821615155b15156100dc57604080517f08c379a000000000000000000000000000000000000000000000000000000000815260206004820152602d60248201527f4b4e57566f74696e6720616e64204b4e57546f6b656e2061646472657373206360448201527f616e277420626520656d70747900000000000000000000000000000000000000606482015290519081900360840190fd5b60008054600160a060020a03928316600160a060020a031991821617808355600280548316918516919091179055600180549484169482169490941780855560038054909216931692909217909155338152600760205260409020805460ff191690911790556120a2806101516000396000f30060806040526004361061011c5763ffffffff7c010000000000000000000000000000000000000000000000000000000060003504166306ee459681146101215780630aba86881461014e5780630bdc90e8146101645780630ee62ec01461017c5780631341f25c1461019d5780631f51fd71146101d25780632e71d0fb1461022b57806339ba645b146102465780633e029f631461026757806351f43c2414610335578063552edc9d1461037357806373b0dddd1461038e57806387c9203d146103af57806395332229146103ca578063985dbfc51461045a578063a34c299a1461048b578063ccd9aa681461049c578063d0c397ef146104bd578063ea6c6d0f146104de578063eb49fe94146104f6578063eb9310241461050b575b600080fd5b34801561012d57600080fd5b5061013c60043560243561052c565b60408051918252519081900360200190f35b610162600435602435604435606435610549565b005b34801561017057600080fd5b5061013c600435610c29565b34801561018857600080fd5b50610162600435602435604435606435610c3e565b3480156101a957600080fd5b506101be600160a060020a0360043516610e05565b604080519115158252519081900360200190f35b3480156101de57600080fd5b506101ea600435610e1a565b604080519889526020890197909752878701959095526060870193909352608086019190915260a085015260c084015260e083015251908190036101000190f35b34801561023757600080fd5b50610162600435602435610e62565b34801561025257600080fd5b50610162600160a060020a0360043516611373565b34801561027357600080fd5b506102826004356024356113b3565b60408051888152600160a060020a038716918101919091528415156060820152831515608082015260a0810183905260c0810182905260e0602080830182815289519284019290925288516101008401918a019080838360005b838110156102f45781810151838201526020016102dc565b50505050905090810190601f1680156103215780820380516001836020036101000a031916815260200191505b509850505050505050505060405180910390f35b34801561034157600080fd5b506101be60048035906024803580820192908101359160443580820192908101359160643590810191013560846114a7565b34801561037f57600080fd5b5061013c6004356024356117f9565b34801561039a57600080fd5b50610162600160a060020a0360043516611819565b3480156103bb57600080fd5b506101be600435602435611859565b3480156103d657600080fd5b506103e5600435602435611913565b6040805160208082528351818301528351919283929083019185019080838360005b8381101561041f578181015183820152602001610407565b50505050905090810190601f16801561044c5780820380516001836020036101000a031916815260200191505b509250505060405180910390f35b34801561046657600080fd5b5061046f6119c1565b60408051600160a060020a039092168252519081900360200190f35b6101626004356024356044356119d0565b3480156104a857600080fd5b506101be600160a060020a0360043516611d53565b3480156104c957600080fd5b50610162600160a060020a0360043516611d68565b3480156104ea57600080fd5b506101be600435611dab565b34801561050257600080fd5b5061046f611dc1565b34801561051757600080fd5b50610162600160a060020a0360043516611dd0565b600091825260056020908152604080842092845291905290205490565b3360008181526006602052604090205460ff16151561056757600080fd5b600034116105e5576040805160e560020a62461bcd02815260206004820152602860248201527f56616c7565206f6620746865207472616e73616374696f6e2063616e206e6f7460448201527f206265207a65726f000000000000000000000000000000000000000000000000606482015290519081900360840190fd5b600085815260046020526040812085600381106105fe57fe5b0154600260001961010060018416150201909116041161068d576040805160e560020a62461bcd028152602060048201526024808201527f4b6e6f776c656467652d4c6162656c20696e646578206973206e6f7420636f7260448201527f7265637400000000000000000000000000000000000000000000000000000000606482015290519081900360840190fd5b60008581526004602052604090206007015483108015906106bf57506000858152600460205260409020600801548311155b1515610715576040805160e560020a62461bcd02815260206004820152601c60248201527f566f746520636f6d6d6974206475726174696f6e20696e76616c696400000000604482015290519081900360640190fd5b600085815260046020526040902060090154821080159061074757506000858152600460205260409020600a01548211155b151561079d576040805160e560020a62461bcd02815260206004820152601a60248201527f566f7465206f70656e206475726174696f6e20696e76616c6964000000000000604482015290519081900360640190fd5b6000858152600460205260409020600601546107c090600163ffffffff611e1316565b600086815260046020526040908190206006810192909255805160e0810190915260025490918291600160a060020a031690639156cd0790899033908a6003811061080757fe5b6040517c010000000000000000000000000000000000000000000000000000000063ffffffff871602815260048101858152600160a060020a0385166024830152606482018d9052608482018c90523460a4830181905260c0604484019081529490930180546002610100600183161502600019019091160460c4840181905290948e948e9490939260e490910190879080156108e55780601f106108ba576101008083540402835291602001916108e5565b820191906000526020600020905b8154815290600101906020018083116108c857829003601f168201915b5050975050505050505050602060405180830381600087803b15801561090a57600080fd5b505af115801561091e573d6000803e3d6000fd5b505050506040513d602081101561093457600080fd5b505181526000878152600460209081526040909120910190866003811061095757fe5b01805460408051602060026001851615610100026000190190941693909304601f810184900484028201840190925281815292918301828280156109dc5780601f106109b1576101008083540402835291602001916109dc565b820191906000526020600020905b8154815290600101906020018083116109bf57829003601f168201915b505050918352505033602080830191909152600060408084018290526060840182905234608085015260a09093018190528881526005825282812060048352838220600601548252825291909120825181558282015180519192610a4892600185019290910190611f25565b5060408281015160028301805460608601516080870151151575010000000000000000000000000000000000000000000275ff0000000000000000000000000000000000000000001991151560a060020a0274ff000000000000000000000000000000000000000019600160a060020a0390961673ffffffffffffffffffffffffffffffffffffffff199094169390931794909416919091171691909117905560a0830151600383015560c0909201516004918201556000878152600560209081528382208382528483206006015483529052919091200154610b31903463ffffffff611e1316565b6000868152600560209081526040808320600480845282852060068101805487529285529285208101959095559289905292905254339187907f171fe77c3addce776991159eb3eb73b14d9187ebd06c1c34ea12355a84ddbd83908860038110610b9757fe5b6040805160208082529390920180546002600019610100600184161502019091160493830184905292829182019084908015610c145780601f10610be957610100808354040283529160200191610c14565b820191906000526020600020905b815481529060010190602001808311610bf757829003601f168201915b50509250505060405180910390a45050505050565b60009081526004602052604090206006015490565b3360008181526006602052604090205460ff161515610c5c57600080fd5b60025460008681526005602090815260408083208884529091528082205481517f34f2f2d2000000000000000000000000000000000000000000000000000000008152600481019190915233602482015260448101879052606481018690529051600160a060020a03909316926334f2f2d29260848084019391929182900301818387803b158015610ced57600080fd5b505af1158015610d01573d6000803e3d6000fd5b505050600086815260056020818152604080842089855282528084203380865293810183529381902060018082018a9055905482518a8314948101859052928301819052606080845295820180546002600019948216156101000294909401169290920495830186905293955089948b947f864c0d6987266fd72e7e37f1fbc98b6a3794b7187dae454c67a2a626628a72ab94929390918190608082019086908015610dee5780601f10610dc357610100808354040283529160200191610dee565b820191906000526020600020905b815481529060010190602001808311610dd157829003601f168201915b505094505050505060405180910390a45050505050565b60076020526000908152604090205460ff1681565b600460205280600052604060002060009150905080600301549080600401549080600501549080600601549080600701549080600801549080600901549080600a0154905088565b3360008181526006602052604081205490919060ff161515610e8357600080fd5b60008481526005602081815260408084208785528252808420338552909201905290206002015460ff1615610f28576040805160e560020a62461bcd02815260206004820152602760248201527f45616368207061727469636970616e742063616e206f6e6c792066696e616c6960448201527f7a65206f6e636500000000000000000000000000000000000000000000000000606482015290519081900360840190fd5b6000848152600560208181526040808420878552825280842033855290920190528120541180610f7c57506000848152600560209081526040808320868452909152902060020154600160a060020a031633145b1515610ff8576040805160e560020a62461bcd02815260206004820152603a60248201527f4f6e6c79207061727469636970616e7473206f662074686520766f746520617260448201527f652061626c6520746f207265736f6c76652074686520766f7465000000000000606482015290519081900360840190fd5b600084815260056020908152604080832086845290915290206002015460a060020a900460ff16151561120e57600254600085815260056020908152604080832087845282528083205481517fe74fef3700000000000000000000000000000000000000000000000000000000815260048101919091529051600160a060020a039094169363e74fef3793602480840194938390030190829087803b1580156110a057600080fd5b505af11580156110b4573d6000803e3d6000fd5b505050506040513d60208110156110ca57600080fd5b505160008581526005602090815260408083208784528252918290206002808201805474ff000000000000000000000000000000000000000019961515750100000000000000000000000000000000000000000090810275ff00000000000000000000000000000000000000000019909216919091179690961660a060020a1790819055845195900460ff16801515938601939093528385526001918201805492831615610100026000190190921604928401839052869388937f6bd2699645e0f6c5547bdf0d053280e48fef1ab21514bd02c88610b1279b942a93919081906060820190859080156111fe5780601f106111d3576101008083540402835291602001916111fe565b820191906000526020600020905b8154815290600101906020018083116111e157829003601f168201915b5050935050505060405180910390a35b600254600085815260056020818152604080842088855282528084208054338087529190940183528185206001015482517fce729fd200000000000000000000000000000000000000000000000000000000815260048101959095526024850152604484015251600160a060020a039094169363ce729fd2936064808501948390030190829087803b1580156112a357600080fd5b505af11580156112b7573d6000803e3d6000fd5b505050506040513d60208110156112cd57600080fd5b50519150600082111561130957604051339083156108fc029084906000818181858888f19350505050158015611307573d6000803e3d6000fd5b505b6000848152600560209081526040808320868452909152902060040154611336908363ffffffff611e9d16565b600094855260056020818152604080882096885295815285872060048101939093553387529101905250509020600201805460ff19166001179055565b3360008181526007602052604090205460ff16151561139157600080fd5b50600160a060020a03166000908152600660205260409020805460ff19169055565b60056020908152600092835260408084208252918352918190208054600180830180548551600293821615610100026000190190911692909204601f81018790048702830187019095528482529194929390928301828280156114575780601f1061142c57610100808354040283529160200191611457565b820191906000526020600020905b81548152906001019060200180831161143a57829003601f168201915b505050600284015460038501546004909501549394600160a060020a0382169460ff60a060020a840481169550750100000000000000000000000000000000000000000090930490921692509087565b3360008181526006602052604081205490919060ff1615156114c857600080fd5b891515611545576040805160e560020a62461bcd02815260206004820152602360248201527f5265706f7369746f72792064657363726970746f722063616e2774206265207a60448201527f65726f0000000000000000000000000000000000000000000000000000000000606482015290519081900360840190fd5b60008a815260046020526040902060030154156115d2576040805160e560020a62461bcd02815260206004820152602760248201527f5265706f7369746f72792063616e206f6e6c7920626520696e697469616c697a60448201527f6564206f6e636500000000000000000000000000000000000000000000000000606482015290519081900360840190fd5b60008811806115e15750600086115b806115ec5750600084115b1515611667576040805160e560020a62461bcd028152602060048201526024808201527f50726f76696465206174206c65617374206f6e65204b6e6f776c65646765204c60448201527f6162656c00000000000000000000000000000000000000000000000000000000606482015290519081900360840190fd5b604080516101a06020601f8c01819004028201810190925261018081018a8152909182916101208301918291908e908e908190870183828082843782019150505050505081526020018a8a8080601f016020809104026020016040519081016040528093929190818152602001838380828437820191505050505050815260200188888080601f016020809104026020016040519081016040528093929190818152602001838380828437505050929093525050508152843560208083019190915285013560408083019190915285013560608201526000608082015260a00184600360209081029190910135825260808601358282015260a086013560408084019190915260c087013560609093019290925260008d815260049091522081516117959082906003611fa3565b506020820151600382015560408201516004820155606082015160058201556080820151600682015560a0820151600782015560c0820151600882015560e0820151600982015561010090910151600a909101555060019998505050505050505050565b600091825260056020908152604080842092845291905290206003015490565b3360008181526007602052604090205460ff16151561183757600080fd5b50600160a060020a03166000908152600760205260409020805460ff19169055565b600082815260056020908152604080832084845290915281206002015460a060020a900460ff1615156118d6576040805160e560020a62461bcd02815260206004820152601d60248201527f50726f706f73616c206861736e2774206265656e207265736f6c766564000000604482015290519081900360640190fd5b5060009182526005602090815260408084209284529190529020600201547501000000000000000000000000000000000000000000900460ff1690565b6000828152600460205260409020606090826003811061192f57fe5b01805460408051602060026001851615610100026000190190941693909304601f810184900484028201840190925281815292918301828280156119b45780601f10611989576101008083540402835291602001916119b4565b820191906000526020600020905b81548152906001019060200180831161199757829003601f168201915b5050505050905092915050565b600154600160a060020a031681565b3360008181526006602052604081205490919060ff1615156119f157600080fd5b60008581526005602090815260408083208784529091529020600301543414611a8a576040805160e560020a62461bcd02815260206004820152603960248201527f56616c7565206f6620746865207472616e73616374696f6e20646f65736e277460448201527f206d6174636820746865207265717569726564207374616b6500000000000000606482015290519081900360840190fd5b6000858152600560209081526040808320878452909152902060020154600160a060020a0316331415611b2d576040805160e560020a62461bcd02815260206004820152603160248201527f5468652070726f706f736572206973206e6f7420616c6c6f77656420746f207660448201527f6f746520696e20612070726f706f73616c000000000000000000000000000000606482015290519081900360840190fd5b6000858152600560209081526040808320878452909152902060040154611b5a903463ffffffff611e1316565b60008681526005602090815260408083208884528252808320600480820195909555600254905482517f7eb2ff5200000000000000000000000000000000000000000000000000000000815295860152336024860152604485018890529051600160a060020a0390911693637eb2ff529360648083019493928390030190829087803b158015611be957600080fd5b505af1158015611bfd573d6000803e3d6000fd5b505050506040513d6020811015611c1357600080fd5b5051915060008211611c95576040805160e560020a62461bcd02815260206004820152603360248201527f566f74696e6720636f6e74726163742072657475726e656420616e20696e766160448201527f6c696420616d6f756e74206f6620766f74657300000000000000000000000000606482015290519081900360840190fd5b600085815260056020818152604080842088855280835281852033808752948101845282862088905594899052825280513492810183905290810186905260608082526001948501805460026101009782161597909702600019011695909504908201819052929388938a937fa01eea487bb3ec75528c167ccf90452d4164ddda7b13c55b2a89751a8dc5fbc19390918991908190608082019086908015610dee5780601f10610dc357610100808354040283529160200191610dee565b60066020526000908152604090205460ff1681565b3360008181526007602052604090205460ff161515611d8657600080fd5b50600160a060020a03166000908152600760205260409020805460ff19166001179055565b6000908152600460205260408120600301541190565b600054600160a060020a031681565b3360008181526007602052604090205460ff161515611dee57600080fd5b50600160a060020a03166000908152600660205260409020805460ff19166001179055565b600082820183811015611e96576040805160e560020a62461bcd02815260206004820152602a60248201527f526573756c742068617320746f20626520626967676572207468616e20626f7460448201527f682073756d6d616e647300000000000000000000000000000000000000000000606482015290519081900360840190fd5b9392505050565b60008083831115611f1e576040805160e560020a62461bcd02815260206004820152603560248201527f43616e27742073756274726163742061206e756d6265722066726f6d2061207360448201527f6d616c6c6572206f6e6520776974682075696e74730000000000000000000000606482015290519081900360840190fd5b5050900390565b828054600181600116156101000203166002900490600052602060002090601f016020900481019282601f10611f6657805160ff1916838001178555611f93565b82800160010185558215611f93579182015b82811115611f93578251825591602001919060010190611f78565b50611f9f929150611fef565b5090565b8260038101928215611fe3579160200282015b82811115611fe35782518051611fd3918491602090910190611f25565b5091602001919060010190611fb6565b50611f9f92915061200c565b61200991905b80821115611f9f5760008155600101611ff5565b90565b61200991905b80821115611f9f576000612026828261202f565b50600101612012565b50805460018160011615610100020316600290046000825580601f106120555750612073565b601f0160209004906000526020600020908101906120739190611fef565b505600a165627a7a72305820dfe23797f55902824dd698c2dd6d6a698dafbbb4e55266e33047a06088a7048b0029`
+const DitCoordinatorBin = `0x608060405234801561001057600080fd5b50604051606080612a8f833981016040908152815160208301519190920151600160a060020a0382161580159061004f5750600160a060020a03831615155b15156100e257604080517f08c379a000000000000000000000000000000000000000000000000000000000815260206004820152602d60248201527f4b4e57566f74696e6720616e64204b4e57546f6b656e2061646472657373206360448201527f616e277420626520656d70747900000000000000000000000000000000000000606482015290519081900360840190fd5b60008054600160a060020a03938416600160a060020a031991821617808355600580548316918616919091179055600180549585169582169590951780865560068054831691861691909117905560028054939094169281169290921790925533808352600a6020526040909220805460ff19169093179092556004805490921617905561291a806101756000396000f3006080604052600436106101a05763ffffffff7c010000000000000000000000000000000000000000000000000000000060003504166306ee459681146101a55780630bdc90e8146101d25780630ee62ec0146101ea5780631341f25c1461021f5780631ecbb9de146102405780631f51fd71146102555780632e71d0fb1461028657806339ba645b146102a15780633e029f63146102c25780633eedfc10146103905780633fcc148d146103a5578063466577cd14610240578063552edc9d146103bd5780636fcfeb3b1461039057806373b0dddd146103d857806387c9203d146103f957806391016157146104145780639533222914610435578063985dbfc5146104c557806399821d9b146104f65780639a401f481461050b578063ab4b593e1461054a578063bef7a4da1461055e578063c814af1f14610575578063ccd9aa681461058a578063d0c397ef146105ab578063d7ad0eae146105cc578063ea6c6d0f146105e1578063ea976d2c146105f9578063eb2c022314610611578063eb49fe9414610632578063eb93102414610647578063effb21e114610575575b600080fd5b3480156101b157600080fd5b506101c0600435602435610668565b60408051918252519081900360200190f35b3480156101de57600080fd5b506101c0600435610685565b3480156101f657600080fd5b5061020b60043560243560443560643561069a565b604080519115158252519081900360200190f35b34801561022b57600080fd5b5061020b600160a060020a036004351661087e565b34801561024c57600080fd5b506101c0610893565b34801561026157600080fd5b5061026d60043561089a565b6040805192835260208301919091528051918290030190f35b34801561029257600080fd5b5061020b6004356024356108b6565b3480156102ad57600080fd5b5061020b600160a060020a0360043516610ec7565b3480156102ce57600080fd5b506102dd600435602435610f0e565b60408051888152600160a060020a038716918101919091528415156060820152831515608082015260a0810183905260c0810182905260e0602080830182815289519284019290925288516101008401918a019080838360005b8381101561034f578181015183820152602001610337565b50505050905090810190601f16801561037c5780820380516001836020036101000a031916815260200191505b509850505050505050505060405180910390f35b34801561039c57600080fd5b506101c0611002565b3480156103b157600080fd5b506101c0600435611008565b3480156103c957600080fd5b506101c060043560243561101d565b3480156103e457600080fd5b5061020b600160a060020a036004351661103d565b34801561040557600080fd5b5061020b600435602435611084565b34801561042057600080fd5b5061020b600160a060020a036004351661113e565b34801561044157600080fd5b5061045060043560243561119f565b6040805160208082528351818301528351919283929083019185019080838360005b8381101561048a578181015183820152602001610472565b50505050905090810190601f1680156104b75780820380516001836020036101000a031916815260200191505b509250505060405180910390f35b3480156104d157600080fd5b506104da61124d565b60408051600160a060020a039092168252519081900360200190f35b34801561050257600080fd5b506104da61125c565b34801561051757600080fd5b5061020b60048035906024803580820192908101359160443580820192908101359160643590810191013560843561126b565b61020b6004356024356044356064356116a3565b6101c0600435602435604435606435608435611a7e565b34801561058157600080fd5b506101c0612199565b34801561059657600080fd5b5061020b600160a060020a036004351661219e565b3480156105b757600080fd5b5061020b600160a060020a03600435166121b3565b3480156105d857600080fd5b506104da6121fe565b3480156105ed57600080fd5b5061020b60043561220d565b34801561060557600080fd5b5061020b600435612223565b34801561061d57600080fd5b5061020b600160a060020a03600435166125a8565b34801561063e57600080fd5b506104da612609565b34801561065357600080fd5b5061020b600160a060020a0360043516612618565b600091825260086020908152604080842092845291905290205490565b60009081526007602052604090206003015490565b3360008181526009602052604081205490919060ff1615156106bb57600080fd5b600554600087815260086020908152604080832089845282528083205481517fcdd6ceb9000000000000000000000000000000000000000000000000000000008152600481019190915233602482015260448101899052606481018890529051600160a060020a039094169363cdd6ceb993608480840194938390030190829087803b15801561074a57600080fd5b505af115801561075e573d6000803e3d6000fd5b505050506040513d602081101561077457600080fd5b505060008681526008602090815260408083208884528252808320338085526005820184529382902060028082018a9055905483516001808c1496820187905294810182905260608082529385018054600019968116156101000296909601909516929092049282018390528a948c947f864c0d6987266fd72e7e37f1fbc98b6a3794b7187dae454c67a2a626628a72ab9490939192919081906080820190869080156108625780601f1061083757610100808354040283529160200191610862565b820191906000526020600020905b81548152906001019060200180831161084557829003601f168201915b505094505050505060405180910390a450600195945050505050565b600a6020526000908152604090205460ff1681565b6212750081565b6007602052600090815260409020600381015460049091015482565b33600081815260096020526040812054909182918291829160ff1615156108dc57600080fd5b6000878152600860209081526040808320898452825280832033845260050190915290206003015460ff1615610982576040805160e560020a62461bcd02815260206004820152602760248201527f45616368207061727469636970616e742063616e206f6e6c792066696e616c6960448201527f7a65206f6e636500000000000000000000000000000000000000000000000000606482015290519081900360840190fd5b6000878152600860209081526040808320898452825280832033845260050190915281205411806109d757506000878152600860209081526040808320898452909152902060020154600160a060020a031633145b1515610a53576040805160e560020a62461bcd02815260206004820152603a60248201527f4f6e6c79207061727469636970616e7473206f662074686520766f746520617260448201527f652061626c6520746f207265736f6c76652074686520766f7465000000000000606482015290519081900360840190fd5b600087815260086020908152604080832089845290915290206002015460a060020a900460ff161515610c695760055460008881526008602090815260408083208a845282528083205481517f865df0ad00000000000000000000000000000000000000000000000000000000815260048101919091529051600160a060020a039094169363865df0ad93602480840194938390030190829087803b158015610afb57600080fd5b505af1158015610b0f573d6000803e3d6000fd5b505050506040513d6020811015610b2557600080fd5b505160008881526008602090815260408083208a84528252918290206002808201805474ff000000000000000000000000000000000000000019961515750100000000000000000000000000000000000000000090810275ff00000000000000000000000000000000000000000019909216919091179690961660a060020a1790819055845195900460ff1680151593860193909352838552600191820180549283161561010002600019019092160492840183905289938b937f56c2d720d2b0f46900eca91b5412e4bb9ef934c72b86308c576d07975fac83539391908190606082019085908015610c595780601f10610c2e57610100808354040283529160200191610c59565b820191906000526020600020905b815481529060010190602001808311610c3c57829003601f168201915b5050935050505060405180910390a35b6005805460008981526008602090815260408083208b84528252808320805433808652919096019092528083206002015481517f36bf4c9100000000000000000000000000000000000000000000000000000000815260048101969096526024860152604485019190915251600160a060020a03909216926336bf4c919260648083019360609383900390910190829087803b158015610d0857600080fd5b505af1158015610d1c573d6000803e3d6000fd5b505050506040513d6060811015610d3257600080fd5b508051602082015160409092015190955090935091506000841115610d8057604051339085156108fc029086906000818181858888f19350505050158015610d7e573d6000803e3d6000fd5b505b6000878152600860209081526040808320898452909152902060040154610dad908563ffffffff61266316565b60008881526008602090815260408083208a8452808352818420600481019590955533808552600586018452828520600301805460ff19166001908117909155948c905290835281518815159381019390935290820186905260608083529383018054600294811615610100026000190116939093049382018490529289928b927fa4a57ebc87f48fa9e8fc4d0812bf408bff87f2326e00c7d209a0d42185b79ec592899189918190608082019086908015610eaa5780601f10610e7f57610100808354040283529160200191610eaa565b820191906000526020600020905b815481529060010190602001808311610e8d57829003601f168201915b505094505050505060405180910390a45060019695505050505050565b336000818152600a602052604081205490919060ff161515610ee857600080fd5b5050600160a060020a03166000908152600960205260409020805460ff19169055600190565b60086020908152600092835260408084208252918352918190208054600180830180548551600293821615610100026000190190911692909204601f8101879004870283018701909552848252919492939092830182828015610fb25780601f10610f8757610100808354040283529160200191610fb2565b820191906000526020600020905b815481529060010190602001808311610f9557829003601f168201915b505050600284015460038501546004909501549394600160a060020a0382169460ff60a060020a840481169550750100000000000000000000000000000000000000000090930490921692509087565b61025881565b60009081526007602052604090206004015490565b600091825260086020908152604080842092845291905290206003015490565b336000818152600a602052604081205490919060ff16151561105e57600080fd5b5050600160a060020a03166000908152600a60205260409020805460ff19169055600190565b600082815260086020908152604080832084845290915281206002015460a060020a900460ff161515611101576040805160e560020a62461bcd02815260206004820152601d60248201527f50726f706f73616c206861736e2774206265656e207265736f6c766564000000604482015290519081900360640190fd5b5060009182526008602090815260408084209284529190529020600201547501000000000000000000000000000000000000000000900460ff1690565b600454600090600160a060020a0316331461115857600080fd5b600160a060020a038216151561116d57600080fd5b5060048054600160a060020a03831673ffffffffffffffffffffffffffffffffffffffff199091161790556001919050565b600082815260076020526040902060609082600381106111bb57fe5b01805460408051602060026001851615610100026000190190941693909304601f810184900484028201840190925281815292918301828280156112405780601f1061121557610100808354040283529160200191611240565b820191906000526020600020905b81548152906001019060200180831161122357829003601f168201915b5050505050905092915050565b600154600160a060020a031681565b600354600160a060020a031681565b3360008181526009602052604081205490919060ff16151561128c57600080fd5b891515611309576040805160e560020a62461bcd02815260206004820152602360248201527f5265706f7369746f72792064657363726970746f722063616e2774206265207a60448201527f65726f0000000000000000000000000000000000000000000000000000000000606482015290519081900360840190fd5b60008a81526007602052604090206004015415611396576040805160e560020a62461bcd02815260206004820152602760248201527f5265706f7369746f72792063616e206f6e6c7920626520696e697469616c697a60448201527f6564206f6e636500000000000000000000000000000000000000000000000000606482015290519081900360840190fd5b60328310156113ef576040805160e560020a62461bcd02815260206004820152601f60248201527f566f74696e67206d616a6f726974792068617320746f206265203e3d20353000604482015290519081900360640190fd5b60008811806113fe5750600086115b806114095750600084115b1515611484576040805160e560020a62461bcd028152602060048201526024808201527f50726f76696465206174206c65617374206f6e65204b6e6f776c65646765204c60448201527f6162656c00000000000000000000000000000000000000000000000000000000606482015290519081900360840190fd5b600354600160a060020a03161561150b576040805160e560020a62461bcd02815260206004820152602260248201527f54686572652069732061206e6577657220636f6e7472616374206465706c6f7960448201527f6564000000000000000000000000000000000000000000000000000000000000606482015290519081900360840190fd5b6040805160e06020601f8c01819004028201810190925260c081018a81529091829160608301918291908e908e908190870183828082843782019150505050505081526020018a8a8080601f016020809104026020016040519081016040528093929190818152602001838380828437820191505050505050815260200188888080601f0160208091040260200160405190810160405280939291908181526020018383808284375050509290935250505081526000602080830182905260409283018790528d8252600790522081516115e89082906003612775565b50602082810151600383015560409283015160049283015560055483517f828c16530000000000000000000000000000000000000000000000000000000081529283018e9052602483018790529251600160a060020a039093169263828c16539260448082019392918290030181600087803b15801561166757600080fd5b505af115801561167b573d6000803e3d6000fd5b505050506040513d602081101561169157600080fd5b5060019b9a5050505050505050505050565b336000818152600960205260408120549091829160ff1615156116c557600080fd5b6000878152600860209081526040808320898452909152902060030154341461175e576040805160e560020a62461bcd02815260206004820152603960248201527f56616c7565206f6620746865207472616e73616374696f6e20646f65736e277460448201527f206d6174636820746865207265717569726564207374616b6500000000000000606482015290519081900360840190fd5b6000878152600860209081526040808320898452909152902060020154600160a060020a0316331415611801576040805160e560020a62461bcd02815260206004820152603160248201527f5468652070726f706f736572206973206e6f7420616c6c6f77656420746f207660448201527f6f746520696e20612070726f706f73616c000000000000000000000000000000606482015290519081900360840190fd5b600087815260086020908152604080832089845290915290206004015461182e903463ffffffff6126eb16565b60008881526008602090815260408083208a84528252808320600480820195909555600554905482517fd4e0ac9500000000000000000000000000000000000000000000000000000000815295860152336024860152604485018a9052606485018990529051600160a060020a039091169363d4e0ac959360848083019493928390030190829087803b1580156118c457600080fd5b505af11580156118d8573d6000803e3d6000fd5b505050506040513d60208110156118ee57600080fd5b5051915060008211611970576040805160e560020a62461bcd02815260206004820152603360248201527f566f74696e6720636f6e74726163742072657475726e656420616e20696e766160448201527f6c696420616d6f756e74206f6620766f74657300000000000000000000000000606482015290519081900360840190fd5b600087815260086020908152604080832089845280835281842033808652600582018552838620889055948b905290835281513493810184905291820188905260608201869052608080835260019182018054600261010094821615949094026000190116929092049083018190528a938c937f7ee8ecf4d9d20fb6454a55c418451d97bec229903525d8517fcd32db68a479e493928b918a91819060a082019087908015611a605780601f10611a3557610100808354040283529160200191611a60565b820191906000526020600020905b815481529060010190602001808311611a4357829003601f168201915b50509550505050505060405180910390a45060019695505050505050565b3360008181526009602052604081205490919060ff161515611a9f57600080fd5b60003411611b1d576040805160e560020a62461bcd02815260206004820152602860248201527f56616c7565206f6620746865207472616e73616374696f6e2063616e206e6f7460448201527f206265207a65726f000000000000000000000000000000000000000000000000606482015290519081900360840190fd5b60008781526007602052604081208760038110611b3657fe5b01546002600019610100600184161502019091160411611bc5576040805160e560020a62461bcd028152602060048201526024808201527f4b6e6f776c656467652d4c6162656c20696e646578206973206e6f7420636f7260448201527f7265637400000000000000000000000000000000000000000000000000000000606482015290519081900360840190fd5b6102588410158015611bda5750621275008411155b1515611c30576040805160e560020a62461bcd02815260206004820152601c60248201527f566f746520636f6d6d6974206475726174696f6e20696e76616c696400000000604482015290519081900360640190fd5b6102588310158015611c455750621275008311155b1515611c9b576040805160e560020a62461bcd02815260206004820152601a60248201527f566f7465206f70656e206475726174696f6e20696e76616c6964000000000000604482015290519081900360640190fd5b600354600160a060020a031615611d22576040805160e560020a62461bcd02815260206004820152602260248201527f54686572652069732061206e6577657220636f6e7472616374206465706c6f7960448201527f6564000000000000000000000000000000000000000000000000000000000000606482015290519081900360840190fd5b600087815260076020526040902060030154611d4590600163ffffffff6126eb16565b60008881526007602052604090819020600380820193909355815160e0810190925260055491928392600160a060020a031691636766b4a4918c9133918d908110611d8c57fe5b018a8a348e6040518863ffffffff167c010000000000000000000000000000000000000000000000000000000002815260040180886000191660001916815260200187600160a060020a0316600160a060020a0316815260200180602001868152602001858152602001848152602001838152602001828103825287818154600181600116156101000203166002900481526020019150805460018160011615610100020316600290048015611e835780601f10611e5857610100808354040283529160200191611e83565b820191906000526020600020905b815481529060010190602001808311611e6657829003601f168201915b505098505050505050505050602060405180830381600087803b158015611ea957600080fd5b505af1158015611ebd573d6000803e3d6000fd5b505050506040513d6020811015611ed357600080fd5b5051815260008981526007602090815260409091209101908860038110611ef657fe5b01805460408051602060026001851615610100026000190190941693909304601f81018490048402820184019092528181529291830182828015611f7b5780601f10611f5057610100808354040283529160200191611f7b565b820191906000526020600020905b815481529060010190602001808311611f5e57829003601f168201915b5050509183525050336020808301919091526000604080840182905260608401829052346080850181905260a0909401939093528a81526008825282812060078352838220600301548252825291909120825181558282015180519192611fea926001850192909101906127c5565b5060408281015160028301805460608601516080870151151575010000000000000000000000000000000000000000000275ff0000000000000000000000000000000000000000001991151560a060020a0274ff000000000000000000000000000000000000000019600160a060020a0390961673ffffffffffffffffffffffffffffffffffffffff199094169390931794909416919091171691909117905560a083015160038084019190915560c090930151600490920191909155600089815260076020522080820154339290918a917f2ba422bdea9179f02f8c9dd0d6285478f7b4c3fa11a812eeb4d3b1b04cc57c3591908b9081106120e957fe5b60408051602081018d905281815292909101805460026000196101006001841615020190911604918301829052918b91819060608201908590801561216f5780601f106121445761010080835404028352916020019161216f565b820191906000526020600020905b81548152906001019060200180831161215257829003601f168201915b5050935050505060405180910390a450505060009384525050600760205250604090206003015490565b600081565b60096020526000908152604090205460ff1681565b336000818152600a602052604081205490919060ff1615156121d457600080fd5b5050600160a060020a03166000908152600a60205260409020805460ff1916600190811790915590565b600254600160a060020a031681565b6000908152600760205260408120600401541190565b60008060008061223161283f565b3360008181526009602052604081205490919060ff16151561225257600080fd5b600254600160a060020a0316151561226957600080fd5b600254604080517f0bdc90e8000000000000000000000000000000000000000000000000000000008152600481018b90529051600160a060020a0390921697508791630bdc90e8916024808201926020929091908290030181600087803b1580156122d357600080fd5b505af11580156122e7573d6000803e3d6000fd5b505050506040513d60208110156122fd57600080fd5b5051604080517f3fcc148d000000000000000000000000000000000000000000000000000000008152600481018b90529051919650600160a060020a03881691633fcc148d916024808201926020929091908290030181600087803b15801561236557600080fd5b505af1158015612379573d6000803e3d6000fd5b505050506040513d602081101561238f57600080fd5b50519350600091505b60038260ff1610156124b757604080517f95332229000000000000000000000000000000000000000000000000000000008152600481018a905260ff841660248201529051600160a060020a03881691639533222991604480830192600092919082900301818387803b15801561240e57600080fd5b505af1158015612422573d6000803e3d6000fd5b505050506040513d6000823e601f3d908101601f19168201604052602081101561244b57600080fd5b81019080805164010000000081111561246357600080fd5b8201602081018481111561247657600080fd5b815164010000000081118282018710171561249057600080fd5b50909350869250505060ff8416600381106124a757fe5b6020020152600190910190612398565b60408051606081018252848152602080820188905281830187905260008b815260079091529190912081516124ef9082906003612775565b50602082810151600383015560409283015160049283015560055483517f828c16530000000000000000000000000000000000000000000000000000000081529283018c9052602483018890529251600160a060020a039093169263828c16539260448082019392918290030181600087803b15801561256e57600080fd5b505af1158015612582573d6000803e3d6000fd5b505050506040513d602081101561259857600080fd5b5060019998505050505050505050565b600454600090600160a060020a031633146125c257600080fd5b600160a060020a03821615156125d757600080fd5b5060038054600160a060020a03831673ffffffffffffffffffffffffffffffffffffffff199091161790556001919050565b600054600160a060020a031681565b336000818152600a602052604081205490919060ff16151561263957600080fd5b5050600160a060020a03166000908152600960205260409020805460ff1916600190811790915590565b600080838311156126e4576040805160e560020a62461bcd02815260206004820152603560248201527f43616e27742073756274726163742061206e756d6265722066726f6d2061207360448201527f6d616c6c6572206f6e6520776974682075696e74730000000000000000000000606482015290519081900360840190fd5b5050900390565b60008282018381101561276e576040805160e560020a62461bcd02815260206004820152602a60248201527f526573756c742068617320746f20626520626967676572207468616e20626f7460448201527f682073756d6d616e647300000000000000000000000000000000000000000000606482015290519081900360840190fd5b9392505050565b82600381019282156127b5579160200282015b828111156127b557825180516127a59184916020909101906127c5565b5091602001919060010190612788565b506127c1929150612867565b5090565b828054600181600116156101000203166002900490600052602060002090601f016020900481019282601f1061280657805160ff1916838001178555612833565b82800160010185558215612833579182015b82811115612833578251825591602001919060010190612818565b506127c192915061288d565b6060604051908101604052806003905b606081526020019060019003908161284f5790505090565b61288a91905b808211156127c157600061288182826128a7565b5060010161286d565b90565b61288a91905b808211156127c15760008155600101612893565b50805460018160011615610100020316600290046000825580601f106128cd57506128eb565b601f0160209004906000526020600020908101906128eb919061288d565b505600a165627a7a723058202ec9ea0237c029475b8c6bdd8d8a5e4a2fcc8f67ceff84de3d4cdc4ae47f9e7f0029`
 
 // DeployDitCoordinator deploys a new Ethereum contract, binding an instance of DitCoordinator to it.
-func DeployDitCoordinator(auth *bind.TransactOpts, backend bind.ContractBackend, _KNWTokenAddress common.Address, _KNWVotingAddress common.Address) (common.Address, *types.Transaction, *DitCoordinator, error) {
+func DeployDitCoordinator(auth *bind.TransactOpts, backend bind.ContractBackend, _KNWTokenAddress common.Address, _KNWVotingAddress common.Address, _lastDitCoordinator common.Address) (common.Address, *types.Transaction, *DitCoordinator, error) {
 	parsed, err := abi.JSON(strings.NewReader(DitCoordinatorABI))
 	if err != nil {
 		return common.Address{}, nil, nil, err
 	}
-	address, tx, contract, err := bind.DeployContract(auth, parsed, common.FromHex(DitCoordinatorBin), backend, _KNWTokenAddress, _KNWVotingAddress)
+	address, tx, contract, err := bind.DeployContract(auth, parsed, common.FromHex(DitCoordinatorBin), backend, _KNWTokenAddress, _KNWVotingAddress, _lastDitCoordinator)
 	if err != nil {
 		return common.Address{}, nil, nil, err
 	}
@@ -891,6 +844,32 @@ func (_DitCoordinator *DitCoordinatorTransactorRaw) Transact(opts *bind.Transact
 	return _DitCoordinator.Contract.contract.Transact(opts, method, params...)
 }
 
+// BURNINGMETHOD is a free data retrieval call binding the contract method 0xc814af1f.
+//
+// Solidity: function BURNING_METHOD() constant returns(uint256)
+func (_DitCoordinator *DitCoordinatorCaller) BURNINGMETHOD(opts *bind.CallOpts) (*big.Int, error) {
+	var (
+		ret0 = new(*big.Int)
+	)
+	out := ret0
+	err := _DitCoordinator.contract.Call(opts, out, "BURNING_METHOD")
+	return *ret0, err
+}
+
+// BURNINGMETHOD is a free data retrieval call binding the contract method 0xc814af1f.
+//
+// Solidity: function BURNING_METHOD() constant returns(uint256)
+func (_DitCoordinator *DitCoordinatorSession) BURNINGMETHOD() (*big.Int, error) {
+	return _DitCoordinator.Contract.BURNINGMETHOD(&_DitCoordinator.CallOpts)
+}
+
+// BURNINGMETHOD is a free data retrieval call binding the contract method 0xc814af1f.
+//
+// Solidity: function BURNING_METHOD() constant returns(uint256)
+func (_DitCoordinator *DitCoordinatorCallerSession) BURNINGMETHOD() (*big.Int, error) {
+	return _DitCoordinator.Contract.BURNINGMETHOD(&_DitCoordinator.CallOpts)
+}
+
 // KNWTokenAddress is a free data retrieval call binding the contract method 0x985dbfc5.
 //
 // Solidity: function KNWTokenAddress() constant returns(address)
@@ -943,9 +922,139 @@ func (_DitCoordinator *DitCoordinatorCallerSession) KNWVotingAddress() (common.A
 	return _DitCoordinator.Contract.KNWVotingAddress(&_DitCoordinator.CallOpts)
 }
 
+// MAXOPENDURATION is a free data retrieval call binding the contract method 0x466577cd.
+//
+// Solidity: function MAX_OPEN_DURATION() constant returns(uint256)
+func (_DitCoordinator *DitCoordinatorCaller) MAXOPENDURATION(opts *bind.CallOpts) (*big.Int, error) {
+	var (
+		ret0 = new(*big.Int)
+	)
+	out := ret0
+	err := _DitCoordinator.contract.Call(opts, out, "MAX_OPEN_DURATION")
+	return *ret0, err
+}
+
+// MAXOPENDURATION is a free data retrieval call binding the contract method 0x466577cd.
+//
+// Solidity: function MAX_OPEN_DURATION() constant returns(uint256)
+func (_DitCoordinator *DitCoordinatorSession) MAXOPENDURATION() (*big.Int, error) {
+	return _DitCoordinator.Contract.MAXOPENDURATION(&_DitCoordinator.CallOpts)
+}
+
+// MAXOPENDURATION is a free data retrieval call binding the contract method 0x466577cd.
+//
+// Solidity: function MAX_OPEN_DURATION() constant returns(uint256)
+func (_DitCoordinator *DitCoordinatorCallerSession) MAXOPENDURATION() (*big.Int, error) {
+	return _DitCoordinator.Contract.MAXOPENDURATION(&_DitCoordinator.CallOpts)
+}
+
+// MAXVOTEDURATION is a free data retrieval call binding the contract method 0x1ecbb9de.
+//
+// Solidity: function MAX_VOTE_DURATION() constant returns(uint256)
+func (_DitCoordinator *DitCoordinatorCaller) MAXVOTEDURATION(opts *bind.CallOpts) (*big.Int, error) {
+	var (
+		ret0 = new(*big.Int)
+	)
+	out := ret0
+	err := _DitCoordinator.contract.Call(opts, out, "MAX_VOTE_DURATION")
+	return *ret0, err
+}
+
+// MAXVOTEDURATION is a free data retrieval call binding the contract method 0x1ecbb9de.
+//
+// Solidity: function MAX_VOTE_DURATION() constant returns(uint256)
+func (_DitCoordinator *DitCoordinatorSession) MAXVOTEDURATION() (*big.Int, error) {
+	return _DitCoordinator.Contract.MAXVOTEDURATION(&_DitCoordinator.CallOpts)
+}
+
+// MAXVOTEDURATION is a free data retrieval call binding the contract method 0x1ecbb9de.
+//
+// Solidity: function MAX_VOTE_DURATION() constant returns(uint256)
+func (_DitCoordinator *DitCoordinatorCallerSession) MAXVOTEDURATION() (*big.Int, error) {
+	return _DitCoordinator.Contract.MAXVOTEDURATION(&_DitCoordinator.CallOpts)
+}
+
+// MINTINGMETHOD is a free data retrieval call binding the contract method 0xeffb21e1.
+//
+// Solidity: function MINTING_METHOD() constant returns(uint256)
+func (_DitCoordinator *DitCoordinatorCaller) MINTINGMETHOD(opts *bind.CallOpts) (*big.Int, error) {
+	var (
+		ret0 = new(*big.Int)
+	)
+	out := ret0
+	err := _DitCoordinator.contract.Call(opts, out, "MINTING_METHOD")
+	return *ret0, err
+}
+
+// MINTINGMETHOD is a free data retrieval call binding the contract method 0xeffb21e1.
+//
+// Solidity: function MINTING_METHOD() constant returns(uint256)
+func (_DitCoordinator *DitCoordinatorSession) MINTINGMETHOD() (*big.Int, error) {
+	return _DitCoordinator.Contract.MINTINGMETHOD(&_DitCoordinator.CallOpts)
+}
+
+// MINTINGMETHOD is a free data retrieval call binding the contract method 0xeffb21e1.
+//
+// Solidity: function MINTING_METHOD() constant returns(uint256)
+func (_DitCoordinator *DitCoordinatorCallerSession) MINTINGMETHOD() (*big.Int, error) {
+	return _DitCoordinator.Contract.MINTINGMETHOD(&_DitCoordinator.CallOpts)
+}
+
+// MINOPENDURATION is a free data retrieval call binding the contract method 0x6fcfeb3b.
+//
+// Solidity: function MIN_OPEN_DURATION() constant returns(uint256)
+func (_DitCoordinator *DitCoordinatorCaller) MINOPENDURATION(opts *bind.CallOpts) (*big.Int, error) {
+	var (
+		ret0 = new(*big.Int)
+	)
+	out := ret0
+	err := _DitCoordinator.contract.Call(opts, out, "MIN_OPEN_DURATION")
+	return *ret0, err
+}
+
+// MINOPENDURATION is a free data retrieval call binding the contract method 0x6fcfeb3b.
+//
+// Solidity: function MIN_OPEN_DURATION() constant returns(uint256)
+func (_DitCoordinator *DitCoordinatorSession) MINOPENDURATION() (*big.Int, error) {
+	return _DitCoordinator.Contract.MINOPENDURATION(&_DitCoordinator.CallOpts)
+}
+
+// MINOPENDURATION is a free data retrieval call binding the contract method 0x6fcfeb3b.
+//
+// Solidity: function MIN_OPEN_DURATION() constant returns(uint256)
+func (_DitCoordinator *DitCoordinatorCallerSession) MINOPENDURATION() (*big.Int, error) {
+	return _DitCoordinator.Contract.MINOPENDURATION(&_DitCoordinator.CallOpts)
+}
+
+// MINVOTEDURATION is a free data retrieval call binding the contract method 0x3eedfc10.
+//
+// Solidity: function MIN_VOTE_DURATION() constant returns(uint256)
+func (_DitCoordinator *DitCoordinatorCaller) MINVOTEDURATION(opts *bind.CallOpts) (*big.Int, error) {
+	var (
+		ret0 = new(*big.Int)
+	)
+	out := ret0
+	err := _DitCoordinator.contract.Call(opts, out, "MIN_VOTE_DURATION")
+	return *ret0, err
+}
+
+// MINVOTEDURATION is a free data retrieval call binding the contract method 0x3eedfc10.
+//
+// Solidity: function MIN_VOTE_DURATION() constant returns(uint256)
+func (_DitCoordinator *DitCoordinatorSession) MINVOTEDURATION() (*big.Int, error) {
+	return _DitCoordinator.Contract.MINVOTEDURATION(&_DitCoordinator.CallOpts)
+}
+
+// MINVOTEDURATION is a free data retrieval call binding the contract method 0x3eedfc10.
+//
+// Solidity: function MIN_VOTE_DURATION() constant returns(uint256)
+func (_DitCoordinator *DitCoordinatorCallerSession) MINVOTEDURATION() (*big.Int, error) {
+	return _DitCoordinator.Contract.MINVOTEDURATION(&_DitCoordinator.CallOpts)
+}
+
 // GetCurrentProposalID is a free data retrieval call binding the contract method 0x0bdc90e8.
 //
-// Solidity: function getCurrentProposalID(bytes32 _repository) constant returns(uint256)
+// Solidity: function getCurrentProposalID(bytes32 _repository) constant returns(uint256 currentProposalID)
 func (_DitCoordinator *DitCoordinatorCaller) GetCurrentProposalID(opts *bind.CallOpts, _repository [32]byte) (*big.Int, error) {
 	var (
 		ret0 = new(*big.Int)
@@ -957,14 +1066,14 @@ func (_DitCoordinator *DitCoordinatorCaller) GetCurrentProposalID(opts *bind.Cal
 
 // GetCurrentProposalID is a free data retrieval call binding the contract method 0x0bdc90e8.
 //
-// Solidity: function getCurrentProposalID(bytes32 _repository) constant returns(uint256)
+// Solidity: function getCurrentProposalID(bytes32 _repository) constant returns(uint256 currentProposalID)
 func (_DitCoordinator *DitCoordinatorSession) GetCurrentProposalID(_repository [32]byte) (*big.Int, error) {
 	return _DitCoordinator.Contract.GetCurrentProposalID(&_DitCoordinator.CallOpts, _repository)
 }
 
 // GetCurrentProposalID is a free data retrieval call binding the contract method 0x0bdc90e8.
 //
-// Solidity: function getCurrentProposalID(bytes32 _repository) constant returns(uint256)
+// Solidity: function getCurrentProposalID(bytes32 _repository) constant returns(uint256 currentProposalID)
 func (_DitCoordinator *DitCoordinatorCallerSession) GetCurrentProposalID(_repository [32]byte) (*big.Int, error) {
 	return _DitCoordinator.Contract.GetCurrentProposalID(&_DitCoordinator.CallOpts, _repository)
 }
@@ -997,7 +1106,7 @@ func (_DitCoordinator *DitCoordinatorCallerSession) GetIndividualStake(_reposito
 
 // GetKNWVoteIDFromProposalID is a free data retrieval call binding the contract method 0x06ee4596.
 //
-// Solidity: function getKNWVoteIDFromProposalID(bytes32 _repository, uint256 _proposalID) constant returns(uint256)
+// Solidity: function getKNWVoteIDFromProposalID(bytes32 _repository, uint256 _proposalID) constant returns(uint256 KNWVoteID)
 func (_DitCoordinator *DitCoordinatorCaller) GetKNWVoteIDFromProposalID(opts *bind.CallOpts, _repository [32]byte, _proposalID *big.Int) (*big.Int, error) {
 	var (
 		ret0 = new(*big.Int)
@@ -1009,14 +1118,14 @@ func (_DitCoordinator *DitCoordinatorCaller) GetKNWVoteIDFromProposalID(opts *bi
 
 // GetKNWVoteIDFromProposalID is a free data retrieval call binding the contract method 0x06ee4596.
 //
-// Solidity: function getKNWVoteIDFromProposalID(bytes32 _repository, uint256 _proposalID) constant returns(uint256)
+// Solidity: function getKNWVoteIDFromProposalID(bytes32 _repository, uint256 _proposalID) constant returns(uint256 KNWVoteID)
 func (_DitCoordinator *DitCoordinatorSession) GetKNWVoteIDFromProposalID(_repository [32]byte, _proposalID *big.Int) (*big.Int, error) {
 	return _DitCoordinator.Contract.GetKNWVoteIDFromProposalID(&_DitCoordinator.CallOpts, _repository, _proposalID)
 }
 
 // GetKNWVoteIDFromProposalID is a free data retrieval call binding the contract method 0x06ee4596.
 //
-// Solidity: function getKNWVoteIDFromProposalID(bytes32 _repository, uint256 _proposalID) constant returns(uint256)
+// Solidity: function getKNWVoteIDFromProposalID(bytes32 _repository, uint256 _proposalID) constant returns(uint256 KNWVoteID)
 func (_DitCoordinator *DitCoordinatorCallerSession) GetKNWVoteIDFromProposalID(_repository [32]byte, _proposalID *big.Int) (*big.Int, error) {
 	return _DitCoordinator.Contract.GetKNWVoteIDFromProposalID(&_DitCoordinator.CallOpts, _repository, _proposalID)
 }
@@ -1047,6 +1156,32 @@ func (_DitCoordinator *DitCoordinatorCallerSession) GetKnowledgeLabels(_reposito
 	return _DitCoordinator.Contract.GetKnowledgeLabels(&_DitCoordinator.CallOpts, _repository, _knowledgeLabelID)
 }
 
+// GetVotingMajority is a free data retrieval call binding the contract method 0x3fcc148d.
+//
+// Solidity: function getVotingMajority(bytes32 _repository) constant returns(uint256 votingMajority)
+func (_DitCoordinator *DitCoordinatorCaller) GetVotingMajority(opts *bind.CallOpts, _repository [32]byte) (*big.Int, error) {
+	var (
+		ret0 = new(*big.Int)
+	)
+	out := ret0
+	err := _DitCoordinator.contract.Call(opts, out, "getVotingMajority", _repository)
+	return *ret0, err
+}
+
+// GetVotingMajority is a free data retrieval call binding the contract method 0x3fcc148d.
+//
+// Solidity: function getVotingMajority(bytes32 _repository) constant returns(uint256 votingMajority)
+func (_DitCoordinator *DitCoordinatorSession) GetVotingMajority(_repository [32]byte) (*big.Int, error) {
+	return _DitCoordinator.Contract.GetVotingMajority(&_DitCoordinator.CallOpts, _repository)
+}
+
+// GetVotingMajority is a free data retrieval call binding the contract method 0x3fcc148d.
+//
+// Solidity: function getVotingMajority(bytes32 _repository) constant returns(uint256 votingMajority)
+func (_DitCoordinator *DitCoordinatorCallerSession) GetVotingMajority(_repository [32]byte) (*big.Int, error) {
+	return _DitCoordinator.Contract.GetVotingMajority(&_DitCoordinator.CallOpts, _repository)
+}
+
 // IsKYCValidator is a free data retrieval call binding the contract method 0x1341f25c.
 //
 // Solidity: function isKYCValidator(address ) constant returns(bool)
@@ -1071,6 +1206,58 @@ func (_DitCoordinator *DitCoordinatorSession) IsKYCValidator(arg0 common.Address
 // Solidity: function isKYCValidator(address ) constant returns(bool)
 func (_DitCoordinator *DitCoordinatorCallerSession) IsKYCValidator(arg0 common.Address) (bool, error) {
 	return _DitCoordinator.Contract.IsKYCValidator(&_DitCoordinator.CallOpts, arg0)
+}
+
+// LastDitCoordinator is a free data retrieval call binding the contract method 0xd7ad0eae.
+//
+// Solidity: function lastDitCoordinator() constant returns(address)
+func (_DitCoordinator *DitCoordinatorCaller) LastDitCoordinator(opts *bind.CallOpts) (common.Address, error) {
+	var (
+		ret0 = new(common.Address)
+	)
+	out := ret0
+	err := _DitCoordinator.contract.Call(opts, out, "lastDitCoordinator")
+	return *ret0, err
+}
+
+// LastDitCoordinator is a free data retrieval call binding the contract method 0xd7ad0eae.
+//
+// Solidity: function lastDitCoordinator() constant returns(address)
+func (_DitCoordinator *DitCoordinatorSession) LastDitCoordinator() (common.Address, error) {
+	return _DitCoordinator.Contract.LastDitCoordinator(&_DitCoordinator.CallOpts)
+}
+
+// LastDitCoordinator is a free data retrieval call binding the contract method 0xd7ad0eae.
+//
+// Solidity: function lastDitCoordinator() constant returns(address)
+func (_DitCoordinator *DitCoordinatorCallerSession) LastDitCoordinator() (common.Address, error) {
+	return _DitCoordinator.Contract.LastDitCoordinator(&_DitCoordinator.CallOpts)
+}
+
+// NextDitCoordinator is a free data retrieval call binding the contract method 0x99821d9b.
+//
+// Solidity: function nextDitCoordinator() constant returns(address)
+func (_DitCoordinator *DitCoordinatorCaller) NextDitCoordinator(opts *bind.CallOpts) (common.Address, error) {
+	var (
+		ret0 = new(common.Address)
+	)
+	out := ret0
+	err := _DitCoordinator.contract.Call(opts, out, "nextDitCoordinator")
+	return *ret0, err
+}
+
+// NextDitCoordinator is a free data retrieval call binding the contract method 0x99821d9b.
+//
+// Solidity: function nextDitCoordinator() constant returns(address)
+func (_DitCoordinator *DitCoordinatorSession) NextDitCoordinator() (common.Address, error) {
+	return _DitCoordinator.Contract.NextDitCoordinator(&_DitCoordinator.CallOpts)
+}
+
+// NextDitCoordinator is a free data retrieval call binding the contract method 0x99821d9b.
+//
+// Solidity: function nextDitCoordinator() constant returns(address)
+func (_DitCoordinator *DitCoordinatorCallerSession) NextDitCoordinator() (common.Address, error) {
+	return _DitCoordinator.Contract.NextDitCoordinator(&_DitCoordinator.CallOpts)
 }
 
 // PassedKYC is a free data retrieval call binding the contract method 0xccd9aa68.
@@ -1183,26 +1370,14 @@ func (_DitCoordinator *DitCoordinatorCallerSession) ProposalsOfRepository(arg0 [
 
 // Repositories is a free data retrieval call binding the contract method 0x1f51fd71.
 //
-// Solidity: function repositories(bytes32 ) constant returns(uint256 votingMajority, uint256 mintingMethod, uint256 burningMethod, uint256 currentProposalID, uint256 minVoteCommitDuration, uint256 maxVoteCommitDuration, uint256 minVoteOpenDuration, uint256 maxVoteOpenDuration)
+// Solidity: function repositories(bytes32 ) constant returns(uint256 currentProposalID, uint256 votingMajority)
 func (_DitCoordinator *DitCoordinatorCaller) Repositories(opts *bind.CallOpts, arg0 [32]byte) (struct {
-	VotingMajority        *big.Int
-	MintingMethod         *big.Int
-	BurningMethod         *big.Int
-	CurrentProposalID     *big.Int
-	MinVoteCommitDuration *big.Int
-	MaxVoteCommitDuration *big.Int
-	MinVoteOpenDuration   *big.Int
-	MaxVoteOpenDuration   *big.Int
+	CurrentProposalID *big.Int
+	VotingMajority    *big.Int
 }, error) {
 	ret := new(struct {
-		VotingMajority        *big.Int
-		MintingMethod         *big.Int
-		BurningMethod         *big.Int
-		CurrentProposalID     *big.Int
-		MinVoteCommitDuration *big.Int
-		MaxVoteCommitDuration *big.Int
-		MinVoteOpenDuration   *big.Int
-		MaxVoteOpenDuration   *big.Int
+		CurrentProposalID *big.Int
+		VotingMajority    *big.Int
 	})
 	out := ret
 	err := _DitCoordinator.contract.Call(opts, out, "repositories", arg0)
@@ -1211,32 +1386,20 @@ func (_DitCoordinator *DitCoordinatorCaller) Repositories(opts *bind.CallOpts, a
 
 // Repositories is a free data retrieval call binding the contract method 0x1f51fd71.
 //
-// Solidity: function repositories(bytes32 ) constant returns(uint256 votingMajority, uint256 mintingMethod, uint256 burningMethod, uint256 currentProposalID, uint256 minVoteCommitDuration, uint256 maxVoteCommitDuration, uint256 minVoteOpenDuration, uint256 maxVoteOpenDuration)
+// Solidity: function repositories(bytes32 ) constant returns(uint256 currentProposalID, uint256 votingMajority)
 func (_DitCoordinator *DitCoordinatorSession) Repositories(arg0 [32]byte) (struct {
-	VotingMajority        *big.Int
-	MintingMethod         *big.Int
-	BurningMethod         *big.Int
-	CurrentProposalID     *big.Int
-	MinVoteCommitDuration *big.Int
-	MaxVoteCommitDuration *big.Int
-	MinVoteOpenDuration   *big.Int
-	MaxVoteOpenDuration   *big.Int
+	CurrentProposalID *big.Int
+	VotingMajority    *big.Int
 }, error) {
 	return _DitCoordinator.Contract.Repositories(&_DitCoordinator.CallOpts, arg0)
 }
 
 // Repositories is a free data retrieval call binding the contract method 0x1f51fd71.
 //
-// Solidity: function repositories(bytes32 ) constant returns(uint256 votingMajority, uint256 mintingMethod, uint256 burningMethod, uint256 currentProposalID, uint256 minVoteCommitDuration, uint256 maxVoteCommitDuration, uint256 minVoteOpenDuration, uint256 maxVoteOpenDuration)
+// Solidity: function repositories(bytes32 ) constant returns(uint256 currentProposalID, uint256 votingMajority)
 func (_DitCoordinator *DitCoordinatorCallerSession) Repositories(arg0 [32]byte) (struct {
-	VotingMajority        *big.Int
-	MintingMethod         *big.Int
-	BurningMethod         *big.Int
-	CurrentProposalID     *big.Int
-	MinVoteCommitDuration *big.Int
-	MaxVoteCommitDuration *big.Int
-	MinVoteOpenDuration   *big.Int
-	MaxVoteOpenDuration   *big.Int
+	CurrentProposalID *big.Int
+	VotingMajority    *big.Int
 }, error) {
 	return _DitCoordinator.Contract.Repositories(&_DitCoordinator.CallOpts, arg0)
 }
@@ -1269,191 +1432,254 @@ func (_DitCoordinator *DitCoordinatorCallerSession) RepositoryIsInitialized(_rep
 
 // AddKYCValidator is a paid mutator transaction binding the contract method 0xd0c397ef.
 //
-// Solidity: function addKYCValidator(address _address) returns()
+// Solidity: function addKYCValidator(address _address) returns(bool)
 func (_DitCoordinator *DitCoordinatorTransactor) AddKYCValidator(opts *bind.TransactOpts, _address common.Address) (*types.Transaction, error) {
 	return _DitCoordinator.contract.Transact(opts, "addKYCValidator", _address)
 }
 
 // AddKYCValidator is a paid mutator transaction binding the contract method 0xd0c397ef.
 //
-// Solidity: function addKYCValidator(address _address) returns()
+// Solidity: function addKYCValidator(address _address) returns(bool)
 func (_DitCoordinator *DitCoordinatorSession) AddKYCValidator(_address common.Address) (*types.Transaction, error) {
 	return _DitCoordinator.Contract.AddKYCValidator(&_DitCoordinator.TransactOpts, _address)
 }
 
 // AddKYCValidator is a paid mutator transaction binding the contract method 0xd0c397ef.
 //
-// Solidity: function addKYCValidator(address _address) returns()
+// Solidity: function addKYCValidator(address _address) returns(bool)
 func (_DitCoordinator *DitCoordinatorTransactorSession) AddKYCValidator(_address common.Address) (*types.Transaction, error) {
 	return _DitCoordinator.Contract.AddKYCValidator(&_DitCoordinator.TransactOpts, _address)
 }
 
 // FinalizeVote is a paid mutator transaction binding the contract method 0x2e71d0fb.
 //
-// Solidity: function finalizeVote(bytes32 _repository, uint256 _proposalID) returns()
+// Solidity: function finalizeVote(bytes32 _repository, uint256 _proposalID) returns(bool)
 func (_DitCoordinator *DitCoordinatorTransactor) FinalizeVote(opts *bind.TransactOpts, _repository [32]byte, _proposalID *big.Int) (*types.Transaction, error) {
 	return _DitCoordinator.contract.Transact(opts, "finalizeVote", _repository, _proposalID)
 }
 
 // FinalizeVote is a paid mutator transaction binding the contract method 0x2e71d0fb.
 //
-// Solidity: function finalizeVote(bytes32 _repository, uint256 _proposalID) returns()
+// Solidity: function finalizeVote(bytes32 _repository, uint256 _proposalID) returns(bool)
 func (_DitCoordinator *DitCoordinatorSession) FinalizeVote(_repository [32]byte, _proposalID *big.Int) (*types.Transaction, error) {
 	return _DitCoordinator.Contract.FinalizeVote(&_DitCoordinator.TransactOpts, _repository, _proposalID)
 }
 
 // FinalizeVote is a paid mutator transaction binding the contract method 0x2e71d0fb.
 //
-// Solidity: function finalizeVote(bytes32 _repository, uint256 _proposalID) returns()
+// Solidity: function finalizeVote(bytes32 _repository, uint256 _proposalID) returns(bool)
 func (_DitCoordinator *DitCoordinatorTransactorSession) FinalizeVote(_repository [32]byte, _proposalID *big.Int) (*types.Transaction, error) {
 	return _DitCoordinator.Contract.FinalizeVote(&_DitCoordinator.TransactOpts, _repository, _proposalID)
 }
 
-// InitRepository is a paid mutator transaction binding the contract method 0x51f43c24.
+// InitRepository is a paid mutator transaction binding the contract method 0x9a401f48.
 //
-// Solidity: function initRepository(bytes32 _repository, string _label1, string _label2, string _label3, uint256[7] _voteSettings) returns(bool)
-func (_DitCoordinator *DitCoordinatorTransactor) InitRepository(opts *bind.TransactOpts, _repository [32]byte, _label1 string, _label2 string, _label3 string, _voteSettings [7]*big.Int) (*types.Transaction, error) {
-	return _DitCoordinator.contract.Transact(opts, "initRepository", _repository, _label1, _label2, _label3, _voteSettings)
+// Solidity: function initRepository(bytes32 _repository, string _label1, string _label2, string _label3, uint256 _votingMajority) returns(bool)
+func (_DitCoordinator *DitCoordinatorTransactor) InitRepository(opts *bind.TransactOpts, _repository [32]byte, _label1 string, _label2 string, _label3 string, _votingMajority *big.Int) (*types.Transaction, error) {
+	return _DitCoordinator.contract.Transact(opts, "initRepository", _repository, _label1, _label2, _label3, _votingMajority)
 }
 
-// InitRepository is a paid mutator transaction binding the contract method 0x51f43c24.
+// InitRepository is a paid mutator transaction binding the contract method 0x9a401f48.
 //
-// Solidity: function initRepository(bytes32 _repository, string _label1, string _label2, string _label3, uint256[7] _voteSettings) returns(bool)
-func (_DitCoordinator *DitCoordinatorSession) InitRepository(_repository [32]byte, _label1 string, _label2 string, _label3 string, _voteSettings [7]*big.Int) (*types.Transaction, error) {
-	return _DitCoordinator.Contract.InitRepository(&_DitCoordinator.TransactOpts, _repository, _label1, _label2, _label3, _voteSettings)
+// Solidity: function initRepository(bytes32 _repository, string _label1, string _label2, string _label3, uint256 _votingMajority) returns(bool)
+func (_DitCoordinator *DitCoordinatorSession) InitRepository(_repository [32]byte, _label1 string, _label2 string, _label3 string, _votingMajority *big.Int) (*types.Transaction, error) {
+	return _DitCoordinator.Contract.InitRepository(&_DitCoordinator.TransactOpts, _repository, _label1, _label2, _label3, _votingMajority)
 }
 
-// InitRepository is a paid mutator transaction binding the contract method 0x51f43c24.
+// InitRepository is a paid mutator transaction binding the contract method 0x9a401f48.
 //
-// Solidity: function initRepository(bytes32 _repository, string _label1, string _label2, string _label3, uint256[7] _voteSettings) returns(bool)
-func (_DitCoordinator *DitCoordinatorTransactorSession) InitRepository(_repository [32]byte, _label1 string, _label2 string, _label3 string, _voteSettings [7]*big.Int) (*types.Transaction, error) {
-	return _DitCoordinator.Contract.InitRepository(&_DitCoordinator.TransactOpts, _repository, _label1, _label2, _label3, _voteSettings)
+// Solidity: function initRepository(bytes32 _repository, string _label1, string _label2, string _label3, uint256 _votingMajority) returns(bool)
+func (_DitCoordinator *DitCoordinatorTransactorSession) InitRepository(_repository [32]byte, _label1 string, _label2 string, _label3 string, _votingMajority *big.Int) (*types.Transaction, error) {
+	return _DitCoordinator.Contract.InitRepository(&_DitCoordinator.TransactOpts, _repository, _label1, _label2, _label3, _votingMajority)
+}
+
+// MigrateRepository is a paid mutator transaction binding the contract method 0xea976d2c.
+//
+// Solidity: function migrateRepository(bytes32 _repository) returns(bool)
+func (_DitCoordinator *DitCoordinatorTransactor) MigrateRepository(opts *bind.TransactOpts, _repository [32]byte) (*types.Transaction, error) {
+	return _DitCoordinator.contract.Transact(opts, "migrateRepository", _repository)
+}
+
+// MigrateRepository is a paid mutator transaction binding the contract method 0xea976d2c.
+//
+// Solidity: function migrateRepository(bytes32 _repository) returns(bool)
+func (_DitCoordinator *DitCoordinatorSession) MigrateRepository(_repository [32]byte) (*types.Transaction, error) {
+	return _DitCoordinator.Contract.MigrateRepository(&_DitCoordinator.TransactOpts, _repository)
+}
+
+// MigrateRepository is a paid mutator transaction binding the contract method 0xea976d2c.
+//
+// Solidity: function migrateRepository(bytes32 _repository) returns(bool)
+func (_DitCoordinator *DitCoordinatorTransactorSession) MigrateRepository(_repository [32]byte) (*types.Transaction, error) {
+	return _DitCoordinator.Contract.MigrateRepository(&_DitCoordinator.TransactOpts, _repository)
 }
 
 // OpenVoteOnProposal is a paid mutator transaction binding the contract method 0x0ee62ec0.
 //
-// Solidity: function openVoteOnProposal(bytes32 _repository, uint256 _proposalID, uint256 _voteOption, uint256 _voteSalt) returns()
+// Solidity: function openVoteOnProposal(bytes32 _repository, uint256 _proposalID, uint256 _voteOption, uint256 _voteSalt) returns(bool)
 func (_DitCoordinator *DitCoordinatorTransactor) OpenVoteOnProposal(opts *bind.TransactOpts, _repository [32]byte, _proposalID *big.Int, _voteOption *big.Int, _voteSalt *big.Int) (*types.Transaction, error) {
 	return _DitCoordinator.contract.Transact(opts, "openVoteOnProposal", _repository, _proposalID, _voteOption, _voteSalt)
 }
 
 // OpenVoteOnProposal is a paid mutator transaction binding the contract method 0x0ee62ec0.
 //
-// Solidity: function openVoteOnProposal(bytes32 _repository, uint256 _proposalID, uint256 _voteOption, uint256 _voteSalt) returns()
+// Solidity: function openVoteOnProposal(bytes32 _repository, uint256 _proposalID, uint256 _voteOption, uint256 _voteSalt) returns(bool)
 func (_DitCoordinator *DitCoordinatorSession) OpenVoteOnProposal(_repository [32]byte, _proposalID *big.Int, _voteOption *big.Int, _voteSalt *big.Int) (*types.Transaction, error) {
 	return _DitCoordinator.Contract.OpenVoteOnProposal(&_DitCoordinator.TransactOpts, _repository, _proposalID, _voteOption, _voteSalt)
 }
 
 // OpenVoteOnProposal is a paid mutator transaction binding the contract method 0x0ee62ec0.
 //
-// Solidity: function openVoteOnProposal(bytes32 _repository, uint256 _proposalID, uint256 _voteOption, uint256 _voteSalt) returns()
+// Solidity: function openVoteOnProposal(bytes32 _repository, uint256 _proposalID, uint256 _voteOption, uint256 _voteSalt) returns(bool)
 func (_DitCoordinator *DitCoordinatorTransactorSession) OpenVoteOnProposal(_repository [32]byte, _proposalID *big.Int, _voteOption *big.Int, _voteSalt *big.Int) (*types.Transaction, error) {
 	return _DitCoordinator.Contract.OpenVoteOnProposal(&_DitCoordinator.TransactOpts, _repository, _proposalID, _voteOption, _voteSalt)
 }
 
 // PassKYC is a paid mutator transaction binding the contract method 0xeb931024.
 //
-// Solidity: function passKYC(address _address) returns()
+// Solidity: function passKYC(address _address) returns(bool)
 func (_DitCoordinator *DitCoordinatorTransactor) PassKYC(opts *bind.TransactOpts, _address common.Address) (*types.Transaction, error) {
 	return _DitCoordinator.contract.Transact(opts, "passKYC", _address)
 }
 
 // PassKYC is a paid mutator transaction binding the contract method 0xeb931024.
 //
-// Solidity: function passKYC(address _address) returns()
+// Solidity: function passKYC(address _address) returns(bool)
 func (_DitCoordinator *DitCoordinatorSession) PassKYC(_address common.Address) (*types.Transaction, error) {
 	return _DitCoordinator.Contract.PassKYC(&_DitCoordinator.TransactOpts, _address)
 }
 
 // PassKYC is a paid mutator transaction binding the contract method 0xeb931024.
 //
-// Solidity: function passKYC(address _address) returns()
+// Solidity: function passKYC(address _address) returns(bool)
 func (_DitCoordinator *DitCoordinatorTransactorSession) PassKYC(_address common.Address) (*types.Transaction, error) {
 	return _DitCoordinator.Contract.PassKYC(&_DitCoordinator.TransactOpts, _address)
 }
 
-// ProposeCommit is a paid mutator transaction binding the contract method 0x0aba8688.
+// ProposeCommit is a paid mutator transaction binding the contract method 0xbef7a4da.
 //
-// Solidity: function proposeCommit(bytes32 _repository, uint256 _knowledgeLabelIndex, uint256 _voteCommitDuration, uint256 _voteOpenDuration) returns()
-func (_DitCoordinator *DitCoordinatorTransactor) ProposeCommit(opts *bind.TransactOpts, _repository [32]byte, _knowledgeLabelIndex *big.Int, _voteCommitDuration *big.Int, _voteOpenDuration *big.Int) (*types.Transaction, error) {
-	return _DitCoordinator.contract.Transact(opts, "proposeCommit", _repository, _knowledgeLabelIndex, _voteCommitDuration, _voteOpenDuration)
+// Solidity: function proposeCommit(bytes32 _repository, uint256 _knowledgeLabelIndex, uint256 _numberOfKNW, uint256 _voteCommitDuration, uint256 _voteOpenDuration) returns(uint256 proposalID)
+func (_DitCoordinator *DitCoordinatorTransactor) ProposeCommit(opts *bind.TransactOpts, _repository [32]byte, _knowledgeLabelIndex *big.Int, _numberOfKNW *big.Int, _voteCommitDuration *big.Int, _voteOpenDuration *big.Int) (*types.Transaction, error) {
+	return _DitCoordinator.contract.Transact(opts, "proposeCommit", _repository, _knowledgeLabelIndex, _numberOfKNW, _voteCommitDuration, _voteOpenDuration)
 }
 
-// ProposeCommit is a paid mutator transaction binding the contract method 0x0aba8688.
+// ProposeCommit is a paid mutator transaction binding the contract method 0xbef7a4da.
 //
-// Solidity: function proposeCommit(bytes32 _repository, uint256 _knowledgeLabelIndex, uint256 _voteCommitDuration, uint256 _voteOpenDuration) returns()
-func (_DitCoordinator *DitCoordinatorSession) ProposeCommit(_repository [32]byte, _knowledgeLabelIndex *big.Int, _voteCommitDuration *big.Int, _voteOpenDuration *big.Int) (*types.Transaction, error) {
-	return _DitCoordinator.Contract.ProposeCommit(&_DitCoordinator.TransactOpts, _repository, _knowledgeLabelIndex, _voteCommitDuration, _voteOpenDuration)
+// Solidity: function proposeCommit(bytes32 _repository, uint256 _knowledgeLabelIndex, uint256 _numberOfKNW, uint256 _voteCommitDuration, uint256 _voteOpenDuration) returns(uint256 proposalID)
+func (_DitCoordinator *DitCoordinatorSession) ProposeCommit(_repository [32]byte, _knowledgeLabelIndex *big.Int, _numberOfKNW *big.Int, _voteCommitDuration *big.Int, _voteOpenDuration *big.Int) (*types.Transaction, error) {
+	return _DitCoordinator.Contract.ProposeCommit(&_DitCoordinator.TransactOpts, _repository, _knowledgeLabelIndex, _numberOfKNW, _voteCommitDuration, _voteOpenDuration)
 }
 
-// ProposeCommit is a paid mutator transaction binding the contract method 0x0aba8688.
+// ProposeCommit is a paid mutator transaction binding the contract method 0xbef7a4da.
 //
-// Solidity: function proposeCommit(bytes32 _repository, uint256 _knowledgeLabelIndex, uint256 _voteCommitDuration, uint256 _voteOpenDuration) returns()
-func (_DitCoordinator *DitCoordinatorTransactorSession) ProposeCommit(_repository [32]byte, _knowledgeLabelIndex *big.Int, _voteCommitDuration *big.Int, _voteOpenDuration *big.Int) (*types.Transaction, error) {
-	return _DitCoordinator.Contract.ProposeCommit(&_DitCoordinator.TransactOpts, _repository, _knowledgeLabelIndex, _voteCommitDuration, _voteOpenDuration)
+// Solidity: function proposeCommit(bytes32 _repository, uint256 _knowledgeLabelIndex, uint256 _numberOfKNW, uint256 _voteCommitDuration, uint256 _voteOpenDuration) returns(uint256 proposalID)
+func (_DitCoordinator *DitCoordinatorTransactorSession) ProposeCommit(_repository [32]byte, _knowledgeLabelIndex *big.Int, _numberOfKNW *big.Int, _voteCommitDuration *big.Int, _voteOpenDuration *big.Int) (*types.Transaction, error) {
+	return _DitCoordinator.Contract.ProposeCommit(&_DitCoordinator.TransactOpts, _repository, _knowledgeLabelIndex, _numberOfKNW, _voteCommitDuration, _voteOpenDuration)
 }
 
 // RemoveKYCValidator is a paid mutator transaction binding the contract method 0x73b0dddd.
 //
-// Solidity: function removeKYCValidator(address _address) returns()
+// Solidity: function removeKYCValidator(address _address) returns(bool)
 func (_DitCoordinator *DitCoordinatorTransactor) RemoveKYCValidator(opts *bind.TransactOpts, _address common.Address) (*types.Transaction, error) {
 	return _DitCoordinator.contract.Transact(opts, "removeKYCValidator", _address)
 }
 
 // RemoveKYCValidator is a paid mutator transaction binding the contract method 0x73b0dddd.
 //
-// Solidity: function removeKYCValidator(address _address) returns()
+// Solidity: function removeKYCValidator(address _address) returns(bool)
 func (_DitCoordinator *DitCoordinatorSession) RemoveKYCValidator(_address common.Address) (*types.Transaction, error) {
 	return _DitCoordinator.Contract.RemoveKYCValidator(&_DitCoordinator.TransactOpts, _address)
 }
 
 // RemoveKYCValidator is a paid mutator transaction binding the contract method 0x73b0dddd.
 //
-// Solidity: function removeKYCValidator(address _address) returns()
+// Solidity: function removeKYCValidator(address _address) returns(bool)
 func (_DitCoordinator *DitCoordinatorTransactorSession) RemoveKYCValidator(_address common.Address) (*types.Transaction, error) {
 	return _DitCoordinator.Contract.RemoveKYCValidator(&_DitCoordinator.TransactOpts, _address)
 }
 
+// ReplaceDitManager is a paid mutator transaction binding the contract method 0x91016157.
+//
+// Solidity: function replaceDitManager(address _newManager) returns(bool)
+func (_DitCoordinator *DitCoordinatorTransactor) ReplaceDitManager(opts *bind.TransactOpts, _newManager common.Address) (*types.Transaction, error) {
+	return _DitCoordinator.contract.Transact(opts, "replaceDitManager", _newManager)
+}
+
+// ReplaceDitManager is a paid mutator transaction binding the contract method 0x91016157.
+//
+// Solidity: function replaceDitManager(address _newManager) returns(bool)
+func (_DitCoordinator *DitCoordinatorSession) ReplaceDitManager(_newManager common.Address) (*types.Transaction, error) {
+	return _DitCoordinator.Contract.ReplaceDitManager(&_DitCoordinator.TransactOpts, _newManager)
+}
+
+// ReplaceDitManager is a paid mutator transaction binding the contract method 0x91016157.
+//
+// Solidity: function replaceDitManager(address _newManager) returns(bool)
+func (_DitCoordinator *DitCoordinatorTransactorSession) ReplaceDitManager(_newManager common.Address) (*types.Transaction, error) {
+	return _DitCoordinator.Contract.ReplaceDitManager(&_DitCoordinator.TransactOpts, _newManager)
+}
+
 // RevokeKYC is a paid mutator transaction binding the contract method 0x39ba645b.
 //
-// Solidity: function revokeKYC(address _address) returns()
+// Solidity: function revokeKYC(address _address) returns(bool)
 func (_DitCoordinator *DitCoordinatorTransactor) RevokeKYC(opts *bind.TransactOpts, _address common.Address) (*types.Transaction, error) {
 	return _DitCoordinator.contract.Transact(opts, "revokeKYC", _address)
 }
 
 // RevokeKYC is a paid mutator transaction binding the contract method 0x39ba645b.
 //
-// Solidity: function revokeKYC(address _address) returns()
+// Solidity: function revokeKYC(address _address) returns(bool)
 func (_DitCoordinator *DitCoordinatorSession) RevokeKYC(_address common.Address) (*types.Transaction, error) {
 	return _DitCoordinator.Contract.RevokeKYC(&_DitCoordinator.TransactOpts, _address)
 }
 
 // RevokeKYC is a paid mutator transaction binding the contract method 0x39ba645b.
 //
-// Solidity: function revokeKYC(address _address) returns()
+// Solidity: function revokeKYC(address _address) returns(bool)
 func (_DitCoordinator *DitCoordinatorTransactorSession) RevokeKYC(_address common.Address) (*types.Transaction, error) {
 	return _DitCoordinator.Contract.RevokeKYC(&_DitCoordinator.TransactOpts, _address)
 }
 
-// VoteOnProposal is a paid mutator transaction binding the contract method 0xa34c299a.
+// UpgradeContract is a paid mutator transaction binding the contract method 0xeb2c0223.
 //
-// Solidity: function voteOnProposal(bytes32 _repository, uint256 _proposalID, bytes32 _voteHash) returns()
-func (_DitCoordinator *DitCoordinatorTransactor) VoteOnProposal(opts *bind.TransactOpts, _repository [32]byte, _proposalID *big.Int, _voteHash [32]byte) (*types.Transaction, error) {
-	return _DitCoordinator.contract.Transact(opts, "voteOnProposal", _repository, _proposalID, _voteHash)
+// Solidity: function upgradeContract(address _address) returns(bool)
+func (_DitCoordinator *DitCoordinatorTransactor) UpgradeContract(opts *bind.TransactOpts, _address common.Address) (*types.Transaction, error) {
+	return _DitCoordinator.contract.Transact(opts, "upgradeContract", _address)
 }
 
-// VoteOnProposal is a paid mutator transaction binding the contract method 0xa34c299a.
+// UpgradeContract is a paid mutator transaction binding the contract method 0xeb2c0223.
 //
-// Solidity: function voteOnProposal(bytes32 _repository, uint256 _proposalID, bytes32 _voteHash) returns()
-func (_DitCoordinator *DitCoordinatorSession) VoteOnProposal(_repository [32]byte, _proposalID *big.Int, _voteHash [32]byte) (*types.Transaction, error) {
-	return _DitCoordinator.Contract.VoteOnProposal(&_DitCoordinator.TransactOpts, _repository, _proposalID, _voteHash)
+// Solidity: function upgradeContract(address _address) returns(bool)
+func (_DitCoordinator *DitCoordinatorSession) UpgradeContract(_address common.Address) (*types.Transaction, error) {
+	return _DitCoordinator.Contract.UpgradeContract(&_DitCoordinator.TransactOpts, _address)
 }
 
-// VoteOnProposal is a paid mutator transaction binding the contract method 0xa34c299a.
+// UpgradeContract is a paid mutator transaction binding the contract method 0xeb2c0223.
 //
-// Solidity: function voteOnProposal(bytes32 _repository, uint256 _proposalID, bytes32 _voteHash) returns()
-func (_DitCoordinator *DitCoordinatorTransactorSession) VoteOnProposal(_repository [32]byte, _proposalID *big.Int, _voteHash [32]byte) (*types.Transaction, error) {
-	return _DitCoordinator.Contract.VoteOnProposal(&_DitCoordinator.TransactOpts, _repository, _proposalID, _voteHash)
+// Solidity: function upgradeContract(address _address) returns(bool)
+func (_DitCoordinator *DitCoordinatorTransactorSession) UpgradeContract(_address common.Address) (*types.Transaction, error) {
+	return _DitCoordinator.Contract.UpgradeContract(&_DitCoordinator.TransactOpts, _address)
+}
+
+// VoteOnProposal is a paid mutator transaction binding the contract method 0xab4b593e.
+//
+// Solidity: function voteOnProposal(bytes32 _repository, uint256 _proposalID, bytes32 _voteHash, uint256 _numberOfKNW) returns(bool)
+func (_DitCoordinator *DitCoordinatorTransactor) VoteOnProposal(opts *bind.TransactOpts, _repository [32]byte, _proposalID *big.Int, _voteHash [32]byte, _numberOfKNW *big.Int) (*types.Transaction, error) {
+	return _DitCoordinator.contract.Transact(opts, "voteOnProposal", _repository, _proposalID, _voteHash, _numberOfKNW)
+}
+
+// VoteOnProposal is a paid mutator transaction binding the contract method 0xab4b593e.
+//
+// Solidity: function voteOnProposal(bytes32 _repository, uint256 _proposalID, bytes32 _voteHash, uint256 _numberOfKNW) returns(bool)
+func (_DitCoordinator *DitCoordinatorSession) VoteOnProposal(_repository [32]byte, _proposalID *big.Int, _voteHash [32]byte, _numberOfKNW *big.Int) (*types.Transaction, error) {
+	return _DitCoordinator.Contract.VoteOnProposal(&_DitCoordinator.TransactOpts, _repository, _proposalID, _voteHash, _numberOfKNW)
+}
+
+// VoteOnProposal is a paid mutator transaction binding the contract method 0xab4b593e.
+//
+// Solidity: function voteOnProposal(bytes32 _repository, uint256 _proposalID, bytes32 _voteHash, uint256 _numberOfKNW) returns(bool)
+func (_DitCoordinator *DitCoordinatorTransactorSession) VoteOnProposal(_repository [32]byte, _proposalID *big.Int, _voteHash [32]byte, _numberOfKNW *big.Int) (*types.Transaction, error) {
+	return _DitCoordinator.Contract.VoteOnProposal(&_DitCoordinator.TransactOpts, _repository, _proposalID, _voteHash, _numberOfKNW)
 }
 
 // DitCoordinatorCommitVoteIterator is returned from FilterCommitVote and is used to iterate over the raw logs and unpacked data for CommitVote events raised by the DitCoordinator contract.
@@ -1530,13 +1756,14 @@ type DitCoordinatorCommitVote struct {
 	Who           common.Address
 	Label         string
 	Stake         *big.Int
+	NumberOfKNW   *big.Int
 	NumberOfVotes *big.Int
 	Raw           types.Log // Blockchain specific contextual infos
 }
 
-// FilterCommitVote is a free log retrieval operation binding the contract event 0xa01eea487bb3ec75528c167ccf90452d4164ddda7b13c55b2a89751a8dc5fbc1.
+// FilterCommitVote is a free log retrieval operation binding the contract event 0x7ee8ecf4d9d20fb6454a55c418451d97bec229903525d8517fcd32db68a479e4.
 //
-// Solidity: event CommitVote(bytes32 indexed repository, uint256 indexed proposal, address indexed who, string label, uint256 stake, uint256 numberOfVotes)
+// Solidity: event CommitVote(bytes32 indexed repository, uint256 indexed proposal, address indexed who, string label, uint256 stake, uint256 numberOfKNW, uint256 numberOfVotes)
 func (_DitCoordinator *DitCoordinatorFilterer) FilterCommitVote(opts *bind.FilterOpts, repository [][32]byte, proposal []*big.Int, who []common.Address) (*DitCoordinatorCommitVoteIterator, error) {
 
 	var repositoryRule []interface{}
@@ -1559,9 +1786,9 @@ func (_DitCoordinator *DitCoordinatorFilterer) FilterCommitVote(opts *bind.Filte
 	return &DitCoordinatorCommitVoteIterator{contract: _DitCoordinator.contract, event: "CommitVote", logs: logs, sub: sub}, nil
 }
 
-// WatchCommitVote is a free log subscription operation binding the contract event 0xa01eea487bb3ec75528c167ccf90452d4164ddda7b13c55b2a89751a8dc5fbc1.
+// WatchCommitVote is a free log subscription operation binding the contract event 0x7ee8ecf4d9d20fb6454a55c418451d97bec229903525d8517fcd32db68a479e4.
 //
-// Solidity: event CommitVote(bytes32 indexed repository, uint256 indexed proposal, address indexed who, string label, uint256 stake, uint256 numberOfVotes)
+// Solidity: event CommitVote(bytes32 indexed repository, uint256 indexed proposal, address indexed who, string label, uint256 stake, uint256 numberOfKNW, uint256 numberOfVotes)
 func (_DitCoordinator *DitCoordinatorFilterer) WatchCommitVote(opts *bind.WatchOpts, sink chan<- *DitCoordinatorCommitVote, repository [][32]byte, proposal []*big.Int, who []common.Address) (event.Subscription, error) {
 
 	var repositoryRule []interface{}
@@ -1589,6 +1816,149 @@ func (_DitCoordinator *DitCoordinatorFilterer) WatchCommitVote(opts *bind.WatchO
 				// New log arrived, parse the event and forward to the user
 				event := new(DitCoordinatorCommitVote)
 				if err := _DitCoordinator.contract.UnpackLog(event, "CommitVote", log); err != nil {
+					return err
+				}
+				event.Raw = log
+
+				select {
+				case sink <- event:
+				case err := <-sub.Err():
+					return err
+				case <-quit:
+					return nil
+				}
+			case err := <-sub.Err():
+				return err
+			case <-quit:
+				return nil
+			}
+		}
+	}), nil
+}
+
+// DitCoordinatorFinalizeProposalIterator is returned from FilterFinalizeProposal and is used to iterate over the raw logs and unpacked data for FinalizeProposal events raised by the DitCoordinator contract.
+type DitCoordinatorFinalizeProposalIterator struct {
+	Event *DitCoordinatorFinalizeProposal // Event containing the contract specifics and raw log
+
+	contract *bind.BoundContract // Generic contract to use for unpacking event data
+	event    string              // Event name to use for unpacking event data
+
+	logs chan types.Log        // Log channel receiving the found contract events
+	sub  ethereum.Subscription // Subscription for errors, completion and termination
+	done bool                  // Whether the subscription completed delivering logs
+	fail error                 // Occurred error to stop iteration
+}
+
+// Next advances the iterator to the subsequent event, returning whether there
+// are any more events found. In case of a retrieval or parsing error, false is
+// returned and Error() can be queried for the exact failure.
+func (it *DitCoordinatorFinalizeProposalIterator) Next() bool {
+	// If the iterator failed, stop iterating
+	if it.fail != nil {
+		return false
+	}
+	// If the iterator completed, deliver directly whatever's available
+	if it.done {
+		select {
+		case log := <-it.logs:
+			it.Event = new(DitCoordinatorFinalizeProposal)
+			if err := it.contract.UnpackLog(it.Event, it.event, log); err != nil {
+				it.fail = err
+				return false
+			}
+			it.Event.Raw = log
+			return true
+
+		default:
+			return false
+		}
+	}
+	// Iterator still in progress, wait for either a data or an error event
+	select {
+	case log := <-it.logs:
+		it.Event = new(DitCoordinatorFinalizeProposal)
+		if err := it.contract.UnpackLog(it.Event, it.event, log); err != nil {
+			it.fail = err
+			return false
+		}
+		it.Event.Raw = log
+		return true
+
+	case err := <-it.sub.Err():
+		it.done = true
+		it.fail = err
+		return it.Next()
+	}
+}
+
+// Error returns any retrieval or parsing error occurred during filtering.
+func (it *DitCoordinatorFinalizeProposalIterator) Error() error {
+	return it.fail
+}
+
+// Close terminates the iteration process, releasing any pending underlying
+// resources.
+func (it *DitCoordinatorFinalizeProposalIterator) Close() error {
+	it.sub.Unsubscribe()
+	return nil
+}
+
+// DitCoordinatorFinalizeProposal represents a FinalizeProposal event raised by the DitCoordinator contract.
+type DitCoordinatorFinalizeProposal struct {
+	Repository [32]byte
+	Proposal   *big.Int
+	Label      string
+	Accepted   bool
+	Raw        types.Log // Blockchain specific contextual infos
+}
+
+// FilterFinalizeProposal is a free log retrieval operation binding the contract event 0x56c2d720d2b0f46900eca91b5412e4bb9ef934c72b86308c576d07975fac8353.
+//
+// Solidity: event FinalizeProposal(bytes32 indexed repository, uint256 indexed proposal, string label, bool accepted)
+func (_DitCoordinator *DitCoordinatorFilterer) FilterFinalizeProposal(opts *bind.FilterOpts, repository [][32]byte, proposal []*big.Int) (*DitCoordinatorFinalizeProposalIterator, error) {
+
+	var repositoryRule []interface{}
+	for _, repositoryItem := range repository {
+		repositoryRule = append(repositoryRule, repositoryItem)
+	}
+	var proposalRule []interface{}
+	for _, proposalItem := range proposal {
+		proposalRule = append(proposalRule, proposalItem)
+	}
+
+	logs, sub, err := _DitCoordinator.contract.FilterLogs(opts, "FinalizeProposal", repositoryRule, proposalRule)
+	if err != nil {
+		return nil, err
+	}
+	return &DitCoordinatorFinalizeProposalIterator{contract: _DitCoordinator.contract, event: "FinalizeProposal", logs: logs, sub: sub}, nil
+}
+
+// WatchFinalizeProposal is a free log subscription operation binding the contract event 0x56c2d720d2b0f46900eca91b5412e4bb9ef934c72b86308c576d07975fac8353.
+//
+// Solidity: event FinalizeProposal(bytes32 indexed repository, uint256 indexed proposal, string label, bool accepted)
+func (_DitCoordinator *DitCoordinatorFilterer) WatchFinalizeProposal(opts *bind.WatchOpts, sink chan<- *DitCoordinatorFinalizeProposal, repository [][32]byte, proposal []*big.Int) (event.Subscription, error) {
+
+	var repositoryRule []interface{}
+	for _, repositoryItem := range repository {
+		repositoryRule = append(repositoryRule, repositoryItem)
+	}
+	var proposalRule []interface{}
+	for _, proposalItem := range proposal {
+		proposalRule = append(proposalRule, proposalItem)
+	}
+
+	logs, sub, err := _DitCoordinator.contract.WatchLogs(opts, "FinalizeProposal", repositoryRule, proposalRule)
+	if err != nil {
+		return nil, err
+	}
+	return event.NewSubscription(func(quit <-chan struct{}) error {
+		defer sub.Unsubscribe()
+		for {
+			select {
+			case log := <-logs:
+				// New log arrived, parse the event and forward to the user
+				event := new(DitCoordinatorFinalizeProposal)
+				if err := _DitCoordinator.contract.UnpackLog(event, "FinalizeProposal", log); err != nil {
 					return err
 				}
 				event.Raw = log
@@ -1678,17 +2048,19 @@ func (it *DitCoordinatorFinalizeVoteIterator) Close() error {
 
 // DitCoordinatorFinalizeVote represents a FinalizeVote event raised by the DitCoordinator contract.
 type DitCoordinatorFinalizeVote struct {
-	Repository [32]byte
-	Proposal   *big.Int
-	Label      string
-	Accepted   bool
-	Raw        types.Log // Blockchain specific contextual infos
+	Repository  [32]byte
+	Proposal    *big.Int
+	Who         common.Address
+	Label       string
+	VotedRight  bool
+	NumberOfKNW *big.Int
+	Raw         types.Log // Blockchain specific contextual infos
 }
 
-// FilterFinalizeVote is a free log retrieval operation binding the contract event 0x6bd2699645e0f6c5547bdf0d053280e48fef1ab21514bd02c88610b1279b942a.
+// FilterFinalizeVote is a free log retrieval operation binding the contract event 0xa4a57ebc87f48fa9e8fc4d0812bf408bff87f2326e00c7d209a0d42185b79ec5.
 //
-// Solidity: event FinalizeVote(bytes32 indexed repository, uint256 indexed proposal, string label, bool accepted)
-func (_DitCoordinator *DitCoordinatorFilterer) FilterFinalizeVote(opts *bind.FilterOpts, repository [][32]byte, proposal []*big.Int) (*DitCoordinatorFinalizeVoteIterator, error) {
+// Solidity: event FinalizeVote(bytes32 indexed repository, uint256 indexed proposal, address indexed who, string label, bool votedRight, uint256 numberOfKNW)
+func (_DitCoordinator *DitCoordinatorFilterer) FilterFinalizeVote(opts *bind.FilterOpts, repository [][32]byte, proposal []*big.Int, who []common.Address) (*DitCoordinatorFinalizeVoteIterator, error) {
 
 	var repositoryRule []interface{}
 	for _, repositoryItem := range repository {
@@ -1698,18 +2070,22 @@ func (_DitCoordinator *DitCoordinatorFilterer) FilterFinalizeVote(opts *bind.Fil
 	for _, proposalItem := range proposal {
 		proposalRule = append(proposalRule, proposalItem)
 	}
+	var whoRule []interface{}
+	for _, whoItem := range who {
+		whoRule = append(whoRule, whoItem)
+	}
 
-	logs, sub, err := _DitCoordinator.contract.FilterLogs(opts, "FinalizeVote", repositoryRule, proposalRule)
+	logs, sub, err := _DitCoordinator.contract.FilterLogs(opts, "FinalizeVote", repositoryRule, proposalRule, whoRule)
 	if err != nil {
 		return nil, err
 	}
 	return &DitCoordinatorFinalizeVoteIterator{contract: _DitCoordinator.contract, event: "FinalizeVote", logs: logs, sub: sub}, nil
 }
 
-// WatchFinalizeVote is a free log subscription operation binding the contract event 0x6bd2699645e0f6c5547bdf0d053280e48fef1ab21514bd02c88610b1279b942a.
+// WatchFinalizeVote is a free log subscription operation binding the contract event 0xa4a57ebc87f48fa9e8fc4d0812bf408bff87f2326e00c7d209a0d42185b79ec5.
 //
-// Solidity: event FinalizeVote(bytes32 indexed repository, uint256 indexed proposal, string label, bool accepted)
-func (_DitCoordinator *DitCoordinatorFilterer) WatchFinalizeVote(opts *bind.WatchOpts, sink chan<- *DitCoordinatorFinalizeVote, repository [][32]byte, proposal []*big.Int) (event.Subscription, error) {
+// Solidity: event FinalizeVote(bytes32 indexed repository, uint256 indexed proposal, address indexed who, string label, bool votedRight, uint256 numberOfKNW)
+func (_DitCoordinator *DitCoordinatorFilterer) WatchFinalizeVote(opts *bind.WatchOpts, sink chan<- *DitCoordinatorFinalizeVote, repository [][32]byte, proposal []*big.Int, who []common.Address) (event.Subscription, error) {
 
 	var repositoryRule []interface{}
 	for _, repositoryItem := range repository {
@@ -1719,8 +2095,12 @@ func (_DitCoordinator *DitCoordinatorFilterer) WatchFinalizeVote(opts *bind.Watc
 	for _, proposalItem := range proposal {
 		proposalRule = append(proposalRule, proposalItem)
 	}
+	var whoRule []interface{}
+	for _, whoItem := range who {
+		whoRule = append(whoRule, whoItem)
+	}
 
-	logs, sub, err := _DitCoordinator.contract.WatchLogs(opts, "FinalizeVote", repositoryRule, proposalRule)
+	logs, sub, err := _DitCoordinator.contract.WatchLogs(opts, "FinalizeVote", repositoryRule, proposalRule, whoRule)
 	if err != nil {
 		return nil, err
 	}
@@ -1974,16 +2354,17 @@ func (it *DitCoordinatorProposeCommitIterator) Close() error {
 
 // DitCoordinatorProposeCommit represents a ProposeCommit event raised by the DitCoordinator contract.
 type DitCoordinatorProposeCommit struct {
-	Repository [32]byte
-	Proposal   *big.Int
-	Who        common.Address
-	Label      string
-	Raw        types.Log // Blockchain specific contextual infos
+	Repository  [32]byte
+	Proposal    *big.Int
+	Who         common.Address
+	Label       string
+	NumberOfKNW *big.Int
+	Raw         types.Log // Blockchain specific contextual infos
 }
 
-// FilterProposeCommit is a free log retrieval operation binding the contract event 0x171fe77c3addce776991159eb3eb73b14d9187ebd06c1c34ea12355a84ddbd83.
+// FilterProposeCommit is a free log retrieval operation binding the contract event 0x2ba422bdea9179f02f8c9dd0d6285478f7b4c3fa11a812eeb4d3b1b04cc57c35.
 //
-// Solidity: event ProposeCommit(bytes32 indexed repository, uint256 indexed proposal, address indexed who, string label)
+// Solidity: event ProposeCommit(bytes32 indexed repository, uint256 indexed proposal, address indexed who, string label, uint256 numberOfKNW)
 func (_DitCoordinator *DitCoordinatorFilterer) FilterProposeCommit(opts *bind.FilterOpts, repository [][32]byte, proposal []*big.Int, who []common.Address) (*DitCoordinatorProposeCommitIterator, error) {
 
 	var repositoryRule []interface{}
@@ -2006,9 +2387,9 @@ func (_DitCoordinator *DitCoordinatorFilterer) FilterProposeCommit(opts *bind.Fi
 	return &DitCoordinatorProposeCommitIterator{contract: _DitCoordinator.contract, event: "ProposeCommit", logs: logs, sub: sub}, nil
 }
 
-// WatchProposeCommit is a free log subscription operation binding the contract event 0x171fe77c3addce776991159eb3eb73b14d9187ebd06c1c34ea12355a84ddbd83.
+// WatchProposeCommit is a free log subscription operation binding the contract event 0x2ba422bdea9179f02f8c9dd0d6285478f7b4c3fa11a812eeb4d3b1b04cc57c35.
 //
-// Solidity: event ProposeCommit(bytes32 indexed repository, uint256 indexed proposal, address indexed who, string label)
+// Solidity: event ProposeCommit(bytes32 indexed repository, uint256 indexed proposal, address indexed who, string label, uint256 numberOfKNW)
 func (_DitCoordinator *DitCoordinatorFilterer) WatchProposeCommit(opts *bind.WatchOpts, sink chan<- *DitCoordinatorProposeCommit, repository [][32]byte, proposal []*big.Int, who []common.Address) (event.Subscription, error) {
 
 	var repositoryRule []interface{}
