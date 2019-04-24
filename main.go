@@ -120,7 +120,7 @@ func main() {
 	case "get_address":
 		// Return the ETH address
 		helpers.PrintLine("Ethereum Address: "+config.DitConfig.EthereumKeys.Address, 0)
-		helpers.PrintLine("Etherscan-URL: https://rinkeby.etherscan.io/address/"+config.DitConfig.EthereumKeys.Address, 0)
+		helpers.PrintLine("Etherscan-URL: https://blockscout.com/poa/sokol/address/"+config.DitConfig.EthereumKeys.Address, 0)
 		break
 	case "clone":
 		checkIfExists(args, 1, "a URL to a repository")

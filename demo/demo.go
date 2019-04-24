@@ -155,11 +155,11 @@ func ProposeCommit(_commitMessage string) (string, int, error) {
 	fmt.Println()
 
 	// Setting the value of the transaction to be the selected stake
-	weiFloatStake, _ := (new(big.Float).Mul(floatStake, big.NewFloat(1000000000000000000))).Int64()
-	intStake := big.NewInt(weiFloatStake)
+	weiFloatStake, _ := (new(big.Float).Mul(floatStake, big.NewFloat(1000000000))).Int64()
+	intStake := (new(big.Int).Mul(big.NewInt(weiFloatStake), big.NewInt(1000000000)))
 
-	weiFloatKNW, _ := (new(big.Float).Mul(floatKNW, big.NewFloat(1000000000000000000))).Int64()
-	intKNW := big.NewInt(weiFloatKNW)
+	weiFloatKNW, _ := (new(big.Float).Mul(floatKNW, big.NewFloat(1000000000))).Int64()
+	intKNW := (new(big.Int).Mul(big.NewInt(weiFloatKNW), big.NewInt(1000000000)))
 
 	approvedBalance, err := ditTokenInstance.Allowance(nil, myAddress, common.HexToAddress(config.DitConfig.DitCoordinator))
 	if err != nil {
@@ -360,8 +360,7 @@ func populateTx(_connection *ethclient.Client) (*bind.TransactOpts, error) {
 		return nil, errors.New("Failed to retrieve the gas-price for ethereum transaction")
 	}
 
-	// Minimum gas price is 10 gwei for now, which works best for rinkeby
-	// Will be changed later on
+	// Default gas price is 1 gwei
 	defaultGasPrice := big.NewInt(1000000000)
 	if gasPrice.Cmp(defaultGasPrice) != 1 {
 		gasPrice = defaultGasPrice
@@ -427,7 +426,6 @@ func getKNWVotingInstance(_connection *ethclient.Client) (*KNWVoting.KNWVoting, 
 
 // getConnection will return a connection to the ethereum blockchain
 func getConnection() (*ethclient.Client, error) {
-	// Connecting to rinkeby via infura
 	connection, err := ethclient.Dial("https://sokol.poa.network")
 	if err != nil {
 		return nil, errors.New("Failed to connect to the ethereum network")

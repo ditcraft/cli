@@ -333,12 +333,12 @@ func ProposeCommit(_commitMessage string) (string, int, error) {
 	}
 
 	// Setting the value of the transaction to be the selected stake
-	weiFloatStake, _ := (new(big.Float).Mul(floatStake, big.NewFloat(1000000000000000000))).Int64()
-	intStake := big.NewInt(weiFloatStake)
+	weiFloatStake, _ := (new(big.Float).Mul(floatStake, big.NewFloat(1000000000))).Int64()
+	intStake := (new(big.Int).Mul(big.NewInt(weiFloatStake), big.NewInt(1000000000)))
 	auth.Value = intStake
 
-	weiFloatKNW, _ := (new(big.Float).Mul(floatKNW, big.NewFloat(1000000000000000000))).Int64()
-	intKNW := big.NewInt(weiFloatKNW)
+	weiFloatKNW, _ := (new(big.Float).Mul(floatKNW, big.NewFloat(1000000000))).Int64()
+	intKNW := (new(big.Int).Mul(big.NewInt(weiFloatKNW), big.NewInt(1000000000)))
 
 	// Retrieving the last/current proposalID of the ditContract
 	// (This will increment after a proposal, so we can see when the proposal is live)
@@ -402,9 +402,6 @@ func ProposeCommit(_commitMessage string) (string, int, error) {
 	timeReveal := time.Unix(int64(newVote.RevealEnd), 0)
 	timeRevealString := timeReveal.Format("15:04:05 on 2006/01/02")
 
-	timeCommit := time.Unix(int64(newVote.CommitEnd), 0)
-	timeCommitString := timeCommit.Format("15:04:05 on 2006/01/02")
-
 	// Returning the response to the user, we don't want to print this right here and now
 	// since we are not sure whether the actual git commands will succeed.
 	// So it will be printed afterwards in the main routine
@@ -418,11 +415,6 @@ func ProposeCommit(_commitMessage string) (string, int, error) {
 	}
 	responseString += "\n---------------------------"
 
-	if config.DitConfig.DemoModeActive {
-		fmt.Println()
-		helpers.PrintLine("You may now simulate demo voters with '"+helpers.ColorizeCommand("demo_vote "+strconv.Itoa(int(newVote.ID)))+"' until "+timeCommitString, 3)
-		fmt.Println()
-	}
 	return responseString, int(newProposalID.Int64()), nil
 }
 
@@ -1461,8 +1453,7 @@ func populateTx(_connection *ethclient.Client) (*bind.TransactOpts, error) {
 		return nil, errors.New("Failed to retrieve the gas-price for ethereum transaction")
 	}
 
-	// Minimum gas price is 10 gwei for now, which works best for rinkeby
-	// Will be changed later on
+	// Default gas price is 1 gwei
 	defaultGasPrice := big.NewInt(1000000000)
 	if gasPrice.Cmp(defaultGasPrice) != 1 {
 		gasPrice = defaultGasPrice
@@ -1564,7 +1555,6 @@ func getKNWVotingInstance(_connection *ethclient.Client) (*KNWVoting.KNWVoting, 
 
 // getConnection will return a connection to the ethereum blockchain
 func getConnection() (*ethclient.Client, error) {
-	// Connecting to rinkeby via infura
 	connection, err := ethclient.Dial("https://sokol.poa.network")
 	if err != nil {
 		return nil, errors.New("Failed to connect to the ethereum network")
