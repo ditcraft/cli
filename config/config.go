@@ -55,14 +55,12 @@ type ActiveVote struct {
 	KnowledgeLabel string `json:"knowledge_label"`
 	Choice         int    `json:"choice"`
 	Salt           int    `json:"salt"`
-	NumTokens      int    `json:"num_tokens"`
-	NumVotes       int    `json:"num_votes"`
-	NumKNW         int    `json:"num_knw"`
+	NumTokens      string `json:"num_tokens"`
+	NumVotes       string `json:"num_votes"`
+	NumKNW         string `json:"num_knw"`
 	CommitEnd      int    `json:"commit_end"`
 	RevealEnd      int    `json:"reveal_end"`
 	Resolved       bool   `json:"resolved"`
-	DemoChoices    []int  `json:"demo_choices"`
-	DemoSalts      []int  `json:"demo_salts"`
 }
 
 // GetPrivateKey will prompt the user for his password and return the decrypted ethereum private key

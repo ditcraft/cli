@@ -306,12 +306,16 @@ func ProposeCommit(_commitMessage string) (string, int, error) {
 	floatKNW := big.NewFloat(floatKNWParsed)
 
 	helpers.PrintLine(fmt.Sprintf("You have a balance of %.2f KNW for the label '%s'", floatKNWBalance, knowledgeLabels[answerKnowledgeLabel-1]), 0)
-	if floatKNW.Cmp(big.NewFloat(0)) == 1 {
+	if floatKNWBalance.Cmp(big.NewFloat(0)) == 1 {
 		userInputString = fmt.Sprintf("How much do you want to use?")
-		for floatKNW.Cmp(big.NewFloat(0)) == -1 || floatStake.Cmp(floatKNWBalance) != -1 {
+		keepAsking := true
+		for keepAsking {
 			answerKNW = helpers.GetUserInput(userInputString)
 			floatKNWParsed, _ = strconv.ParseFloat(answerKNW, 64)
 			floatKNW = big.NewFloat(floatKNWParsed)
+			if floatKNW.Cmp(big.NewFloat(0)) >= 0 && floatKNW.Cmp(floatKNWBalance) <= 0 {
+				keepAsking = false
+			}
 		}
 	}
 
@@ -395,8 +399,17 @@ func ProposeCommit(_commitMessage string) (string, int, error) {
 	}
 
 	// Conwerting the stake and used KNW count into a float so that it's human-readable
-	floatxDai := new(big.Float).Quo((new(big.Float).SetInt(big.NewInt(int64(newVote.NumTokens)))), big.NewFloat(1000000000000000000))
-	floatKNW = new(big.Float).Quo((new(big.Float).SetInt(big.NewInt(int64(newVote.NumKNW)))), big.NewFloat(1000000000000000000))
+	intxDai, ok := new(big.Int).SetString(newVote.NumTokens, 10)
+	if !ok {
+		return "", 0, errors.New("Failed to parse big.int from string")
+	}
+	floatxDai := new(big.Float).Quo((new(big.Float).SetInt(intxDai)), big.NewFloat(1000000000000000000))
+
+	intKNW, ok = new(big.Int).SetString(newVote.NumKNW, 10)
+	if !ok {
+		return "", 0, errors.New("Failed to parse big.int from string")
+	}
+	floatKNW = new(big.Float).Quo((new(big.Float).SetInt(intKNW)), big.NewFloat(1000000000000000000))
 
 	// Formatting the time of the commit and reveal phase into a readable format
 	timeReveal := time.Unix(int64(newVote.RevealEnd), 0)
@@ -411,7 +424,7 @@ func ProposeCommit(_commitMessage string) (string, int, error) {
 	responseString += fmt.Sprintf("\nYou staked %.2f %s and used %f KNW.", floatxDai, config.DitConfig.Currency, floatKNW)
 	responseString += "\nThe vote will end at " + timeRevealString
 	if config.DitConfig.LiveRepositories[repoIndex].Provider == "github" {
-		responseString += "\nYour commit is at https://github.com/" + config.DitConfig.LiveRepositories[repoIndex].Name + "/tree/dit_proposal_" + strconv.Itoa(int(newVote.ID))
+		responseString += "\nYour commit is at https://" + config.DitConfig.LiveRepositories[repoIndex].Name + "/tree/dit_proposal_" + strconv.Itoa(int(newVote.ID))
 	}
 	responseString += "\n---------------------------"
 
@@ -513,7 +526,7 @@ func Vote(_proposalID string, _choice string, _salt string) error {
 	floatKNW := big.NewFloat(floatKNWParsed)
 
 	helpers.PrintLine(fmt.Sprintf("You have a balance of %.2f KNW for the label '%s'", floatKNWBalance, proposal.KnowledgeLabel), 0)
-	if floatKNW.Cmp(big.NewFloat(0)) == 1 {
+	if floatKNWBalance.Cmp(big.NewFloat(0)) == 1 {
 		userInputString := fmt.Sprintf("How much do you want to use?")
 		for floatKNW.Cmp(big.NewFloat(0)) == -1 || floatStake.Cmp(floatKNWBalance) != -1 {
 			answerKNW = helpers.GetUserInput(userInputString)
@@ -1006,11 +1019,11 @@ func Finalize(_proposalID string) (bool, bool, error) {
 	if oldKNWBalance.Cmp(newKNWBalance) < 0 {
 		difference := newKNWBalance.Sub(newKNWBalance, oldKNWBalance)
 		floatDifference := new(big.Float).Quo((new(big.Float).SetInt64(difference.Int64())), big.NewFloat(1000000000000000000))
-		helpers.PrintLine(fmt.Sprintf("You earned %f KNW Tokens for the knowledge label '%s'\n", floatDifference, repositoryArray[repoIndex].ActiveVotes[voteIndex].KnowledgeLabel), 0)
+		helpers.PrintLine(fmt.Sprintf("You earned %.2f KNW Tokens for the knowledge label '%s'", floatDifference, repositoryArray[repoIndex].ActiveVotes[voteIndex].KnowledgeLabel), 0)
 	} else if oldKNWBalance.Cmp(newKNWBalance) > 0 {
 		difference := oldKNWBalance.Sub(oldKNWBalance, newKNWBalance)
 		floatDifference := new(big.Float).Quo((new(big.Float).SetInt64(difference.Int64())), big.NewFloat(1000000000000000000))
-		helpers.PrintLine(fmt.Sprintf("You lost %f KNW Tokens for the knowledge label '%s'\n", floatDifference, repositoryArray[repoIndex].ActiveVotes[voteIndex].KnowledgeLabel), 0)
+		helpers.PrintLine(fmt.Sprintf("You lost %.2f KNW Tokens for the knowledge label '%s'", floatDifference, repositoryArray[repoIndex].ActiveVotes[voteIndex].KnowledgeLabel), 0)
 	}
 
 	// Saving the resolved-status in the config
@@ -1028,14 +1041,6 @@ func Finalize(_proposalID string) (bool, bool, error) {
 		return false, false, err
 	}
 
-	// if config.DitConfig.DemoModeActive && len(config.DitConfig.DemoRepositories[repoIndex].ActiveVotes[voteIndex].DemoChoices) == 3 {
-	// 	for i := 0; i < 3; i++ {
-	// 		_, err := demo.Finalize(_proposalID, i)
-	// 		if err != nil {
-	// 			helpers.PrintLine("Error during vote finalizing of demo voter "+strconv.Itoa(i), 2)
-	// 		}
-	// 	}
-	// }
 	return pollPassed, isProposer, nil
 }
 
@@ -1140,8 +1145,16 @@ func GetVoteInfo(_proposalID ...int) error {
 	// If the user participated in this vote, the choice and stake/KNW are also printed
 	for i := range repositoryArray[repoIndex].ActiveVotes {
 		if repositoryArray[repoIndex].ActiveVotes[i].ID == proposalID {
-			floatxDai := new(big.Float).Quo((new(big.Float).SetInt(big.NewInt(int64(repositoryArray[repoIndex].ActiveVotes[i].NumTokens)))), big.NewFloat(1000000000000000000))
-			floatKNW := new(big.Float).Quo((new(big.Float).SetInt(big.NewInt(int64(repositoryArray[repoIndex].ActiveVotes[i].NumKNW)))), big.NewFloat(1000000000000000000))
+			intxDai, ok := new(big.Int).SetString(repositoryArray[repoIndex].ActiveVotes[i].NumTokens, 10)
+			if !ok {
+				return errors.New("Failed to parse big.int from string")
+			}
+			floatxDai := new(big.Float).Quo((new(big.Float).SetInt(intxDai)), big.NewFloat(1000000000000000000))
+			intKNW, ok := new(big.Int).SetString(repositoryArray[repoIndex].ActiveVotes[i].NumKNW, 10)
+			if !ok {
+				return errors.New("Failed to parse big.int from string")
+			}
+			floatKNW := new(big.Float).Quo((new(big.Float).SetInt(intKNW)), big.NewFloat(1000000000000000000))
 			if proposal.Proposer.Hex() != config.DitConfig.EthereumKeys.Address {
 				helpers.PrintLine("Your choice: "+strconv.Itoa(repositoryArray[repoIndex].ActiveVotes[i].Choice), 0)
 			}
@@ -1337,9 +1350,9 @@ func gatherProposalInfo(_connection *ethclient.Client, _ditCoordinatorInstance *
 		return newVote, errors.New("Failed to retrieve numKNW")
 	}
 
-	newVote.NumTokens = int(numTokens.Int64())
-	newVote.NumVotes = int(numVotes.Int64())
-	newVote.NumKNW = int(numKNW.Int64())
+	newVote.NumTokens = numTokens.String()
+	newVote.NumVotes = numVotes.String()
+	newVote.NumKNW = numKNW.String()
 
 	return newVote, nil
 }

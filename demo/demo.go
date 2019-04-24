@@ -131,12 +131,16 @@ func ProposeCommit(_commitMessage string) (string, int, error) {
 	floatKNW := big.NewFloat(floatKNWParsed)
 
 	helpers.PrintLine(fmt.Sprintf("You have a balance of %.2f KNW for the label '%s'", floatKNWBalance, knowledgeLabels[answerKnowledgeLabel-1]), 0)
-	if floatKNW.Cmp(big.NewFloat(0)) == 1 {
+	if floatKNWBalance.Cmp(big.NewFloat(0)) == 1 {
 		userInputString = fmt.Sprintf("How much do you want to use?")
-		for floatKNW.Cmp(big.NewFloat(0)) == -1 || floatStake.Cmp(floatKNWBalance) != -1 {
+		keepAsking := true
+		for keepAsking {
 			answerKNW = helpers.GetUserInput(userInputString)
 			floatKNWParsed, _ = strconv.ParseFloat(answerKNW, 64)
 			floatKNW = big.NewFloat(floatKNWParsed)
+			if floatKNW.Cmp(big.NewFloat(0)) >= 0 && floatKNW.Cmp(floatKNWBalance) <= 0 {
+				keepAsking = false
+			}
 		}
 	}
 
@@ -188,9 +192,8 @@ func ProposeCommit(_commitMessage string) (string, int, error) {
 			time.Sleep(2 * time.Second)
 		}
 		fmt.Println()
+		helpers.PrintLine("Now the actual commit proposal will be executed", 0)
 	}
-
-	helpers.PrintLine("Now the actual commit proposal will be executed", 0)
 
 	// Crerating the transaction (basic values)
 	auth, err := populateTx(connection)
@@ -253,8 +256,17 @@ func ProposeCommit(_commitMessage string) (string, int, error) {
 	}
 
 	// Conwerting the stake and used KNW count into a float so that it's human-readable
-	floatETH := new(big.Float).Quo((new(big.Float).SetInt(big.NewInt(int64(newVote.NumTokens)))), big.NewFloat(1000000000000000000))
-	floatKNW = new(big.Float).Quo((new(big.Float).SetInt(big.NewInt(int64(newVote.NumKNW)))), big.NewFloat(1000000000000000000))
+	intEth, ok := new(big.Int).SetString(newVote.NumTokens, 10)
+	if !ok {
+		return "", 0, errors.New("Failed to parse big.int from string")
+	}
+	floatETH := new(big.Float).Quo((new(big.Float).SetInt(intEth)), big.NewFloat(1000000000000000000))
+
+	intKNW, ok = new(big.Int).SetString(newVote.NumKNW, 10)
+	if !ok {
+		return "", 0, errors.New("Failed to parse big.int from string")
+	}
+	floatKNW = new(big.Float).Quo((new(big.Float).SetInt(intKNW)), big.NewFloat(1000000000000000000))
 
 	// Formatting the time of the commit and reveal phase into a readable format
 	timeReveal := time.Unix(int64(newVote.RevealEnd), 0)
@@ -269,10 +281,10 @@ func ProposeCommit(_commitMessage string) (string, int, error) {
 	var responseString string
 	responseString += "---------------------------"
 	responseString += "\nSuccessfully proposed commit. Vote on proposal started with ID " + strconv.Itoa(int(newVote.ID)) + ""
-	responseString += fmt.Sprintf("\nYou staked %.2f %s and used %f KNW", floatETH, config.DitConfig.Currency, floatKNW)
+	responseString += fmt.Sprintf("\nYou staked %.2f %s and used %.2f KNW", floatETH, config.DitConfig.Currency, floatKNW)
 	responseString += "\nThe vote will end at " + timeRevealString
 	if config.DitConfig.DemoRepositories[repoIndex].Provider == "github" {
-		responseString += "\nYour commit is at https://github.com/" + config.DitConfig.DemoRepositories[repoIndex].Name + "/tree/dit_proposal_" + strconv.Itoa(int(newVote.ID))
+		responseString += "\nYour commit is at https://" + config.DitConfig.DemoRepositories[repoIndex].Name + "/tree/dit_proposal_" + strconv.Itoa(int(newVote.ID))
 	}
 	responseString += "\n---------------------------"
 
@@ -510,9 +522,9 @@ func gatherProposalInfo(_connection *ethclient.Client, _ditCoordinatorInstance *
 		return newVote, errors.New("Failed to retrieve numKNW")
 	}
 
-	newVote.NumTokens = int(numTokens.Int64())
-	newVote.NumVotes = int(numVotes.Int64())
-	newVote.NumKNW = int(numKNW.Int64())
+	newVote.NumTokens = numTokens.String()
+	newVote.NumVotes = numVotes.String()
+	newVote.NumKNW = numKNW.String()
 
 	return newVote, nil
 }
