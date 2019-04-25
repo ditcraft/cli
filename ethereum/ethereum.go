@@ -1466,17 +1466,12 @@ func populateTx(_connection *ethclient.Client) (*bind.TransactOpts, error) {
 		return nil, errors.New("Failed to retrieve the gas-price for ethereum transaction")
 	}
 
-	// Default gas price is 1 gwei
-	defaultGasPrice := big.NewInt(1000000000)
-	if gasPrice.Cmp(defaultGasPrice) != 1 {
-		gasPrice = defaultGasPrice
-	}
 	// Setting the values into the transaction-options object
 	auth := bind.NewKeyedTransactor(privateKey)
 	auth.Nonce = big.NewInt(int64(nonce))
 
 	auth.Value = big.NewInt(0)
-	auth.GasLimit = uint64(1000000)
+	// auth.GasLimit = uint64(1000000)
 	auth.GasPrice = gasPrice
 
 	return auth, nil

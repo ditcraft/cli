@@ -128,6 +128,8 @@ func Create(_demoMode bool) error {
 		answer := helpers.GetUserInputChoice("Are you sure that you want to proceed?", "y", "n")
 		if answer == "n" {
 			continueCreating = false
+		} else {
+			fmt.Println()
 		}
 	}
 	if continueCreating {
