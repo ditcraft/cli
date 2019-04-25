@@ -26,11 +26,11 @@ Please note that the windows version hasn't been thoroughly tested, although it 
 ## Build the client yourself
 If you want to build the client yourself feel free to do so by following this guide. The only prerequisite that you need is go.
 * Run `go get github.com/ditcraft/client`
-* Enter the directory of the client with `cd $GOPATH/src/github.com/ditclient/client`
+* Enter the directory of the client with `cd $GOPATH/src/github.com/ditcraft/client`
 * Install the necessary dependencies with `go get -d ./...`
 * Build the client with `go build -o dit main.go`
-* For Linux/MacOS: Move `dit` to /usr/bin and grant execution permissions
-    * `mv dit /usr/bin/dit && chmod a+x /ust/bin/dit`
+* For Linux/MacOS: Move `dit` to /usr/local/bin and grant execution permissions
+    * `mv dit /usr/local/bin/dit && chmod a+x /ust/local/bin/dit`
 
 **Please note**: If you intend to make use of the demo mode described below, you need to insert four Ethereum addresses and their corresponding private keys with funds on the Rinkeby Ethereum testnet into the code before building it. One (*the main one*) in `config.go` (*line 64/65*) and three (*the demo voters*) in `demo.go` (*lines 29-38*). The precompiled binaries already contain pre-funded ones, so only need to worry about this when building it yourself.
 
