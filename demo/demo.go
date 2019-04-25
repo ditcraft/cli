@@ -338,7 +338,7 @@ func CheckForKYC() (bool, error) {
 func populateTx(_connection *ethclient.Client) (*bind.TransactOpts, error) {
 	// Retrieve the decrypted private key through a password prompt
 	var err error
-	privateKeyString, err := config.GetPrivateKey()
+	privateKeyString, err := config.GetPrivateKey(true)
 	if err != nil {
 		return nil, err
 	}
@@ -390,7 +390,7 @@ func getDitDemoCoordinatorInstance(_connection *ethclient.Client, _ditDemoCoordi
 		ditDemoCoordinatorAddressString = _ditDemoCoordinatorAddress[0]
 	} else {
 		if len(config.DitConfig.DitCoordinator) != correctETHAddressLength {
-			return nil, errors.New("Invalid ditDemoCoordinator address, please do '" + helpers.ColorizeCommand("set_coordinator") + "' first")
+			return nil, errors.New("Invalid ditDemoCoordinator address, please do '" + helpers.ColorizeCommand("update") + "' first")
 		}
 		ditDemoCoordinatorAddressString = config.DitConfig.DitCoordinator
 	}

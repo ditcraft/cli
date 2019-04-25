@@ -22,6 +22,10 @@ import (
 // DitConfig is exported since it needs to be accessed from other packages all the time
 var DitConfig ditConfig
 
+// Version of the config, will be incremented after every client update that modified the config file
+// in a way that an update is necessaray
+var Version = 1
+
 type ditConfig struct {
 	DitCoordinator   string       `json:"dit_coordinator"`
 	KNWVoting        string       `json:"knw_voting"`
@@ -30,6 +34,7 @@ type ditConfig struct {
 	Currency         string       `json:"currency"`
 	PassedKYC        bool         `json:"passed_kyc"`
 	DemoModeActive   bool         `json:"demo_mode_active"`
+	Version          int          `json:"version"`
 	EthereumKeys     ethereumKeys `json:"ethereum_keys"`
 	LiveRepositories []Repository `json:"live_repositories"`
 	DemoRepositories []Repository `json:"demo_repositories"`
@@ -64,9 +69,11 @@ type ActiveVote struct {
 }
 
 // GetPrivateKey will prompt the user for his password and return the decrypted ethereum private key
-func GetPrivateKey() (string, error) {
+func GetPrivateKey(_forTransaction bool) (string, error) {
 	// Prompting the user
-	helpers.PrintLine("This action requires to send a transaction to the ethereum blockchain.", 0)
+	if _forTransaction {
+		helpers.PrintLine("This action requires to send a transaction to the ethereum blockchain.", 0)
+	}
 	helpers.Printf("Please provide your password to unlock your ethereum account: ", 0)
 	password, err := terminal.ReadPassword(0)
 	fmt.Printf("\n")
@@ -125,6 +132,7 @@ func Create(_demoMode bool) error {
 	continueCreating := true
 	if strings.Contains(DitConfig.DitCoordinator, "0x") {
 		helpers.PrintLine("This action will re-initialize the client, resulting in a loss of your current Ethereum keys.", 1)
+		helpers.PrintLine("Note: If you want to switch between live and demo mode, use '"+helpers.ColorizeCommand("mode")+"'", 1)
 		answer := helpers.GetUserInputChoice("Are you sure that you want to proceed?", "y", "n")
 		if answer == "n" {
 			continueCreating = false
@@ -231,6 +239,42 @@ func Create(_demoMode bool) error {
 	}
 
 	return errors.New("Cancelling setup due to users choice")
+}
+
+// Update will migrate the current key-pair after a client update that
+func Update(_liveDitCoordinator string, _demoDitCoordinator string) (bool, error) {
+	didUpdate := false
+	if DitConfig.Version < Version {
+		helpers.PrintLine("Updating the ditClients' config...", 0)
+		didUpdate = true
+		newDitConfig := ditConfig{}
+		newDitConfig.DemoModeActive = DitConfig.DemoModeActive
+		newDitConfig.DitCoordinator = DitConfig.DitCoordinator
+		newDitConfig.EthereumKeys = DitConfig.EthereumKeys
+		newDitConfig.LiveRepositories = make([]Repository, 0)
+		newDitConfig.DemoRepositories = make([]Repository, 0)
+		newDitConfig.Version = Version
+
+		DitConfig = newDitConfig
+		// Write the config to the file
+		err := Save()
+		if err != nil {
+			return false, err
+		}
+	}
+	if (DitConfig.DemoModeActive && DitConfig.DitCoordinator != _demoDitCoordinator) || (!DitConfig.DemoModeActive && DitConfig.DitCoordinator != _liveDitCoordinator) {
+		helpers.PrintLine("Updating the ditCoordinator...", 0)
+		didUpdate = true
+		if !DitConfig.DemoModeActive {
+			DitConfig.DitCoordinator = _liveDitCoordinator
+		} else {
+			DitConfig.DitCoordinator = _demoDitCoordinator
+		}
+	}
+	if didUpdate {
+		return true, nil
+	}
+	return false, errors.New("Your ditClient is already up to date")
 }
 
 // Save will write the current config object to the file

@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"strconv"
@@ -16,6 +17,7 @@ import (
 // The current dit coordinator address
 var liveDitCoodinator = "0x049e4E2b99A6004a73a6c6E61d57f3b576f30aB6"
 var demoDitCoodinator = "0xf5Df1fa5Fbb7DCE71E2C7ceaC7D5632593cc6d15"
+var configVersion = "v0.2"
 
 func main() {
 	var err error
@@ -41,10 +43,13 @@ func main() {
 		os.Exit(0)
 	}
 
-	if err == nil && command != "setup" {
-		if (!config.DitConfig.DemoModeActive && config.DitConfig.DitCoordinator != liveDitCoodinator) || (config.DitConfig.DemoModeActive && config.DitConfig.DitCoordinator != demoDitCoodinator) {
+	if err == nil && (command != "setup" && command != "update") {
+		if config.DitConfig.Version != config.Version {
+			helpers.PrintLine("Your config is not up to date, the client might not work correctly", 1)
+			helpers.PrintLine("To fix this call '"+helpers.ColorizeCommand("update")+"'", 1)
+		} else if (!config.DitConfig.DemoModeActive && config.DitConfig.DitCoordinator != liveDitCoodinator) || (config.DitConfig.DemoModeActive && config.DitConfig.DitCoordinator != demoDitCoodinator) {
 			helpers.PrintLine("You are using an old version of the deployed ditCoordinator contract", 1)
-			helpers.PrintLine("To fix this call '"+helpers.ColorizeCommand("setup")+"'", 1)
+			helpers.PrintLine("To fix this call '"+helpers.ColorizeCommand("update")+"'", 1)
 		}
 	}
 
@@ -76,6 +81,23 @@ func main() {
 					helpers.PrintLine("@ditcraft I want to use your client, please verify me "+config.DitConfig.EthereumKeys.Address+"!", 0)
 				}
 			}
+		}
+		break
+	case "update":
+		var updatedDitCoordinator bool
+		updatedDitCoordinator, err = config.Update(liveDitCoodinator, demoDitCoodinator)
+		if updatedDitCoordinator {
+			err = ethereum.SetDitCoordinator(config.DitConfig.DitCoordinator)
+			if !config.DitConfig.PassedKYC {
+				var passedKYC bool
+				passedKYC, err = ethereum.CheckForKYC()
+				if err == nil && !passedKYC {
+					helpers.PrintLine("You didn't pass the KYC yet", 1)
+				}
+			}
+		}
+		if err == nil {
+			helpers.PrintLine("Update successful", 0)
 		}
 		break
 	case "mode":
@@ -121,6 +143,22 @@ func main() {
 		// Return the ETH address
 		helpers.PrintLine("Ethereum Address: "+config.DitConfig.EthereumKeys.Address, 0)
 		helpers.PrintLine("URL: https://blockscout.com/poa/sokol/address/"+config.DitConfig.EthereumKeys.Address, 0)
+		break
+	case "export_keys":
+		helpers.PrintLine("Exporting your keys will print your ethereum private key in plain text", 1)
+		helpers.PrintLine("This might compromise your keys, please don't proceed if you are not sure about this", 1)
+		answer := helpers.GetUserInputChoice("Are you sure that you want to proceed?", "y", "n")
+		if answer == "y" {
+			// Return the ETH address and private key
+			var privateKey string
+			privateKey, err = config.GetPrivateKey(false)
+			if len(privateKey) == 64 {
+				helpers.PrintLine("Ethereum Address: "+config.DitConfig.EthereumKeys.Address, 0)
+				helpers.PrintLine("Ethereum Private-Key: "+privateKey, 0)
+			}
+		} else {
+			err = errors.New("Cancelling key export due to users choice")
+		}
 		break
 	case "clone":
 		checkIfExists(args, 1, "a URL to a repository")
@@ -187,23 +225,11 @@ func main() {
 		// Votes on a proposal
 		err = ethereum.Vote(args[1], args[2], args[3])
 		break
-	// case "demo_vote":
-	// 	checkIfExists(args, 1, "a proposal ID - dit demo_vote <PROPOSAL_ID>")
-	// 	// Demo-Votes on a proposal
-	// 	err = demo.Vote(args[1])
-	// 	break
 	case "open", "open_vote", "reveal_vote", "reveal":
 		checkIfExists(args, 1, "a proposal ID")
 		// Reveals the vote on a proposal
 		err = ethereum.Open(args[1])
 		break
-	// case "demo_open", "demo_open_vote", "demo_reveal_vote", "demo_reveal":
-	// 	checkIfExists(args, 1, "a proposal ID")
-	// 	// Reveals the votes of the demo voters on a proposal
-	// 	for i := 0; i < 3; i++ {
-	// 		err = demo.Open(args[1], i)
-	// 	}
-	// 	break
 	case "finalize", "finalize_vote":
 		checkIfExists(args, 1, "a proposal ID")
 		err = git.Validate()
@@ -258,11 +284,13 @@ func printUsage() {
 	}
 	fmt.Println("------------- General ------------")
 	fmt.Println(" - dit setup\t\t\t\t\tCreates or imports the ethereum keys and creates a config")
+	fmt.Println(" - dit update\t\t\t\t\tUpdates the clients config after an update of the dit client")
 	fmt.Println(" - dit mode <MODE>\t\t\t\tSwitch between the modes of the client (live or demo)")
 	fmt.Println("")
 	fmt.Println("------------- Ethereum ------------")
 	fmt.Println(" - dit get_address\t\t\t\tReturns ethereum address of the account")
-	fmt.Println(" - dit get_balance\t\t\t\tReturns the ETH and KNW balance of the account")
+	fmt.Println(" - dit get_balance\t\t\t\tReturns the " + config.DitConfig.Currency + " and KNW balance of the account")
+	fmt.Println(" - dit export_keys\t\t\t\tReturns the unencrypted ethereum private key and address")
 	fmt.Println("")
 	fmt.Println("----------- Repositories ----------")
 	fmt.Println(" - dit clone <REPOSITORY_URL>\t\t\tClones a repository (GitHub only) and automatically")
