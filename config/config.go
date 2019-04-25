@@ -122,102 +122,113 @@ func Load() error {
 
 // Create will create a new config file
 func Create(_demoMode bool) error {
-	helpers.PrintLine("Initializing the ditClient...", 0)
-	DitConfig = ditConfig{}
-	DitConfig.DemoModeActive = _demoMode
-
-	if !DitConfig.DemoModeActive {
-		helpers.PrintLine("You are initializing the client in live mode, you will be staking real xDai.", 1)
-		helpers.PrintLine("If you just want to play around with dit, you can also use the demo mode with '"+helpers.ColorizeCommand("setup --demo")+"'", 0)
-		fmt.Println()
-	} else {
-		helpers.PrintLine("You are initializing the client in demo mode, feel free to play around with it!", 0)
-		helpers.PrintLine("If you want to switch to the live mode later on, you can do so with '"+helpers.ColorizeCommand("mode live")+"'", 0)
-		fmt.Println()
-	}
-	// Prompting the user for his choice on the ethereum key generation/importing
-	answerPrivateKeySelection := helpers.GetUserInputChoice("You can either (a) sample a new ethereum private-key or (b) provide your own one", "a", "b")
-
-	// Sample new ethereum Keys
-	if answerPrivateKeySelection == "a" {
-		address, privateKey, err := sampleEthereumKeys()
-		if err != nil {
-			return err
+	continueCreating := true
+	if strings.Contains(DitConfig.DitCoordinator, "0x") {
+		helpers.PrintLine("This action will re-initialize the client, resulting in a loss of your current Ethereum keys.", 1)
+		answer := helpers.GetUserInputChoice("Are you sure that you want to proceed?", "y", "n")
+		if answer == "n" {
+			continueCreating = false
 		}
-		DitConfig.EthereumKeys.PrivateKey = privateKey
-		DitConfig.EthereumKeys.Address = address
-	} else {
-		// Import existing ones, prompting the user for input
-		answerPrivateKeyInput := helpers.GetUserInput("Please provide a hex-formatted ethereum private-key")
-		if len(answerPrivateKeyInput) == 64 || len(answerPrivateKeyInput) == 66 {
-			// Remove possible "0x" at the beginning
-			if strings.Contains(answerPrivateKeyInput, "0x") && len(answerPrivateKeyInput) == 66 {
-				answerPrivateKeyInput = answerPrivateKeyInput[2:]
-			}
-			// Import the ethereum private key
-			address, privateKey, err := importEthereumKey(answerPrivateKeyInput)
+	}
+	if continueCreating {
+		helpers.PrintLine("Initializing the ditClient...", 0)
+		DitConfig = ditConfig{}
+		DitConfig.DemoModeActive = _demoMode
+
+		if !DitConfig.DemoModeActive {
+			helpers.PrintLine("You are initializing the client in live mode, you will be staking real xDai.", 1)
+			helpers.PrintLine("If you just want to play around with dit, you can also use the demo mode with '"+helpers.ColorizeCommand("setup --demo")+"'", 0)
+			fmt.Println()
+		} else {
+			helpers.PrintLine("You are initializing the client in demo mode, feel free to play around with it!", 0)
+			helpers.PrintLine("If you want to switch to the live mode later on, you can do so with '"+helpers.ColorizeCommand("mode live")+"'", 0)
+			fmt.Println()
+		}
+		// Prompting the user for his choice on the ethereum key generation/importing
+		answerPrivateKeySelection := helpers.GetUserInputChoice("You can either (a) sample a new ethereum private-key or (b) provide your own one", "a", "b")
+
+		// Sample new ethereum Keys
+		if answerPrivateKeySelection == "a" {
+			address, privateKey, err := sampleEthereumKeys()
 			if err != nil {
 				return err
 			}
-
 			DitConfig.EthereumKeys.PrivateKey = privateKey
 			DitConfig.EthereumKeys.Address = address
 		} else {
-			return errors.New("Invalid ethereum private-key")
-		}
-	}
+			// Import existing ones, prompting the user for input
+			answerPrivateKeyInput := helpers.GetUserInput("Please provide a hex-formatted ethereum private-key")
+			if len(answerPrivateKeyInput) == 64 || len(answerPrivateKeyInput) == 66 {
+				// Remove possible "0x" at the beginning
+				if strings.Contains(answerPrivateKeyInput, "0x") && len(answerPrivateKeyInput) == 66 {
+					answerPrivateKeyInput = answerPrivateKeyInput[2:]
+				}
+				// Import the ethereum private key
+				address, privateKey, err := importEthereumKey(answerPrivateKeyInput)
+				if err != nil {
+					return err
+				}
 
-	// Prompting the user to set a password for the private keys encryption
-	var password []byte
-	keepAsking := true
-	for keepAsking {
-		helpers.Printf("Please provide a password to encrypt your private key: ", 0)
-		var err error
-		password, err = terminal.ReadPassword(0)
-		fmt.Printf("\n")
+				DitConfig.EthereumKeys.PrivateKey = privateKey
+				DitConfig.EthereumKeys.Address = address
+			} else {
+				return errors.New("Invalid ethereum private-key")
+			}
+		}
+
+		// Prompting the user to set a password for the private keys encryption
+		var password []byte
+		keepAsking := true
+		for keepAsking {
+			helpers.Printf("Please provide a password to encrypt your private key: ", 0)
+			var err error
+			password, err = terminal.ReadPassword(0)
+			fmt.Printf("\n")
+			if err != nil {
+				return errors.New("Failed to retrieve password")
+			}
+
+			// Repeating the password to make sure that there are no typos
+			helpers.Printf("Please repeat your password: ", 0)
+			passwordAgain, err := terminal.ReadPassword(0)
+			fmt.Printf("\n")
+			if err != nil {
+				return errors.New("Failed to retrieve password")
+			}
+
+			// If passwords don't match or are empty
+			if string(passwordAgain) != string(password) {
+				helpers.PrintLine("Passwords didn't match - try again!", 1)
+			} else if len(password) == 0 {
+				helpers.PrintLine("Password can't be empty - try again!", 1)
+			} else {
+				// Stop if nothing of the above is true
+				keepAsking = false
+			}
+		}
+
+		// Encrypt the private keys with the password
+		encryptedPrivateKey, err := encrypt([]byte(DitConfig.EthereumKeys.PrivateKey), string(password))
 		if err != nil {
-			return errors.New("Failed to retrieve password")
+			return errors.New("Failed to encrypt ethereum private-key")
 		}
 
-		// Repeating the password to make sure that there are no typos
-		helpers.Printf("Please repeat your password: ", 0)
-		passwordAgain, err := terminal.ReadPassword(0)
-		fmt.Printf("\n")
+		DitConfig.EthereumKeys.PrivateKey = hex.EncodeToString(encryptedPrivateKey)
+		DitConfig.LiveRepositories = make([]Repository, 0)
+		DitConfig.DemoRepositories = make([]Repository, 0)
+
+		// Write the config to the file
+		err = Save()
 		if err != nil {
-			return errors.New("Failed to retrieve password")
+			return err
 		}
 
-		// If passwords don't match or are empty
-		if string(passwordAgain) != string(password) {
-			helpers.PrintLine("Passwords didn't match - try again!", 1)
-		} else if len(password) == 0 {
-			helpers.PrintLine("Password can't be empty - try again!", 1)
-		} else {
-			// Stop if nothing of the above is true
-			keepAsking = false
-		}
+		helpers.PrintLine("Initialization successfull", 0)
+		helpers.PrintLine("Your Ethereum Address is: "+DitConfig.EthereumKeys.Address, 0)
+		return nil
 	}
 
-	// Encrypt the private keys with the password
-	encryptedPrivateKey, err := encrypt([]byte(DitConfig.EthereumKeys.PrivateKey), string(password))
-	if err != nil {
-		return errors.New("Failed to encrypt ethereum private-key")
-	}
-
-	DitConfig.EthereumKeys.PrivateKey = hex.EncodeToString(encryptedPrivateKey)
-	DitConfig.LiveRepositories = make([]Repository, 0)
-	DitConfig.DemoRepositories = make([]Repository, 0)
-
-	// Write the config to the file
-	err = Save()
-	if err != nil {
-		return err
-	}
-
-	helpers.PrintLine("Initialization successfull", 0)
-	helpers.PrintLine("Your Ethereum Address is: "+DitConfig.EthereumKeys.Address, 0)
-
-	return nil
+	return errors.New("Cancelling setup due to users choice")
 }
 
 // Save will write the current config object to the file
