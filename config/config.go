@@ -224,6 +224,7 @@ func Create(_demoMode bool) error {
 		}
 
 		DitConfig.EthereumKeys.PrivateKey = hex.EncodeToString(encryptedPrivateKey)
+		DitConfig.Version = Version
 		DitConfig.LiveRepositories = make([]Repository, 0)
 		DitConfig.DemoRepositories = make([]Repository, 0)
 
