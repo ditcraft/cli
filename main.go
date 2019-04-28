@@ -78,7 +78,7 @@ func main() {
 					fmt.Println()
 					helpers.PrintLine("You didn't pass the KYC yet. Please do the KYC now:", 0)
 					helpers.PrintLine("Go to our Twitter @ditcraft and tweet the following at us:", 0)
-					helpers.PrintLine("@ditcraft I want to use your client, please verify me "+config.DitConfig.EthereumKeys.Address+"!", 0)
+					helpers.PrintLine("@ditcraft I want to use dit, the decentralized git client! Please verify me "+config.DitConfig.EthereumKeys.Address+"", 0)
 				}
 			}
 		}
