@@ -38,7 +38,7 @@ func main() {
 
 	// If there is an error during the config load and the user is not
 	// in the process of setting dit up: print an error
-	if err != nil && command != "setup" {
+	if err != nil && command != "setup" && command != "update" {
 		helpers.PrintLine(err.Error(), 2)
 		os.Exit(0)
 	}
@@ -92,7 +92,10 @@ func main() {
 				var passedKYC bool
 				passedKYC, err = ethereum.CheckForKYC()
 				if err == nil && !passedKYC {
-					helpers.PrintLine("You didn't pass the KYC yet", 1)
+					fmt.Println()
+					helpers.PrintLine("You didn't pass the KYC yet. Please do the KYC now:", 0)
+					helpers.PrintLine("Go to our Twitter @ditcraft and tweet the following at us:", 0)
+					helpers.PrintLine("@ditcraft I want to try dit, the decentralized git. Please verify me "+config.DitConfig.EthereumKeys.Address+"!", 0)
 				}
 			}
 		}

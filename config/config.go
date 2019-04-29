@@ -98,19 +98,9 @@ func GetPrivateKey(_forTransaction bool) (string, error) {
 
 // Load will load the config and set it to the exported variable "DitConfig"
 func Load() error {
-	// Retrieve the home directory of the user
-	usr, err := user.Current()
+	configFile, err := getRawConfig()
 	if err != nil {
-		return errors.New("Failed to retrieve home-directory of user")
-	}
-
-	// Reading the config file
-	configFile, err := ioutil.ReadFile(usr.HomeDir + "/.ditconfig")
-	if err != nil {
-		if strings.Contains(err.Error(), "no such file or directory") {
-			return errors.New("Config file not found - please use '" + helpers.ColorizeCommand("setup") + "'")
-		}
-		return errors.New("Failed to load config file")
+		return err
 	}
 
 	// Parsing the json into a public object
@@ -125,6 +115,25 @@ func Load() error {
 	}
 
 	return nil
+}
+
+func getRawConfig() ([]byte, error) {
+	// Retrieve the home directory of the user
+	usr, err := user.Current()
+	if err != nil {
+		return nil, errors.New("Failed to retrieve home-directory of user")
+	}
+
+	// Reading the config file
+	configFile, err := ioutil.ReadFile(usr.HomeDir + "/.ditconfig")
+	if err != nil {
+		if strings.Contains(err.Error(), "no such file or directory") {
+			return nil, errors.New("Config file not found - please use '" + helpers.ColorizeCommand("setup") + "'")
+		}
+		return nil, errors.New("Failed to load config file")
+	}
+
+	return configFile, nil
 }
 
 // Create will create a new config file
@@ -245,6 +254,30 @@ func Create(_demoMode bool) error {
 // Update will migrate the current key-pair after a client update that
 func Update(_liveDitCoordinator string, _demoDitCoordinator string) (bool, error) {
 	didUpdate := false
+	// Retrieving the config file
+	configFile, err := getRawConfig()
+	if err != nil {
+		return false, err
+	}
+
+	// Parsing the config to detect parsing errors
+	err = json.Unmarshal(configFile, &DitConfig)
+	if err != nil && strings.Contains(err.Error(), "cannot unmarshal") {
+		for _, repository := range DitConfig.LiveRepositories {
+			for _, vote := range repository.ActiveVotes {
+				// If there was a parsing error and a live vote is still not resolved, the user is warned before updating
+				if !vote.Resolved {
+					helpers.PrintLine("You have ongoing or unfinalized votes that might be unresolvable with this client after an update!", 1)
+					answer := helpers.GetUserInputChoice("Are you sure that you want to proceed?", "y", "n")
+					if answer == "n" {
+						return false, errors.New("Cancelling update due to users choice")
+					}
+					break
+				}
+			}
+		}
+	}
+
 	if DitConfig.Version < Version {
 		helpers.PrintLine("Updating the ditClients' config...", 0)
 		didUpdate = true

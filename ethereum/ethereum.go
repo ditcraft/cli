@@ -324,7 +324,7 @@ func ProposeCommit(_commitMessage string) (string, int, error) {
 	helpers.PrintLine("  Proposing the commit with the following settings:", 0)
 	helpers.PrintLine("  Commit Message: "+_commitMessage+"", 0)
 	helpers.PrintLine("  Knowledge Label: "+knowledgeLabels[answerKnowledgeLabel-1], 0)
-	helpers.PrintLine("  The following stake with automatically be deducted: "+floatStakeString+"xDai", 0)
+	helpers.PrintLine("  The following stake will automatically be deducted: "+floatStakeString+"xDai", 0)
 	userIsSure := helpers.GetUserInputChoice("Is that correct?", "y", "n")
 	if userIsSure == "n" {
 		return "", 0, errors.New("Canceled proposal of commit due to users choice")
@@ -988,6 +988,14 @@ func Finalize(_proposalID string) (bool, bool, error) {
 		return false, false, errors.New("Failed to retrieve KNW balance")
 	}
 
+	// Retrieving information about this vote from the KNWVoting contract itself
+	KNWPoll, err := KNWVotingInstance.Votes(nil, proposal.KNWVoteID)
+	if err != nil {
+		return false, false, errors.New("Failed to retrieve vote information")
+	}
+
+	winningPercentage := int(KNWPoll.WinningPercentage.Int64())
+
 	// Retrieving the outcome of the vote
 	pollPassed, err := KNWVotingInstance.IsPassed(nil, big.NewInt(int64(repositoryArray[repoIndex].ActiveVotes[voteIndex].KNWVoteID)))
 	if err != nil {
@@ -996,16 +1004,24 @@ func Finalize(_proposalID string) (bool, bool, error) {
 
 	fmt.Printf("\n")
 	// Show the user how the vote ended
-	if pollPassed {
-		helpers.PrintLine("Successfully finalized the vote - it passed", 0)
-		if proposal.Proposer == common.HexToAddress(config.DitConfig.EthereumKeys.Address) {
-			helpers.PrintLine("You received your stake back and will share the opposing voters slashes stakes", 0)
+	if KNWPoll.WinningPercentage.Cmp(big.NewInt(50)) == 1 {
+		if pollPassed {
+			helpers.PrintLine("Successfully finalized the vote - it passed with "+strconv.Itoa(winningPercentage)+"% approval from the validators", 0)
+			if proposal.Proposer == common.HexToAddress(config.DitConfig.EthereumKeys.Address) {
+				helpers.PrintLine("You received your stake back and will share the opposing voters slashes stakes", 0)
+			}
+		} else {
+			helpers.PrintLine("Successfully finalized the vote - it didn't pass, "+strconv.Itoa(winningPercentage)+"% of the validators voted against it", 0)
+			if proposal.Proposer == common.HexToAddress(config.DitConfig.EthereumKeys.Address) {
+				helpers.PrintLine("Your stake was slashed and will be distributed amongst the voters", 0)
+			}
 		}
+	} else if KNWPoll.WinningPercentage.Cmp(big.NewInt(50)) == 0 {
+		helpers.PrintLine("Successfully finalized the vote - it ended in a draw and didn't get accepted", 0)
+		helpers.PrintLine("You received your stake back", 0)
 	} else {
-		helpers.PrintLine("Successfully finalized the vote - it didn't pass", 0)
-		if proposal.Proposer == common.HexToAddress(config.DitConfig.EthereumKeys.Address) {
-			helpers.PrintLine("Your stake was slashed and will be distributed amongst the voters", 0)
-		}
+		helpers.PrintLine("Successfully finalized the vote - no one voted on it and it didn't get accepted", 0)
+		helpers.PrintLine("You received your stake back", 0)
 	}
 
 	// If the user got some xDai as a reward, this will be shown to the user
@@ -1155,20 +1171,33 @@ func GetVoteInfo(_proposalID ...int) error {
 				return errors.New("Failed to parse big.int from string")
 			}
 			floatKNW := new(big.Float).Quo((new(big.Float).SetInt(intKNW)), big.NewFloat(1000000000000000000))
+			fmt.Println()
 			if proposal.Proposer.Hex() != config.DitConfig.EthereumKeys.Address {
 				helpers.PrintLine("Your choice: "+strconv.Itoa(repositoryArray[repoIndex].ActiveVotes[i].Choice), 0)
 			}
-			helpers.PrintLine(fmt.Sprintf("You staked %.2f %s and used %f KNW\n", floatxDai, config.DitConfig.Currency, floatKNW), 0)
+			helpers.PrintLine(fmt.Sprintf("You staked %.2f %s and used %f KNW", floatxDai, config.DitConfig.Currency, floatKNW), 0)
 			break
-		} else {
-			helpers.PrintLine(fmt.Sprintf("Required (gross) stake: %.2f "+config.DitConfig.Currency+"\n", floatGrossStake), 0)
 		}
 	}
-	helpers.PrintLine(fmt.Sprintf("Current net stake: %.2f "+config.DitConfig.Currency+"\n", floatNetStake), 0)
+	helpers.PrintLine(fmt.Sprintf("Required (gross) stake: %.2f "+config.DitConfig.Currency, floatGrossStake), 0)
+	helpers.PrintLine(fmt.Sprintf("Current net stake: %.2f "+config.DitConfig.Currency, floatNetStake), 0)
+	fmt.Println()
 	helpers.PrintLine("Vote phase end: "+timeCommitString, 0)
 	helpers.PrintLine("Opening phase end: "+timeRevealString, 0)
 	helpers.PrintLine("Resolved? "+strconv.FormatBool(proposal.IsFinalized), 0)
-	helpers.PrintLine("Passed? "+strconv.FormatBool(proposal.ProposalAccepted), 0)
+	winningPercentage := int(KNWPoll.WinningPercentage.Int64())
+	if KNWPoll.WinningPercentage.Cmp(big.NewInt(50)) == 1 {
+		if proposal.ProposalAccepted {
+			helpers.PrintLine("Passed? Accepted with "+strconv.Itoa(winningPercentage)+"% approval", 0)
+		} else {
+			helpers.PrintLine("Passed? Rejected with "+strconv.Itoa(winningPercentage)+"% approval", 0)
+		}
+	} else if KNWPoll.WinningPercentage.Cmp(big.NewInt(50)) == 0 {
+		helpers.PrintLine("Passed? Ended in a draw", 0)
+	} else {
+		helpers.PrintLine("Passed? No validators voted on this proposal - it didn't get accepted", 0)
+	}
+
 	helpers.PrintLine("---------------------------", 0)
 
 	return nil

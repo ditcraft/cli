@@ -151,7 +151,7 @@ func ProposeCommit(_commitMessage string) (string, int, error) {
 	helpers.PrintLine("  Commit Message: "+_commitMessage+"", 0)
 	helpers.PrintLine("  Knowledge Label: "+knowledgeLabels[answerKnowledgeLabel-1], 0)
 	helpers.PrintLine("  Amount of KNW Tokens: "+floatKNWString+" KNW", 0)
-	helpers.PrintLine("  The following stake with automatically be deducted: "+floatStakeString+" xDit", 0)
+	helpers.PrintLine("  The following stake will automatically be deducted: "+floatStakeString+" xDit", 0)
 	userIsSure := helpers.GetUserInputChoice("Is that correct?", "y", "n")
 	if userIsSure == "n" {
 		return "", 0, errors.New("Canceled proposal of commit due to users choice")
