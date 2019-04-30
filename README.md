@@ -6,7 +6,7 @@ The easiest way to use dit is to make use of the released pre-compiled binaries 
 
 ### MacOS
 * Download the latest `dit-macos-amd64` from the [release page](https://github.com/ditcraft/client/releases/latest)
-* Open your terminal (you will need it anyways) and go into the folder where you downloaded the ditCraft client
+* Open your terminal (you will need it anyways) and go into the folder where you downloaded the dit client
 * Move it to /usr/local/bin by executing the following
     * `mv dit-macos-* /usr/local/bin/dit`
     * `chmod a+x /usr/local/bin/dit`
@@ -14,7 +14,7 @@ The easiest way to use dit is to make use of the released pre-compiled binaries 
 
 ### Linux
 * Download the latest `dit-linux-amd64` from the [release page](https://github.com/ditcraft/client/releases/latest)
-* Open your terminal (you will need it for dit anyways) and go into the folder where you downloaded the dit client
+* Open your terminal (you will need it anyways) and go into the folder where you downloaded the dit client
 * Move it to /usr/local/bin by executing the following
     * `mv dit-linux-* /usr/local/bin/dit`
     * `chmod a+x /usr/local/bin/dit`
@@ -37,8 +37,8 @@ If you want to build the client yourself feel free to do so by following this gu
 ## Demo-Mode Usage
 To test the dit client you can follow this guideline, showcasing you the features:
 
-* Run `dit setup --demo` to start the setup of dit
-    * The client will automatically use predefined privatekeys that can be used for the demo
+* Run `dit setup` to start the setup of dit
+    * Follow the clients' directions, you'll need to do a quicky KYC (know-your-coder) via our automated Twitter bot
 * Go into a repository that you want to work with, to do so you can either:
     * `dit clone <REPOSITORY_URL>` to pull the repository onto your machine and automatically initialize it as a dit repository or
     * `dit init` in an exisiting repository to initialize it as a dit repository
@@ -46,11 +46,9 @@ To test the dit client you can follow this guideline, showcasing you the feature
 * Create or change a file in the repository where you want to test the dit client
 * Run `dit commit <COMMIT_MESSAGE>`
     * dit will automatically commit these changes to a new branch and show you all the information necessary
-* You can now let simulated demo voters vote on this proposal with `dit demo_vote <PROPOSA_ID>`
-* When it's time to open the demo voters votes to the public, call `dit demo_open <PROPOSAL_ID>`
-    * The timeframe to open your vote is displayed after calling `dit commit` or `dit demo_vote`
-    * Note: For testing and developing purposes the timeframe to cast and open the vote is 3 minutes each. In reality this would last some days or a week. 
-* After you opened the demo voters votes, you need to wait until the opening phase is over to finalize the vote with `dit finalize <PROPOSAL_ID>`
+* Five demo validators will automatically vote on your proposal, so you'll directly see some action
+    * Note: For testing and developing purposes the timeframe to cast and open the vote is 3 minutes each. In reality this would last some days or a week.
+* Afterwards, ou need to wait until the opening phase is over to finalize the vote with `dit finalize <PROPOSAL_ID>`
     * Now you will see the outcome of the vote.
     * If the vote passed dit will automatically merge your commit into the master branch.
     * If the vote didn't pass dit will automatically remove your commit from the repository.
