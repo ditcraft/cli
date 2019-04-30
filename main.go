@@ -15,8 +15,8 @@ import (
 )
 
 // The current dit coordinator address
-var liveDitCoodinator = "0x049e4E2b99A6004a73a6c6E61d57f3b576f30aB6"
-var demoDitCoodinator = "0xf5Df1fa5Fbb7DCE71E2C7ceaC7D5632593cc6d15"
+var liveDitCoodinator = "0x73F2cdF96941B0f51282Fd21bab108df829C9c71"
+var demoDitCoodinator = "0x0488Cea56d44E3BBEAD34D6Ffd2CBcD561d08b90"
 var configVersion = "v0.2"
 
 func main() {
@@ -145,7 +145,7 @@ func main() {
 	case "get_address":
 		// Return the ETH address
 		helpers.PrintLine("Ethereum Address: "+config.DitConfig.EthereumKeys.Address, 0)
-		helpers.PrintLine("URL: https://blockscout.com/poa/sokol/address/"+config.DitConfig.EthereumKeys.Address, 0)
+		helpers.PrintLine("URL: https://blockscout.com/poa/dai/address/"+config.DitConfig.EthereumKeys.Address, 0)
 		break
 	case "export_keys":
 		helpers.PrintLine("Exporting your keys will print your ethereum private key in plain text", 1)
