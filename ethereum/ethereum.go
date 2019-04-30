@@ -993,7 +993,7 @@ func Finalize(_proposalID string) (bool, bool, error) {
 	if err != nil {
 		return false, false, errors.New("Failed to retrieve vote information")
 	}
-
+	totalVoters := int(new(big.Int).Add(KNWPoll.ParticipantsAgainst, KNWPoll.ParticipantsFor).Int64())
 	winningPercentage := int(KNWPoll.WinningPercentage.Int64())
 
 	// Retrieving the outcome of the vote
@@ -1006,18 +1006,18 @@ func Finalize(_proposalID string) (bool, bool, error) {
 	// Show the user how the vote ended
 	if KNWPoll.WinningPercentage.Cmp(big.NewInt(50)) == 1 {
 		if pollPassed {
-			helpers.PrintLine("Successfully finalized the vote - it passed with "+strconv.Itoa(winningPercentage)+"% approval from the validators", 0)
+			helpers.PrintLine("Successfully finalized the vote - it passed with "+strconv.Itoa(winningPercentage)+"% approval amongst "+strconv.Itoa(totalVoters)+" validators", 0)
 			if proposal.Proposer == common.HexToAddress(config.DitConfig.EthereumKeys.Address) {
 				helpers.PrintLine("You received your stake back and will share the opposing voters slashes stakes", 0)
 			}
 		} else {
-			helpers.PrintLine("Successfully finalized the vote - it didn't pass, "+strconv.Itoa(winningPercentage)+"% of the validators voted against it", 0)
+			helpers.PrintLine("Successfully finalized the vote - it didn't pass with "+strconv.Itoa(winningPercentage)+"% disapproval amongst "+strconv.Itoa(totalVoters)+" validators", 0)
 			if proposal.Proposer == common.HexToAddress(config.DitConfig.EthereumKeys.Address) {
 				helpers.PrintLine("Your stake was slashed and will be distributed amongst the voters", 0)
 			}
 		}
 	} else if KNWPoll.WinningPercentage.Cmp(big.NewInt(50)) == 0 {
-		helpers.PrintLine("Successfully finalized the vote - it ended in a draw and didn't get accepted", 0)
+		helpers.PrintLine("Successfully finalized the vote - it ended in a draw between "+strconv.Itoa(totalVoters)+" validators and didn't get accepted", 0)
 		helpers.PrintLine("You received your stake back", 0)
 	} else {
 		helpers.PrintLine("Successfully finalized the vote - no one voted on it and it didn't get accepted", 0)
@@ -1500,7 +1500,7 @@ func populateTx(_connection *ethclient.Client) (*bind.TransactOpts, error) {
 	auth.Nonce = big.NewInt(int64(nonce))
 
 	auth.Value = big.NewInt(0)
-	// auth.GasLimit = uint64(1000000)
+	auth.GasLimit = uint64(1000000)
 	auth.GasPrice = gasPrice
 
 	return auth, nil
