@@ -1489,19 +1489,13 @@ func populateTx(_connection *ethclient.Client) (*bind.TransactOpts, error) {
 		nonce = nonpendingNonce
 	}
 
-	// Retrieving the suggested gasprice by the network
-	gasPrice, err := _connection.SuggestGasPrice(context.Background())
-	if err != nil {
-		return nil, errors.New("Failed to retrieve the gas-price for ethereum transaction")
-	}
-
 	// Setting the values into the transaction-options object
 	auth := bind.NewKeyedTransactor(privateKey)
 	auth.Nonce = big.NewInt(int64(nonce))
 
 	auth.Value = big.NewInt(0)
 	auth.GasLimit = uint64(1000000)
-	auth.GasPrice = gasPrice
+	auth.GasPrice = big.NewInt(1000000000)
 
 	return auth, nil
 }
