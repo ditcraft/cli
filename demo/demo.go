@@ -427,7 +427,7 @@ func getKNWVotingInstance(_connection *ethclient.Client) (*KNWVoting.KNWVoting, 
 
 // getConnection will return a connection to the ethereum blockchain
 func getConnection() (*ethclient.Client, error) {
-	connection, err := ethclient.Dial("https://dai.poa.network")
+	connection, err := ethclient.Dial("https://node.ditcraft.io")
 	if err != nil {
 		return nil, errors.New("Failed to connect to the ethereum network")
 	}
