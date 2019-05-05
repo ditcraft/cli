@@ -69,6 +69,16 @@ func ProposeCommit(_commitMessage string) (string, int, error) {
 		return "", 0, err
 	}
 
+	nextAddress, err := ditCoordinatorInstance.NextDitCoordinator(nil)
+	if err != nil {
+		return "", 0, err
+	}
+	if nextAddress != common.HexToAddress("0") {
+		helpers.PrintLine("There was an update to the ditCraft smartcontracts. Please update your client in order to interact with them.", 0)
+		helpers.PrintLine("Go to: https://github.com/ditcraft/client", 0)
+		os.Exit(0)
+	}
+
 	// Create a new instance of the KNWToken to access it
 	KNWTokenInstance, err := getKNWTokenInstance(connection)
 	if err != nil {

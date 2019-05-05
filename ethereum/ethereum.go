@@ -250,6 +250,16 @@ func ProposeCommit(_commitMessage string) (string, int, error) {
 		return "", 0, err
 	}
 
+	nextAddress, err := ditCoordinatorInstance.NextDitCoordinator(nil)
+	if err != nil {
+		return "", 0, err
+	}
+	if nextAddress != common.HexToAddress("0") {
+		helpers.PrintLine("There was an update to the ditCraft smartcontracts. Please update your client in order to interact with them.", 0)
+		helpers.PrintLine("Go to: https://github.com/ditcraft/client", 0)
+		os.Exit(0)
+	}
+
 	// Create a new instance of the KNWToken to access it
 	KNWTokenInstance, err := getKNWTokenInstance(connection)
 	if err != nil {
@@ -556,7 +566,7 @@ func Vote(_proposalID string, _choice string, _salt string) error {
 
 	// In order to create a valid abi-encoded hash of the vote choice and salt
 	// we need to create an abi object
-	uint256Type, _ := abi.NewType("uint256")
+	uint256Type, _ := abi.NewType("uint256", nil)
 	arguments := abi.Arguments{
 		{
 			Type: uint256Type,
