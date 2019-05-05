@@ -158,6 +158,16 @@ func InitDitRepository(_optionalRepository ...string) error {
 		return err
 	}
 
+	nextAddress, err := ditCoordinatorInstance.NextDitCoordinator(nil)
+	if err != nil {
+		return err
+	}
+	if nextAddress != common.HexToAddress("0") {
+		helpers.PrintLine("There was an update to the ditCraft smartcontracts. Please update your client in order to interact with them.", 0)
+		helpers.PrintLine("Go to: https://github.com/ditcraft/client", 0)
+		os.Exit(0)
+	}
+
 	// Retrieving the address of the ditContract that was deployed for this repository
 	isInitialized, err := ditCoordinatorInstance.RepositoryIsInitialized(nil, repoHash)
 	if err != nil {
@@ -170,7 +180,7 @@ func InitDitRepository(_optionalRepository ...string) error {
 		answer := helpers.GetUserInputChoice("This repository hasn't been initialized yet, do you want to initialize it?", "y", "n")
 		if answer == "y" {
 			// If yes: deploy the ditContract
-			err = initDitRepository(ditCoordinatorInstance, repoHash)
+			err = initDitRepository(ditCoordinatorInstance, repoHash, repository)
 			if err != nil {
 				return err
 			}
@@ -1397,7 +1407,7 @@ func gatherProposalInfo(_connection *ethclient.Client, _ditCoordinatorInstance *
 }
 
 // TODO
-func initDitRepository(_ditCoordinatorInstance *ditCoordinator.DitCoordinator, _repoHash [32]byte) error {
+func initDitRepository(_ditCoordinatorInstance *ditCoordinator.DitCoordinator, _repoHash [32]byte, _name string) error {
 	connection, err := getConnection()
 	if err != nil {
 		return err
@@ -1431,7 +1441,7 @@ func initDitRepository(_ditCoordinatorInstance *ditCoordinator.DitCoordinator, _
 	}
 
 	// Initializing the repository = deploying a new ditContract
-	transaction, err := _ditCoordinatorInstance.InitRepository(auth, _repoHash, knowledgeLabels[0], knowledgeLabels[1], knowledgeLabels[2], neededMajority)
+	transaction, err := _ditCoordinatorInstance.InitRepository(auth, _name, knowledgeLabels[0], knowledgeLabels[1], knowledgeLabels[2], neededMajority)
 	if err != nil {
 		if strings.Contains(err.Error(), "insufficient funds") {
 			return errors.New("Your account doesn't have enough xDai to pay for the transaction")
