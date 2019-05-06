@@ -74,26 +74,40 @@ func GetPrivateKey(_forTransaction bool) (string, error) {
 	if _forTransaction {
 		helpers.PrintLine("This action requires to send a transaction to the ethereum blockchain.", 0)
 	}
-	helpers.Printf("Please provide your password to unlock your ethereum account: ", 0)
-	password, err := terminal.ReadPassword(0)
-	fmt.Printf("\n")
-	if err != nil {
-		return "", errors.New("Failed to retrieve password")
-	}
 
 	// Converting the encrypted private key from hex to bytes
 	encPrivateKey, err := hex.DecodeString(DitConfig.EthereumKeys.PrivateKey)
 	if err != nil {
-		return "", errors.New("Failed to decode private key from config")
+		return "", errors.New("Failed to decode private key from the config")
 	}
 
-	// Decrypting the private key
-	decryptedPrivateKey, err := decrypt(encPrivateKey, string(password))
-	if err != nil {
-		return "", errors.New("Failed to decrypt the encrypted private key - wrong password?")
+	helpers.Printf("Please provide your password to unlock your ethereum account: ", 0)
+	iteration := 0
+	for iteration <= 2 {
+		password, err := terminal.ReadPassword(0)
+		fmt.Printf("\n")
+		if err != nil {
+			if iteration < 2 {
+				iteration++
+				helpers.Printf("There was an error during the password input, please try again: ", 0)
+			} else {
+				return "", errors.New("There was an error during the password input - exiting after three attempts")
+			}
+		} else {
+			decryptedPrivateKey, err := decrypt(encPrivateKey, string(password))
+			if err != nil {
+				if iteration < 2 {
+					iteration++
+					helpers.Printf("Failed to decrypt the encrypted private key - wrong password? Please try again: ", 0)
+				} else {
+					return "", errors.New("There was an error during the private key decryption, probably due to a wrong password")
+				}
+			} else {
+				return string(decryptedPrivateKey), nil
+			}
+		}
 	}
-
-	return string(decryptedPrivateKey), nil
+	return "", errors.New("Failed to decrypt the encrypted private key")
 }
 
 // Load will load the config and set it to the exported variable "DitConfig"
