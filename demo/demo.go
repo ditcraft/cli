@@ -10,13 +10,13 @@ import (
 	"strings"
 	"time"
 
-	"github.com/ditcraft/client/config"
-	"github.com/ditcraft/client/git"
-	"github.com/ditcraft/client/helpers"
-	"github.com/ditcraft/client/smartcontracts/KNWToken"
-	"github.com/ditcraft/client/smartcontracts/KNWVoting"
-	"github.com/ditcraft/client/smartcontracts/ditDemoCoordinator"
-	"github.com/ditcraft/client/smartcontracts/ditToken"
+	"github.com/ditcraft/cli/config"
+	"github.com/ditcraft/cli/git"
+	"github.com/ditcraft/cli/helpers"
+	"github.com/ditcraft/cli/smartcontracts/KNWToken"
+	"github.com/ditcraft/cli/smartcontracts/KNWVoting"
+	"github.com/ditcraft/cli/smartcontracts/ditDemoCoordinator"
+	"github.com/ditcraft/cli/smartcontracts/ditToken"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
@@ -74,8 +74,8 @@ func ProposeCommit(_commitMessage string) (string, int, error) {
 		return "", 0, err
 	}
 	if nextAddress != common.HexToAddress("0") {
-		helpers.PrintLine("There was an update to the ditCraft smartcontracts. Please update your client in order to interact with them.", 0)
-		helpers.PrintLine("Go to: https://github.com/ditcraft/client", 0)
+		helpers.PrintLine("There was an update to the ditCraft smartcontracts. Please update your ditCLI in order to interact with them.", 0)
+		helpers.PrintLine("Go to: https://github.com/ditcraft/cli", 0)
 		os.Exit(0)
 	}
 

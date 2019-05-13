@@ -7,7 +7,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/ditcraft/client/helpers"
+	"github.com/ditcraft/cli/helpers"
 )
 
 // GetRepository will return the name of the current repostiry

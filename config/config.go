@@ -14,7 +14,7 @@ import (
 	"os/user"
 	"strings"
 
-	"github.com/ditcraft/client/helpers"
+	"github.com/ditcraft/cli/helpers"
 	"github.com/ethereum/go-ethereum/crypto"
 	"golang.org/x/crypto/ssh/terminal"
 )
@@ -22,7 +22,7 @@ import (
 // DitConfig is exported since it needs to be accessed from other packages all the time
 var DitConfig ditConfig
 
-// Version of the config, will be incremented after every client update that modified the config file
+// Version of the config, will be incremented after every ditCLI update that modified the config file
 // in a way that an update is necessaray
 var Version = 1
 
@@ -154,7 +154,7 @@ func getRawConfig() ([]byte, error) {
 func Create(_demoMode bool) error {
 	continueCreating := true
 	if strings.Contains(DitConfig.DitCoordinator, "0x") {
-		helpers.PrintLine("This action will re-initialize the client, resulting in a loss of your current Ethereum keys.", 1)
+		helpers.PrintLine("This action will re-initialize the ditCLI, resulting in a loss of your current Ethereum keys.", 1)
 		helpers.PrintLine("Note: If you want to switch between live and demo mode, use '"+helpers.ColorizeCommand("mode")+"'", 1)
 		answer := helpers.GetUserInputChoice("Are you sure that you want to proceed?", "y", "n")
 		if answer == "n" {
@@ -164,16 +164,16 @@ func Create(_demoMode bool) error {
 		}
 	}
 	if continueCreating {
-		helpers.PrintLine("Initializing the ditClient...", 0)
+		helpers.PrintLine("Initializing the ditCLI...", 0)
 		DitConfig = ditConfig{}
 		DitConfig.DemoModeActive = _demoMode
 
 		if !DitConfig.DemoModeActive {
-			helpers.PrintLine("You are initializing the client in live mode, you will be staking real xDai.", 1)
+			helpers.PrintLine("You are initializing the ditCLI in live mode, you will be staking real xDai.", 1)
 			helpers.PrintLine("If you just want to play around with dit, you can also use the demo mode with '"+helpers.ColorizeCommand("setup --demo")+"'", 0)
 			fmt.Println()
 		} else {
-			helpers.PrintLine("You are initializing the client in demo mode, feel free to play around with it!", 0)
+			helpers.PrintLine("You are initializing the ditCLI in demo mode, feel free to play around with it!", 0)
 			helpers.PrintLine("If you want to switch to the live mode later on, you can do so with '"+helpers.ColorizeCommand("mode live")+"'", 0)
 			fmt.Println()
 		}
@@ -265,7 +265,7 @@ func Create(_demoMode bool) error {
 	return errors.New("Cancelling setup due to users choice")
 }
 
-// Update will migrate the current key-pair after a client update that
+// Update will migrate the current key-pair after a ditCLI update that
 func Update(_liveDitCoordinator string, _demoDitCoordinator string) (bool, error) {
 	didUpdate := false
 	// Retrieving the config file
@@ -281,7 +281,7 @@ func Update(_liveDitCoordinator string, _demoDitCoordinator string) (bool, error
 			for _, vote := range repository.ActiveVotes {
 				// If there was a parsing error and a live vote is still not resolved, the user is warned before updating
 				if !vote.Resolved {
-					helpers.PrintLine("You have ongoing or unfinalized votes that might be unresolvable with this client after an update!", 1)
+					helpers.PrintLine("You have ongoing or unfinalized votes that might be unresolvable with this ditCLI after an update!", 1)
 					answer := helpers.GetUserInputChoice("Are you sure that you want to proceed?", "y", "n")
 					if answer == "n" {
 						return false, errors.New("Cancelling update due to users choice")
@@ -293,7 +293,7 @@ func Update(_liveDitCoordinator string, _demoDitCoordinator string) (bool, error
 	}
 
 	if DitConfig.Version < Version {
-		helpers.PrintLine("Updating the ditClients' config...", 0)
+		helpers.PrintLine("Updating the ditCLIs' config...", 0)
 		didUpdate = true
 		newDitConfig := ditConfig{}
 		newDitConfig.DemoModeActive = DitConfig.DemoModeActive
@@ -322,7 +322,7 @@ func Update(_liveDitCoordinator string, _demoDitCoordinator string) (bool, error
 	if didUpdate {
 		return true, nil
 	}
-	return false, errors.New("Your ditClient is already up to date")
+	return false, errors.New("Your ditCLI is already up to date")
 }
 
 // Save will write the current config object to the file

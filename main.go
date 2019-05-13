@@ -7,11 +7,11 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/ditcraft/client/config"
-	"github.com/ditcraft/client/demo"
-	"github.com/ditcraft/client/ethereum"
-	"github.com/ditcraft/client/git"
-	"github.com/ditcraft/client/helpers"
+	"github.com/ditcraft/cli/config"
+	"github.com/ditcraft/cli/demo"
+	"github.com/ditcraft/cli/ethereum"
+	"github.com/ditcraft/cli/git"
+	"github.com/ditcraft/cli/helpers"
 )
 
 // The current dit coordinator address
@@ -45,7 +45,7 @@ func main() {
 
 	if err == nil && (command != "setup" && command != "update") {
 		if config.DitConfig.Version != config.Version {
-			helpers.PrintLine("Your config is not up to date, the client might not work correctly", 1)
+			helpers.PrintLine("Your config is not up to date, the ditCLI might not work correctly", 1)
 			helpers.PrintLine("To fix this call '"+helpers.ColorizeCommand("update")+"'", 1)
 		} else if (!config.DitConfig.DemoModeActive && config.DitConfig.DitCoordinator != liveDitCoodinator) || (config.DitConfig.DemoModeActive && config.DitConfig.DitCoordinator != demoDitCoodinator) {
 			helpers.PrintLine("You are using an old version of the deployed ditCoordinator contract", 1)
@@ -118,9 +118,9 @@ func main() {
 		}
 		err = ethereum.SetDitCoordinator(ditCoordinatorAddress)
 		if err == nil {
-			helpers.PrintLine("dit client switched to the "+args[1]+" mode", 0)
+			helpers.PrintLine("ditCLI switched to the "+args[1]+" mode", 0)
 			if args[1] == "live" {
-				helpers.PrintLine("You are now using the client in live mode, you will be staking real xDai!", 1)
+				helpers.PrintLine("You are now using the ditCLI in live mode, you will be staking real xDai!", 1)
 			}
 			passedKYC, err := ethereum.CheckForKYC()
 			if err == nil && !passedKYC {
@@ -279,7 +279,7 @@ func checkIfExists(_arguments []string, _index int, _description string) {
 }
 
 func printUsage() {
-	fmt.Println("--------- dit client v0.2 --------")
+	fmt.Println("----------- ditCLI v0.2 ----------")
 	if config.DitConfig.DemoModeActive {
 		fmt.Println("--------- demo mode active -------")
 	} else {
@@ -287,8 +287,8 @@ func printUsage() {
 	}
 	fmt.Println("------------- General ------------")
 	fmt.Println(" - dit setup\t\t\t\t\tCreates or imports the ethereum keys and creates a config")
-	fmt.Println(" - dit update\t\t\t\t\tUpdates the clients config after an update of the dit client")
-	fmt.Println(" - dit mode <MODE>\t\t\t\tSwitch between the modes of the client (live or demo)")
+	fmt.Println(" - dit update\t\t\t\t\tUpdates the ditCLIs config after an update of the ditCLI")
+	fmt.Println(" - dit mode <MODE>\t\t\t\tSwitch between the modes of the ditCLI (live or demo)")
 	fmt.Println("")
 	fmt.Println("------------- Ethereum ------------")
 	fmt.Println(" - dit get_address\t\t\t\tReturns ethereum address of the account")
