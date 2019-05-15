@@ -23,8 +23,8 @@ import (
 var DitConfig ditConfig
 
 // Version of the config, will be incremented after every ditCLI update that modified the config file
-// in a way that an update is necessaray
-var Version = 1
+// or the smart contracts in a way that an update is necessaray
+var Version = 2
 
 type ditConfig struct {
 	DitCoordinator   string       `json:"dit_coordinator"`
@@ -281,7 +281,7 @@ func Update(_liveDitCoordinator string, _demoDitCoordinator string) (bool, error
 			for _, vote := range repository.ActiveVotes {
 				// If there was a parsing error and a live vote is still not resolved, the user is warned before updating
 				if !vote.Resolved {
-					helpers.PrintLine("You have ongoing or unfinalized votes that might be unresolvable with this ditCLI after an update!", 1)
+					helpers.PrintLine("You have ongoing or unfinalized votes that might be unresolvable with the new ditCLI version after an update!", 1)
 					answer := helpers.GetUserInputChoice("Are you sure that you want to proceed?", "y", "n")
 					if answer == "n" {
 						return false, errors.New("Cancelling update due to users choice")
