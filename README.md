@@ -45,9 +45,9 @@ To test the ditCLI you can follow this guideline, showcasing you the features:
 * Run `dit commit <COMMIT_MESSAGE>`
     * dit will automatically commit these changes to a new branch and show you all the information necessary
 * Five demo validators will automatically vote on your proposal, so you'll directly see some action
-    * Note: For testing and developing purposes the timeframe to cast and open the vote is 3 minutes each. In reality this would last some days or a week.
-* Afterwards, ou need to wait until the opening phase is over to finalize the vote with `dit finalize <PROPOSAL_ID>`
+    * Note: For testing and developing purposes the timeframe to cast and open the vote is one minute each. In reality this would last some hours or days
+* Afterwards, you need to wait until the opening phase is over to finalize the vote with `dit finalize <PROPOSAL_ID>`
     * Now you will see the outcome of the vote.
-    * If the vote passed dit will automatically merge your commit into the master branch.
-    * If the vote didn't pass dit will automatically remove your commit from the repository.
+    * If the vote passed, dit will automatically merge your commit into the master branch.
+    * If the vote didn't pass dit will automatically remove your commit.
 * Congratulations, you just participated in a decentralized version of git that is goverened through smart-contracts on the ethereum blockchain!
