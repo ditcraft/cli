@@ -72,7 +72,7 @@ type ActiveVote struct {
 func GetPrivateKey(_forTransaction bool) (string, error) {
 	// Prompting the user
 	if _forTransaction {
-		helpers.PrintLine("This action requires to send a transaction to the ethereum blockchain.", 0)
+		helpers.PrintLine("This action requires to send a transaction to the ethereum blockchain.", helpers.INFO)
 	}
 
 	// Converting the encrypted private key from hex to bytes
@@ -81,7 +81,7 @@ func GetPrivateKey(_forTransaction bool) (string, error) {
 		return "", errors.New("Failed to decode private key from the config")
 	}
 
-	helpers.Printf("Please provide your password to unlock your ethereum account: ", 0)
+	helpers.Printf("Please provide your password to unlock your ethereum account: ", helpers.INFO)
 	iteration := 0
 	for iteration <= 2 {
 		password, err := terminal.ReadPassword(0)
@@ -89,7 +89,7 @@ func GetPrivateKey(_forTransaction bool) (string, error) {
 		if err != nil {
 			if iteration < 2 {
 				iteration++
-				helpers.Printf("There was an error during the password input, please try again: ", 0)
+				helpers.Printf("There was an error during the password input, please try again: ", helpers.INFO)
 			} else {
 				return "", errors.New("There was an error during the password input - exiting after three attempts")
 			}
@@ -98,7 +98,7 @@ func GetPrivateKey(_forTransaction bool) (string, error) {
 			if err != nil {
 				if iteration < 2 {
 					iteration++
-					helpers.Printf("Failed to decrypt the encrypted private key - wrong password? Please try again: ", 0)
+					helpers.Printf("Failed to decrypt the encrypted private key - wrong password? Please try again: ", helpers.INFO)
 				} else {
 					return "", errors.New("There was an error during the private key decryption, probably due to a wrong password")
 				}
@@ -154,8 +154,8 @@ func getRawConfig() ([]byte, error) {
 func Create(_demoMode bool) error {
 	continueCreating := true
 	if strings.Contains(DitConfig.DitCoordinator, "0x") {
-		helpers.PrintLine("This action will re-initialize the ditCLI, resulting in a loss of your current Ethereum keys.", 1)
-		helpers.PrintLine("Note: If you want to switch between live and demo mode, use '"+helpers.ColorizeCommand("mode")+"'", 1)
+		helpers.PrintLine("This action will re-initialize the ditCLI, resulting in a loss of your current Ethereum keys.", helpers.WARN)
+		helpers.PrintLine("Note: If you want to switch between live and demo mode, use '"+helpers.ColorizeCommand("mode")+"'", helpers.WARN)
 		answer := helpers.GetUserInputChoice("Are you sure that you want to proceed?", "y", "n")
 		if answer == "n" {
 			continueCreating = false
@@ -164,17 +164,17 @@ func Create(_demoMode bool) error {
 		}
 	}
 	if continueCreating {
-		helpers.PrintLine("Initializing the ditCLI...", 0)
+		helpers.PrintLine("Initializing the ditCLI...", helpers.INFO)
 		DitConfig = ditConfig{}
 		DitConfig.DemoModeActive = _demoMode
 
 		if !DitConfig.DemoModeActive {
-			helpers.PrintLine("You are initializing the ditCLI in live mode, you will be staking real xDai.", 1)
-			helpers.PrintLine("If you just want to play around with dit, you can also use the demo mode with '"+helpers.ColorizeCommand("setup --demo")+"'", 0)
+			helpers.PrintLine("You are initializing the ditCLI in live mode, you will be staking real xDAI.", helpers.WARN)
+			helpers.PrintLine("If you just want to play around with dit, you can also use the demo mode with '"+helpers.ColorizeCommand("setup --demo")+"'", helpers.INFO)
 			fmt.Println()
 		} else {
-			helpers.PrintLine("You are initializing the ditCLI in demo mode, feel free to play around with it!", 0)
-			helpers.PrintLine("If you want to switch to the live mode later on, you can do so with '"+helpers.ColorizeCommand("mode live")+"'", 0)
+			helpers.PrintLine("You are initializing the ditCLI in demo mode, feel free to play around with it!", helpers.INFO)
+			helpers.PrintLine("If you want to switch to the live mode later on, you can do so with '"+helpers.ColorizeCommand("mode live")+"'", helpers.INFO)
 			fmt.Println()
 		}
 		// Prompting the user for his choice on the ethereum key generation/importing
@@ -213,7 +213,7 @@ func Create(_demoMode bool) error {
 		var password []byte
 		keepAsking := true
 		for keepAsking {
-			helpers.Printf("Please provide a password to encrypt your private key: ", 0)
+			helpers.Printf("Please provide a password to encrypt your private key: ", helpers.INFO)
 			var err error
 			password, err = terminal.ReadPassword(0)
 			fmt.Printf("\n")
@@ -222,7 +222,7 @@ func Create(_demoMode bool) error {
 			}
 
 			// Repeating the password to make sure that there are no typos
-			helpers.Printf("Please repeat your password: ", 0)
+			helpers.Printf("Please repeat your password: ", helpers.INFO)
 			passwordAgain, err := terminal.ReadPassword(0)
 			fmt.Printf("\n")
 			if err != nil {
@@ -231,9 +231,9 @@ func Create(_demoMode bool) error {
 
 			// If passwords don't match or are empty
 			if string(passwordAgain) != string(password) {
-				helpers.PrintLine("Passwords didn't match - try again!", 1)
+				helpers.PrintLine("Passwords didn't match - try again!", helpers.WARN)
 			} else if len(password) == 0 {
-				helpers.PrintLine("Password can't be empty - try again!", 1)
+				helpers.PrintLine("Password can't be empty - try again!", helpers.WARN)
 			} else {
 				// Stop if nothing of the above is true
 				keepAsking = false
@@ -257,8 +257,8 @@ func Create(_demoMode bool) error {
 			return err
 		}
 
-		helpers.PrintLine("Initialization successfull", 0)
-		helpers.PrintLine("Your Ethereum Address is: "+DitConfig.EthereumKeys.Address, 0)
+		helpers.PrintLine("Initialization successfull", helpers.INFO)
+		helpers.PrintLine("Your Ethereum Address is: "+DitConfig.EthereumKeys.Address, helpers.INFO)
 		return nil
 	}
 
@@ -281,7 +281,7 @@ func Update(_liveDitCoordinator string, _demoDitCoordinator string) (bool, error
 			for _, vote := range repository.ActiveVotes {
 				// If there was a parsing error and a live vote is still not resolved, the user is warned before updating
 				if !vote.Resolved {
-					helpers.PrintLine("You have ongoing or unfinalized votes that might be unresolvable with the new ditCLI version after an update!", 1)
+					helpers.PrintLine("You have ongoing or unfinalized votes that might be unresolvable with the new ditCLI version after an update!", helpers.WARN)
 					answer := helpers.GetUserInputChoice("Are you sure that you want to proceed?", "y", "n")
 					if answer == "n" {
 						return false, errors.New("Cancelling update due to users choice")
@@ -293,7 +293,7 @@ func Update(_liveDitCoordinator string, _demoDitCoordinator string) (bool, error
 	}
 
 	if DitConfig.Version < Version {
-		helpers.PrintLine("Updating the ditCLIs' config...", 0)
+		helpers.PrintLine("Updating the ditCLIs' config...", helpers.INFO)
 		didUpdate = true
 		newDitConfig := ditConfig{}
 		newDitConfig.DemoModeActive = DitConfig.DemoModeActive
@@ -311,7 +311,7 @@ func Update(_liveDitCoordinator string, _demoDitCoordinator string) (bool, error
 		}
 	}
 	if (DitConfig.DemoModeActive && DitConfig.DitCoordinator != _demoDitCoordinator) || (!DitConfig.DemoModeActive && DitConfig.DitCoordinator != _liveDitCoordinator) {
-		helpers.PrintLine("Updating the ditCoordinator...", 0)
+		helpers.PrintLine("Updating the ditCoordinator...", helpers.INFO)
 		didUpdate = true
 		if !DitConfig.DemoModeActive {
 			DitConfig.DitCoordinator = _liveDitCoordinator
@@ -350,7 +350,7 @@ func Save() error {
 
 // importEthereumKey will return the private key and the address of an imported private key
 func importEthereumKey(privateKey string) (string, string, error) {
-	helpers.PrintLine("Importing ethereum key...", 0)
+	helpers.PrintLine("Importing ethereum key...", helpers.INFO)
 
 	// Converting the private key string into a private key object
 	key, err := crypto.HexToECDSA(privateKey)
@@ -368,7 +368,7 @@ func importEthereumKey(privateKey string) (string, string, error) {
 }
 
 func sampleEthereumKeys() (string, string, error) {
-	helpers.PrintLine("Sampling ethereum key...", 0)
+	helpers.PrintLine("Sampling ethereum key...", helpers.INFO)
 
 	// Sampling a new private key
 	key, err := crypto.GenerateKey()

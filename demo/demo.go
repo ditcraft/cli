@@ -74,8 +74,8 @@ func ProposeCommit(_commitMessage string) (string, int, error) {
 		return "", 0, err
 	}
 	if nextAddress != common.HexToAddress("0") {
-		helpers.PrintLine("There was an update to the ditCraft smartcontracts. Please update your ditCLI in order to interact with them.", 0)
-		helpers.PrintLine("Go to: https://github.com/ditcraft/cli", 0)
+		helpers.PrintLine("There was an update to the ditCraft smartcontracts. Please update your ditCLI in order to interact with them.", helpers.INFO)
+		helpers.PrintLine("Go to: https://github.com/ditcraft/cli", helpers.INFO)
 		os.Exit(0)
 	}
 
@@ -104,22 +104,22 @@ func ProposeCommit(_commitMessage string) (string, int, error) {
 		answerKnowledgeLabel, _ = strconv.Atoi(helpers.GetUserInput(userInputString))
 	}
 
-	// Retrieving the xDit balance of the user
-	xDitBalance, err := ditTokenInstance.BalanceOf(nil, myAddress)
+	// Retrieving the xDIT balance of the user
+	xDITBalance, err := ditTokenInstance.BalanceOf(nil, myAddress)
 	if err != nil {
 		return "", 0, errors.New("Failed to retrieve " + config.DitConfig.Currency + " balance")
 	}
 
-	// Formatting the xDit balance to a human-readable format
-	floatBalance := new(big.Float).Quo((new(big.Float).SetInt(xDitBalance)), big.NewFloat(1000000000000000000))
+	// Formatting the xDIT balance to a human-readable format
+	floatBalance := new(big.Float).Quo((new(big.Float).SetInt(xDITBalance)), big.NewFloat(1000000000000000000))
 
-	// Retrieving the xDit balance of the user
+	// Retrieving the xDIT balance of the user
 	freeKNWBalance, err := KNWTokenInstance.FreeBalanceOfLabel(nil, myAddress, knowledgeLabels[answerKnowledgeLabel-1])
 	if err != nil {
 		return "", 0, errors.New("Failed to retrieve free KNW balance")
 	}
 
-	// Formatting the xDit balance to a human-readable format
+	// Formatting the xDIT balance to a human-readable format
 	floatKNWBalance := new(big.Float).Quo((new(big.Float).SetInt(freeKNWBalance)), big.NewFloat(1000000000000000000))
 
 	// Prompting the user how much stake he wants to set for this proposal
@@ -127,7 +127,7 @@ func ProposeCommit(_commitMessage string) (string, int, error) {
 	floatStakeParsed, _ := strconv.ParseFloat(answerStake, 64)
 	floatStake := big.NewFloat(floatStakeParsed)
 
-	helpers.PrintLine(fmt.Sprintf("You have a balance of %.2f xDit", floatBalance), 0)
+	helpers.PrintLine(fmt.Sprintf("You have a balance of %.2f xDIT", floatBalance), helpers.INFO)
 	userInputString = fmt.Sprintf("How much do you want to stake?")
 	for floatStake.Cmp(big.NewFloat(0)) == 0 || floatStake.Cmp(floatBalance) != -1 {
 		answerStake = helpers.GetUserInput(userInputString)
@@ -140,7 +140,7 @@ func ProposeCommit(_commitMessage string) (string, int, error) {
 	floatKNWParsed, _ := strconv.ParseFloat(answerKNW, 64)
 	floatKNW := big.NewFloat(floatKNWParsed)
 
-	helpers.PrintLine(fmt.Sprintf("You have a balance of %.2f KNW for the label '%s'", floatKNWBalance, knowledgeLabels[answerKnowledgeLabel-1]), 0)
+	helpers.PrintLine(fmt.Sprintf("You have a balance of %.2f KNW for the label '%s'", floatKNWBalance, knowledgeLabels[answerKnowledgeLabel-1]), helpers.INFO)
 	if floatKNWBalance.Cmp(big.NewFloat(0)) == 1 {
 		userInputString = fmt.Sprintf("How much do you want to use?")
 		keepAsking := true
@@ -157,11 +157,11 @@ func ProposeCommit(_commitMessage string) (string, int, error) {
 	// Prompting the user whether he is sure of this proposal and its details
 	floatStakeString := fmt.Sprintf("%.2f", floatStakeParsed)
 	floatKNWString := fmt.Sprintf("%.2f", floatKNWParsed)
-	helpers.PrintLine("  Proposing the commit with the following settings:", 0)
-	helpers.PrintLine("  Commit Message: "+_commitMessage+"", 0)
-	helpers.PrintLine("  Knowledge Label: "+knowledgeLabels[answerKnowledgeLabel-1], 0)
-	helpers.PrintLine("  Amount of KNW Tokens: "+floatKNWString+" KNW", 0)
-	helpers.PrintLine("  The following stake will automatically be deducted: "+floatStakeString+" xDit", 0)
+	helpers.PrintLine("  Proposing the commit with the following settings:", helpers.INFO)
+	helpers.PrintLine("  Commit Message: "+_commitMessage+"", helpers.INFO)
+	helpers.PrintLine("  Knowledge Label: "+knowledgeLabels[answerKnowledgeLabel-1], helpers.INFO)
+	helpers.PrintLine("  Amount of KNW Tokens: "+floatKNWString+" KNW", helpers.INFO)
+	helpers.PrintLine("  The following stake will automatically be deducted: "+floatStakeString+" xDIT", helpers.INFO)
 	userIsSure := helpers.GetUserInputChoice("Is that correct?", "y", "n")
 	if userIsSure == "n" {
 		return "", 0, errors.New("Canceled proposal of commit due to users choice")
@@ -177,18 +177,18 @@ func ProposeCommit(_commitMessage string) (string, int, error) {
 
 	approvedBalance, err := ditTokenInstance.Allowance(nil, myAddress, common.HexToAddress(config.DitConfig.DitCoordinator))
 	if err != nil {
-		return "", 0, errors.New("Failed to retrieve xDit allowance")
+		return "", 0, errors.New("Failed to retrieve xDIT allowance")
 	}
 
 	if approvedBalance.Cmp(intStake) == -1 {
-		helpers.PrintLine("Since xDit is a token, we need to set an allowance first", 0)
+		helpers.PrintLine("Since xDIT is a token, we need to set an allowance first", helpers.INFO)
 		// Crerating the transaction (basic values)
 		auth, err := populateTx(connection)
 		if err != nil {
 			return "", 0, err
 		}
 
-		_, err = ditTokenInstance.Approve(auth, common.HexToAddress(config.DitConfig.DitCoordinator), xDitBalance)
+		_, err = ditTokenInstance.Approve(auth, common.HexToAddress(config.DitConfig.DitCoordinator), xDITBalance)
 		if err != nil {
 			return "", 0, err
 		}
@@ -197,12 +197,12 @@ func ProposeCommit(_commitMessage string) (string, int, error) {
 		for newAllowance.Cmp(approvedBalance) == 0 {
 			newAllowance, err = ditTokenInstance.Allowance(nil, myAddress, common.HexToAddress(config.DitConfig.DitCoordinator))
 			if err != nil {
-				return "", 0, errors.New("Failed to retrieve xDit allowance")
+				return "", 0, errors.New("Failed to retrieve xDIT allowance")
 			}
 			time.Sleep(2 * time.Second)
 		}
 		fmt.Println()
-		helpers.PrintLine("Now the actual commit proposal will be executed", 0)
+		helpers.PrintLine("Now the actual commit proposal will be executed", helpers.INFO)
 	}
 
 	// Crerating the transaction (basic values)
@@ -228,7 +228,7 @@ func ProposeCommit(_commitMessage string) (string, int, error) {
 	}
 
 	// Waiting for the proposals transaction to be mined
-	helpers.Printf("Waiting for commit proposal transaction to be mined", 0)
+	helpers.Printf("Waiting for commit proposal transaction to be mined", helpers.INFO)
 	newProposalID := lastProposalID
 	waitingFor := 0
 	for newProposalID.Cmp(lastProposalID) == 0 {
@@ -503,7 +503,7 @@ func gatherProposalInfo(_connection *ethclient.Client, _ditCoordinatorInstance *
 	newVote.CommitEnd = int(KNWPoll.CommitEndDate.Int64())
 	newVote.RevealEnd = int(KNWPoll.OpenEndDate.Int64())
 
-	// Retrieving the amount of xDit a user has staked for this vote
+	// Retrieving the amount of xDIT a user has staked for this vote
 	numTokens, err := KNWVotingInstance.GetGrossStake(nil, big.NewInt(int64(newVote.KNWVoteID)))
 	if err != nil {
 		return newVote, errors.New("Failed to retrieve grossStake")

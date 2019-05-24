@@ -39,17 +39,17 @@ func main() {
 	// If there is an error during the config load and the user is not
 	// in the process of setting dit up: print an error
 	if err != nil && command != "setup" && command != "update" {
-		helpers.PrintLine(err.Error(), 2)
+		helpers.PrintLine(err.Error(), helpers.ERROR)
 		os.Exit(0)
 	}
 
 	if err == nil && (command != "setup" && command != "update") {
 		if config.DitConfig.Version != config.Version {
-			helpers.PrintLine("Your config is not up to date, the ditCLI might not work correctly", 1)
-			helpers.PrintLine("To fix this call '"+helpers.ColorizeCommand("update")+"'", 1)
+			helpers.PrintLine("Your config is not up to date, the ditCLI might not work correctly", helpers.WARN)
+			helpers.PrintLine("To fix this call '"+helpers.ColorizeCommand("update")+"'", helpers.WARN)
 		} else if (!config.DitConfig.DemoModeActive && config.DitConfig.DitCoordinator != liveDitCoodinator) || (config.DitConfig.DemoModeActive && config.DitConfig.DitCoordinator != demoDitCoodinator) {
-			helpers.PrintLine("You are using an old version of the deployed ditCoordinator contract", 1)
-			helpers.PrintLine("To fix this call '"+helpers.ColorizeCommand("update")+"'", 1)
+			helpers.PrintLine("You are using an old version of the deployed ditCoordinator contract", helpers.WARN)
+			helpers.PrintLine("To fix this call '"+helpers.ColorizeCommand("update")+"'", helpers.WARN)
 		}
 	}
 
@@ -72,13 +72,13 @@ func main() {
 			err = ethereum.SetDitCoordinator(ditCoordinatorAddress)
 			if err == nil {
 				fmt.Println()
-				helpers.PrintLine("ditCoordinator automatically set to the current deployed one", 0)
+				helpers.PrintLine("ditCoordinator automatically set to the current deployed one", helpers.INFO)
 				passedKYC, err := ethereum.CheckForKYC()
 				if err == nil && !passedKYC {
 					fmt.Println()
-					helpers.PrintLine("You didn't pass the KYC yet. Please do the KYC now:", 0)
-					helpers.PrintLine("Go to our Twitter @ditcraft and tweet the following at us:", 0)
-					helpers.PrintLine("@ditcraft I want to use dit, the decentralized git client! Please verify me "+config.DitConfig.EthereumKeys.Address+"", 0)
+					helpers.PrintLine("You didn't pass the KYC yet. Please do the KYC now:", helpers.INFO)
+					helpers.PrintLine("Go to our Twitter @ditcraft and tweet the following at us:", helpers.INFO)
+					helpers.PrintLine("@ditcraft I want to use dit, the decentralized git client! Please verify me "+config.DitConfig.EthereumKeys.Address+"", helpers.INFO)
 				}
 			}
 		}
@@ -93,14 +93,14 @@ func main() {
 				passedKYC, err = ethereum.CheckForKYC()
 				if err == nil && !passedKYC {
 					fmt.Println()
-					helpers.PrintLine("You didn't pass the KYC yet. Please do the KYC now:", 0)
-					helpers.PrintLine("Go to our Twitter @ditcraft and tweet the following at us:", 0)
-					helpers.PrintLine("@ditcraft I want to try dit, the decentralized git. Please verify me "+config.DitConfig.EthereumKeys.Address+"!", 0)
+					helpers.PrintLine("You didn't pass the KYC yet. Please do the KYC now:", helpers.INFO)
+					helpers.PrintLine("Go to our Twitter @ditcraft and tweet the following at us:", helpers.INFO)
+					helpers.PrintLine("@ditcraft I want to try dit, the decentralized git. Please verify me "+config.DitConfig.EthereumKeys.Address+"!", helpers.INFO)
 				}
 			}
 		}
 		if err == nil {
-			helpers.PrintLine("Update successful", 0)
+			helpers.PrintLine("Update successful", helpers.INFO)
 		}
 		break
 	case "mode":
@@ -118,16 +118,16 @@ func main() {
 		}
 		err = ethereum.SetDitCoordinator(ditCoordinatorAddress)
 		if err == nil {
-			helpers.PrintLine("ditCLI switched to the "+args[1]+" mode", 0)
+			helpers.PrintLine("ditCLI switched to the "+args[1]+" mode", helpers.INFO)
 			if args[1] == "live" {
-				helpers.PrintLine("You are now using the ditCLI in live mode, you will be staking real xDai!", 1)
+				helpers.PrintLine("You are now using the ditCLI in live mode, you will be staking real xDAI!", helpers.WARN)
 			}
 			passedKYC, err := ethereum.CheckForKYC()
 			if err == nil && !passedKYC {
 				fmt.Println()
-				helpers.PrintLine("You didn't pass the KYC yet. Please do the KYC now:", 0)
-				helpers.PrintLine("Go to our Twitter @ditcraft and tweet the following at us:", 0)
-				helpers.PrintLine("@ditcraft I want to try dit, the decentralized git. Please verify me "+config.DitConfig.EthereumKeys.Address+"!", 0)
+				helpers.PrintLine("You didn't pass the KYC yet. Please do the KYC now:", helpers.INFO)
+				helpers.PrintLine("Go to our Twitter @ditcraft and tweet the following at us:", helpers.INFO)
+				helpers.PrintLine("@ditcraft I want to try dit, the decentralized git. Please verify me "+config.DitConfig.EthereumKeys.Address+"!", helpers.INFO)
 			}
 		}
 	case "set_coordinator":
@@ -135,7 +135,7 @@ func main() {
 		// Set the DitCoordinator to a provided address
 		err = ethereum.SetDitCoordinator(args[1])
 		if err == nil {
-			helpers.PrintLine("ditCoordinator successfully set", 0)
+			helpers.PrintLine("ditCoordinator successfully set", helpers.INFO)
 		}
 		break
 	case "get_balance":
@@ -144,20 +144,20 @@ func main() {
 		break
 	case "get_address":
 		// Return the ETH address
-		helpers.PrintLine("Ethereum Address: "+config.DitConfig.EthereumKeys.Address, 0)
-		helpers.PrintLine("URL: https://blockscout.com/poa/dai/address/"+config.DitConfig.EthereumKeys.Address, 0)
+		helpers.PrintLine("Ethereum Address: "+config.DitConfig.EthereumKeys.Address, helpers.INFO)
+		helpers.PrintLine("URL: https://blockscout.com/poa/dai/address/"+config.DitConfig.EthereumKeys.Address, helpers.INFO)
 		break
 	case "export_keys":
-		helpers.PrintLine("Exporting your keys will print your ethereum private key in plain text", 1)
-		helpers.PrintLine("This might compromise your keys, please don't proceed if you are not sure about this", 1)
+		helpers.PrintLine("Exporting your keys will print your ethereum private key in plain text", helpers.WARN)
+		helpers.PrintLine("This might compromise your keys, please don't proceed if you are not sure about this", helpers.WARN)
 		answer := helpers.GetUserInputChoice("Are you sure that you want to proceed?", "y", "n")
 		if answer == "y" {
 			// Return the ETH address and private key
 			var privateKey string
 			privateKey, err = config.GetPrivateKey(false)
 			if len(privateKey) == 64 {
-				helpers.PrintLine("Ethereum Address: "+config.DitConfig.EthereumKeys.Address, 0)
-				helpers.PrintLine("Ethereum Private-Key: "+privateKey, 0)
+				helpers.PrintLine("Ethereum Address: "+config.DitConfig.EthereumKeys.Address, helpers.INFO)
+				helpers.PrintLine("Ethereum Private-Key: "+privateKey, helpers.INFO)
 			}
 		} else {
 			err = errors.New("Cancelling key export due to users choice")
@@ -172,7 +172,7 @@ func main() {
 			// Initialize this new repository as a ditRepository
 			err = ethereum.InitDitRepository(repositoryName)
 			if err == nil {
-				helpers.PrintLine("ditRepository successfully cloned and initialized", 0)
+				helpers.PrintLine("ditRepository successfully cloned and initialized", helpers.INFO)
 			}
 		}
 		break
@@ -180,7 +180,7 @@ func main() {
 		// Initialize the current repository as a ditRepository
 		err = ethereum.InitDitRepository()
 		if err == nil {
-			helpers.PrintLine("ditRepository successfully initiated", 0)
+			helpers.PrintLine("ditRepository successfully initiated", helpers.INFO)
 		}
 		break
 	case "commit", "propose_commit", "demo_commit":
@@ -247,13 +247,13 @@ func main() {
 					// Merges the proposal branch into master after a successful vote
 					err = git.Merge(args[1])
 					if err == nil {
-						helpers.PrintLine("Successfully merged dit proposal "+args[1]+" into the master branch", 0)
+						helpers.PrintLine("Successfully merged dit proposal "+args[1]+" into the master branch", helpers.INFO)
 					}
 				} else {
 					// Deletes the proposal branch after an unsuccessful vote
 					err = git.DeleteBranch(args[1])
 					if err == nil {
-						helpers.PrintLine("Removed the dit proposal "+args[1]+" from the repository", 0)
+						helpers.PrintLine("Removed the dit proposal "+args[1]+" from the repository", helpers.INFO)
 					}
 				}
 			}
@@ -265,7 +265,7 @@ func main() {
 	}
 	if err != nil {
 		if len(err.Error()) > 0 {
-			helpers.PrintLine(err.Error(), 2)
+			helpers.PrintLine(err.Error(), helpers.ERROR)
 		}
 	}
 }
@@ -273,7 +273,7 @@ func main() {
 // Will check whether a provided argument exists and tell the user if its missing
 func checkIfExists(_arguments []string, _index int, _description string) {
 	if len(_arguments) < _index+1 {
-		helpers.PrintLine("Please provide "+_description, 2)
+		helpers.PrintLine("Please provide "+_description, helpers.ERROR)
 		os.Exit(0)
 	}
 }

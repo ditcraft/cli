@@ -8,6 +8,18 @@ import (
 	"github.com/logrusorgru/aurora"
 )
 
+type outputType int
+
+// outputTypes that can be printed
+const (
+	ERROR    outputType = 0
+	WARN     outputType = 1
+	INFO     outputType = 2
+	DEMO     outputType = 3
+	GITINFO  outputType = 4
+	GITERROR outputType = 5
+)
+
 // GetUserInputChoice will prompt the user if there are only two choices (like a or b)
 func GetUserInputChoice(_prompt string, _selection1 string, _selection2 string) string {
 	reader := bufio.NewReader(os.Stdin)
@@ -31,32 +43,31 @@ func GetUserInput(_prompt string) string {
 	return answer
 }
 
+// ColorizeCommand prints a dit command that will have a certain color to highlight it
 func ColorizeCommand(_command string) string {
 	return fmt.Sprintf("%s", aurora.Green("dit "+_command))
 }
 
-func PrintLine(_line string, _level int) {
-	switch _level {
-	case 0:
-		fmt.Println(fmt.Sprintf("%s %s", aurora.Green("dit  >"), _line))
-	case 1:
-		fmt.Println(fmt.Sprintf("%s %s %s", aurora.Bold(aurora.Brown("warn")), aurora.Bold(aurora.Brown(">")), _line))
-	case 2:
-		fmt.Println(fmt.Sprintf("%s %s %s", aurora.Bold(aurora.BgRed(aurora.Gray("err"))), aurora.Bold(aurora.Red(" >")), _line))
-	case 3:
-		fmt.Println(fmt.Sprintf("%s %s %s", aurora.Cyan("demo"), aurora.Cyan(">"), _line))
-	}
+// PrintLine will print a log output with a line ending
+func PrintLine(_line string, _level outputType) {
+	Printf(_line, _level)
+	fmt.Printf("\n")
 }
 
-func Printf(_line string, _level int) {
+// Printf will print a log output without a line ending
+func Printf(_line string, _level outputType) {
 	switch _level {
-	case 0:
+	case INFO:
 		fmt.Printf(fmt.Sprintf("%s %s", aurora.Green("dit  >"), _line))
-	case 1:
+	case ERROR:
 		fmt.Printf(fmt.Sprintf("%s %s %s", aurora.Bold(aurora.Brown("warn")), aurora.Bold(aurora.Brown(">")), _line))
-	case 2:
+	case WARN:
 		fmt.Printf(fmt.Sprintf("%s %s %s", aurora.Bold(aurora.BgRed(aurora.Gray("err"))), aurora.Bold(aurora.Red(" >")), _line))
-	case 3:
+	case DEMO:
 		fmt.Printf(fmt.Sprintf("%s %s %s", aurora.Cyan("demo"), aurora.Cyan(">"), _line))
+	case GITINFO:
+		fmt.Printf(fmt.Sprintf("%s %s", aurora.Blue("git  >"), _line))
+	case GITERROR:
+		fmt.Printf(fmt.Sprintf("%s %s %s", aurora.Bold(aurora.BgRed(aurora.Gray("git"))), aurora.Bold(aurora.Red(" >")), _line))
 	}
 }

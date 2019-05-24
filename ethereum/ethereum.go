@@ -63,7 +63,7 @@ func SetDitCoordinator(_ditCoordinatorAddressString string) error {
 		return errors.New("Received an invalid address of the KNWToken contract")
 	}
 
-	// If in demo mode, also retrieve the xDit token address
+	// If in demo mode, also retrieve the xDIT token address
 	if config.DitConfig.DemoModeActive {
 		// Create a new instance of the ditDemoCoordinator to access it
 		ditDemoCoordinatorInstance, err := getDitDemoCoordinatorInstance(connection, _ditCoordinatorAddressString)
@@ -77,10 +77,10 @@ func SetDitCoordinator(_ditCoordinatorAddressString string) error {
 			return errors.New("Failed to retrieve address of the KNWToken contract")
 		}
 		config.DitConfig.DitToken = ditTokenAddress.Hex()
-		config.DitConfig.Currency = "xDit"
+		config.DitConfig.Currency = "xDIT"
 	} else {
 		config.DitConfig.DitToken = ""
-		config.DitConfig.Currency = "xDai"
+		config.DitConfig.Currency = "xDAI"
 	}
 
 	// Setting the retrieved addresses to the config object
@@ -140,7 +140,7 @@ func InitDitRepository(_optionalRepository ...string) error {
 			if len(_optionalRepository) > 0 {
 				return nil
 			}
-			helpers.PrintLine("Repository is already initialized", 0)
+			helpers.PrintLine("Repository is already initialized", helpers.INFO)
 			os.Exit(0)
 		}
 	}
@@ -163,8 +163,8 @@ func InitDitRepository(_optionalRepository ...string) error {
 		return err
 	}
 	if nextAddress != common.HexToAddress("0") {
-		helpers.PrintLine("There was an update to the ditCraft smartcontracts. Please update your ditCLI in order to interact with them.", 0)
-		helpers.PrintLine("Go to: https://github.com/ditcraft/cli", 0)
+		helpers.PrintLine("There was an update to the ditCraft smartcontracts. Please update your ditCLI in order to interact with them.", helpers.INFO)
+		helpers.PrintLine("Go to: https://github.com/ditcraft/cli", helpers.INFO)
 		os.Exit(0)
 	}
 
@@ -265,8 +265,8 @@ func ProposeCommit(_commitMessage string) (string, int, error) {
 		return "", 0, err
 	}
 	if nextAddress != common.HexToAddress("0") {
-		helpers.PrintLine("There was an update to the ditCraft smartcontracts. Please update your ditCLI in order to interact with them.", 0)
-		helpers.PrintLine("Go to: https://github.com/ditcraft/cli", 0)
+		helpers.PrintLine("There was an update to the ditCraft smartcontracts. Please update your ditCLI in order to interact with them.", helpers.INFO)
+		helpers.PrintLine("Go to: https://github.com/ditcraft/cli", helpers.INFO)
 		os.Exit(0)
 	}
 
@@ -289,22 +289,22 @@ func ProposeCommit(_commitMessage string) (string, int, error) {
 		answerKnowledgeLabel, _ = strconv.Atoi(helpers.GetUserInput(userInputString))
 	}
 
-	// Retrieving the xDai balance of the user
-	xDaiBalance, err := connection.BalanceAt(context.Background(), myAddress, nil)
+	// Retrieving the xDAI balance of the user
+	xDAIBalance, err := connection.BalanceAt(context.Background(), myAddress, nil)
 	if err != nil {
 		return "", 0, errors.New("Failed to retrieve " + config.DitConfig.Currency + " balance")
 	}
 
-	// Formatting the xDai balance to a human-readable format
-	floatBalance := new(big.Float).Quo((new(big.Float).SetInt(xDaiBalance)), big.NewFloat(1000000000000000000))
+	// Formatting the xDAI balance to a human-readable format
+	floatBalance := new(big.Float).Quo((new(big.Float).SetInt(xDAIBalance)), big.NewFloat(1000000000000000000))
 
-	// Retrieving the xDit balance of the user
+	// Retrieving the xDIT balance of the user
 	freeKNWBalance, err := KNWTokenInstance.FreeBalanceOfLabel(nil, myAddress, knowledgeLabels[answerKnowledgeLabel-1])
 	if err != nil {
 		return "", 0, errors.New("Failed to retrieve free KNW balance")
 	}
 
-	// Formatting the xDit balance to a human-readable format
+	// Formatting the xDIT balance to a human-readable format
 	floatKNWBalance := new(big.Float).Quo((new(big.Float).SetInt(freeKNWBalance)), big.NewFloat(1000000000000000000))
 
 	// Prompting the user how much stake he wants to set for this proposal
@@ -312,7 +312,7 @@ func ProposeCommit(_commitMessage string) (string, int, error) {
 	floatStakeParsed, _ := strconv.ParseFloat(answerStake, 64)
 	floatStake := big.NewFloat(floatStakeParsed)
 
-	helpers.PrintLine(fmt.Sprintf("You have a balance of %.2f xDai", floatBalance), 0)
+	helpers.PrintLine(fmt.Sprintf("You have a balance of %.2f xDAI", floatBalance), helpers.INFO)
 	userInputString = fmt.Sprintf("How much do you want to stake?")
 	for floatStake.Cmp(big.NewFloat(0)) == 0 || floatStake.Cmp(floatBalance) != -1 {
 		answerStake = helpers.GetUserInput(userInputString)
@@ -325,7 +325,7 @@ func ProposeCommit(_commitMessage string) (string, int, error) {
 	floatKNWParsed, _ := strconv.ParseFloat(answerKNW, 64)
 	floatKNW := big.NewFloat(floatKNWParsed)
 
-	helpers.PrintLine(fmt.Sprintf("You have a balance of %.2f KNW for the label '%s'", floatKNWBalance, knowledgeLabels[answerKnowledgeLabel-1]), 0)
+	helpers.PrintLine(fmt.Sprintf("You have a balance of %.2f KNW for the label '%s'", floatKNWBalance, knowledgeLabels[answerKnowledgeLabel-1]), helpers.INFO)
 	if floatKNWBalance.Cmp(big.NewFloat(0)) == 1 {
 		userInputString = fmt.Sprintf("How much do you want to use?")
 		keepAsking := true
@@ -341,10 +341,10 @@ func ProposeCommit(_commitMessage string) (string, int, error) {
 
 	// Prompting the user whether he is sure of this proposal and its details
 	floatStakeString := fmt.Sprintf("%.2f", floatStakeParsed)
-	helpers.PrintLine("  Proposing the commit with the following settings:", 0)
-	helpers.PrintLine("  Commit Message: "+_commitMessage+"", 0)
-	helpers.PrintLine("  Knowledge Label: "+knowledgeLabels[answerKnowledgeLabel-1], 0)
-	helpers.PrintLine("  The following stake will automatically be deducted: "+floatStakeString+"xDai", 0)
+	helpers.PrintLine("  Proposing the commit with the following settings:", helpers.INFO)
+	helpers.PrintLine("  Commit Message: "+_commitMessage+"", helpers.INFO)
+	helpers.PrintLine("  Knowledge Label: "+knowledgeLabels[answerKnowledgeLabel-1], helpers.INFO)
+	helpers.PrintLine("  The following stake will automatically be deducted: "+floatStakeString+"xDAI", helpers.INFO)
 	userIsSure := helpers.GetUserInputChoice("Is that correct?", "y", "n")
 	if userIsSure == "n" {
 		return "", 0, errors.New("Canceled proposal of commit due to users choice")
@@ -375,13 +375,13 @@ func ProposeCommit(_commitMessage string) (string, int, error) {
 	transaction, err := ditCoordinatorInstance.ProposeCommit(auth, repoHash, big.NewInt(int64(answerKnowledgeLabel-1)), intKNW, big.NewInt(int64(180)), big.NewInt(int64(180)))
 	if err != nil {
 		if strings.Contains(err.Error(), "insufficient funds") {
-			return "", 0, errors.New("Your account doesn't have enough xDai to pay for the transaction")
+			return "", 0, errors.New("Your account doesn't have enough xDAI to pay for the transaction")
 		}
 		return "", 0, err
 	}
 
 	// Waiting for the proposals transaction to be mined
-	helpers.Printf("Waiting for commit proposal transaction to be mined", 0)
+	helpers.Printf("Waiting for commit proposal transaction to be mined", helpers.INFO)
 	newProposalID := lastProposalID
 	waitingFor := 0
 	for newProposalID.Cmp(lastProposalID) == 0 {
@@ -419,11 +419,11 @@ func ProposeCommit(_commitMessage string) (string, int, error) {
 	}
 
 	// Conwerting the stake and used KNW count into a float so that it's human-readable
-	intxDai, ok := new(big.Int).SetString(newVote.NumTokens, 10)
+	intxDAI, ok := new(big.Int).SetString(newVote.NumTokens, 10)
 	if !ok {
 		return "", 0, errors.New("Failed to parse big.int from string")
 	}
-	floatxDai := new(big.Float).Quo((new(big.Float).SetInt(intxDai)), big.NewFloat(1000000000000000000))
+	floatxDAI := new(big.Float).Quo((new(big.Float).SetInt(intxDAI)), big.NewFloat(1000000000000000000))
 
 	intKNW, ok = new(big.Int).SetString(newVote.NumKNW, 10)
 	if !ok {
@@ -441,7 +441,7 @@ func ProposeCommit(_commitMessage string) (string, int, error) {
 	var responseString string
 	responseString += "---------------------------"
 	responseString += "\nSuccessfully proposed commit. Vote on proposal started with ID " + strconv.Itoa(int(newVote.ID)) + ""
-	responseString += fmt.Sprintf("\nYou staked %.2f %s and used %f KNW.", floatxDai, config.DitConfig.Currency, floatKNW)
+	responseString += fmt.Sprintf("\nYou staked %.2f %s and used %f KNW.", floatxDAI, config.DitConfig.Currency, floatKNW)
 	responseString += "\nThe vote will end at " + timeRevealString
 	if config.DitConfig.LiveRepositories[repoIndex].Provider == "github" {
 		responseString += "\nYour commit is at https://" + config.DitConfig.LiveRepositories[repoIndex].Name + "/tree/dit_proposal_" + strconv.Itoa(int(newVote.ID))
@@ -531,13 +531,13 @@ func Vote(_proposalID string, _choice string, _salt string) error {
 
 	floatStake := new(big.Float).Quo((new(big.Float).SetInt(requiredStake)), big.NewFloat(1000000000000000000))
 
-	// Retrieving the xDit balance of the user
+	// Retrieving the xDIT balance of the user
 	freeKNWBalance, err := KNWTokenInstance.FreeBalanceOfLabel(nil, myAddress, proposal.KnowledgeLabel)
 	if err != nil {
 		return errors.New("Failed to retrieve free KNW balance")
 	}
 
-	// Formatting the xDit balance to a human-readable format
+	// Formatting the xDIT balance to a human-readable format
 	floatKNWBalance := new(big.Float).Quo((new(big.Float).SetInt(freeKNWBalance)), big.NewFloat(1000000000000000000))
 
 	// Prompting the user how much KNW he wants to use for this proposal
@@ -545,7 +545,7 @@ func Vote(_proposalID string, _choice string, _salt string) error {
 	floatKNWParsed, _ := strconv.ParseFloat(answerKNW, 64)
 	floatKNW := big.NewFloat(floatKNWParsed)
 
-	helpers.PrintLine(fmt.Sprintf("You have a balance of %.2f KNW for the label '%s'", floatKNWBalance, proposal.KnowledgeLabel), 0)
+	helpers.PrintLine(fmt.Sprintf("You have a balance of %.2f KNW for the label '%s'", floatKNWBalance, proposal.KnowledgeLabel), helpers.INFO)
 	if floatKNWBalance.Cmp(big.NewFloat(0)) == 1 {
 		userInputString := fmt.Sprintf("How much do you want to use?")
 		for floatKNW.Cmp(big.NewFloat(0)) == -1 || floatStake.Cmp(floatKNWBalance) != -1 {
@@ -558,14 +558,14 @@ func Vote(_proposalID string, _choice string, _salt string) error {
 	// Prompting the user whether he is sure of this vote and its details
 	floatKNWString := fmt.Sprintf("%.2f", floatKNWParsed)
 
-	helpers.PrintLine("Voting on the commit with the following settings:", 0)
-	helpers.PrintLine("Knowledge Label: "+proposal.KnowledgeLabel, 0)
-	helpers.PrintLine("Amount of KNW Tokens: "+floatKNWString+" KNW", 0)
+	helpers.PrintLine("Voting on the commit with the following settings:", helpers.INFO)
+	helpers.PrintLine("Knowledge Label: "+proposal.KnowledgeLabel, helpers.INFO)
+	helpers.PrintLine("Amount of KNW Tokens: "+floatKNWString+" KNW", helpers.INFO)
 	fmt.Println()
-	helpers.PrintLine("Voting on this proposal will automatically deduct the required stake from you account.", 0)
-	helpers.PrintLine(fmt.Sprintf("Required stake: %.2f", floatStake), 0)
-	helpers.PrintLine("All participants of the vote will counter-stake the proposer.", 0)
-	helpers.PrintLine("You will receive the remaining stake back, no matter how the vote ends.", 0)
+	helpers.PrintLine("Voting on this proposal will automatically deduct the required stake from you account.", helpers.INFO)
+	helpers.PrintLine(fmt.Sprintf("Required stake: %.2f", floatStake), helpers.INFO)
+	helpers.PrintLine("All participants of the vote will counter-stake the proposer.", helpers.INFO)
+	helpers.PrintLine("You will receive the remaining stake back, no matter how the vote ends.", helpers.INFO)
 
 	answer := helpers.GetUserInputChoice("Is this okay for you?", "y", "n")
 	if answer == "n" {
@@ -633,13 +633,13 @@ func Vote(_proposalID string, _choice string, _salt string) error {
 	transaction, err := ditCooordinatorInstance.VoteOnProposal(auth, repoHash, big.NewInt(int64(proposalID)), voteHash, intKNW)
 	if err != nil {
 		if strings.Contains(err.Error(), "insufficient funds") {
-			return errors.New("Your account doesn't have enough xDai to pay for the transaction")
+			return errors.New("Your account doesn't have enough xDAI to pay for the transaction")
 		}
 		return errors.New("Failed to commit the vote: " + err.Error())
 	}
 
 	// Waiting for the voting transaction to be mined
-	helpers.Printf("Waiting for voting transaction to be mined", 0)
+	helpers.Printf("Waiting for voting transaction to be mined", helpers.INFO)
 	waitingFor := 0
 	newDidCommit := oldDidCommit
 	for newDidCommit == oldDidCommit {
@@ -693,15 +693,15 @@ func Vote(_proposalID string, _choice string, _salt string) error {
 	timeRevealString := timeReveal.Format("15:04:05 on 2006/01/02")
 
 	if choice == 1 {
-		helpers.PrintLine("You successfully voted in favor of the proposal", 0)
+		helpers.PrintLine("You successfully voted in favor of the proposal", helpers.INFO)
 	} else {
-		helpers.PrintLine("You successfully voted against the proposal", 0)
+		helpers.PrintLine("You successfully voted against the proposal", helpers.INFO)
 	}
 
 	// Letting the user know when and how he has to reveal the vote
-	helpers.PrintLine("With dit, votes are casted in a concealed manner through a commitment scheme.", 0)
-	helpers.PrintLine("This means that votes have to be revealed to the public once the commit-phase is over.", 0)
-	helpers.PrintLine("Please open your vote with '"+helpers.ColorizeCommand("open "+strconv.Itoa(int(proposalID)))+"' between "+timeCommitString+" and "+timeRevealString, 0)
+	helpers.PrintLine("With dit, votes are casted in a concealed manner through a commitment scheme.", helpers.INFO)
+	helpers.PrintLine("This means that votes have to be revealed to the public once the commit-phase is over.", helpers.INFO)
+	helpers.PrintLine("Please open your vote with '"+helpers.ColorizeCommand("open "+strconv.Itoa(int(proposalID)))+"' between "+timeCommitString+" and "+timeRevealString, helpers.INFO)
 
 	return nil
 }
@@ -811,13 +811,13 @@ func Open(_proposalID string) error {
 	transaction, err := ditCooordinatorInstance.OpenVoteOnProposal(auth, repoHash, big.NewInt(int64(proposalID)), choice, salt)
 	if err != nil {
 		if strings.Contains(err.Error(), "insufficient funds") {
-			return errors.New("Your account doesn't have enough xDai to pay for the transaction")
+			return errors.New("Your account doesn't have enough xDAI to pay for the transaction")
 		}
 		return errors.New("Failed to open the vote: " + err.Error())
 	}
 
 	// Waiting for the reveal transaction to be mined
-	helpers.Printf("Waiting for opening transaction to be mined", 0)
+	helpers.Printf("Waiting for opening transaction to be mined", helpers.INFO)
 	waitingFor := 0
 	newDidReveal := oldDidReveal
 	for newDidReveal == oldDidReveal {
@@ -843,15 +843,15 @@ func Open(_proposalID string) error {
 	timeReveal := time.Unix(int64(repositoryArray[repoIndex].ActiveVotes[voteIndex].RevealEnd), 0)
 	timeRevealString := timeReveal.Format("15:04:05 on 2006/01/02")
 
-	helpers.PrintLine("Successfully opened your vote", 0)
+	helpers.PrintLine("Successfully opened your vote", helpers.INFO)
 	helpers.PrintLine("To finalize it when the vote is over, execute '"+helpers.ColorizeCommand("finalize "+_proposalID)+"' after "+timeRevealString, 3)
 
 	return nil
 }
 
 // Finalize will finalize a vote as it will trigger the calculation of the reward of this user
-// including the xDai and KNW reward in case of a voting for the winning decision
-// or the losing of xDai and KNW in case of a voting for the losing decision
+// including the xDAI and KNW reward in case of a voting for the winning decision
+// or the losing of xDAI and KNW in case of a voting for the losing decision
 // The first caller who executes this will also trigger the calculation whether the vote passed or not
 func Finalize(_proposalID string) (bool, bool, error) {
 	if !config.DitConfig.PassedKYC {
@@ -952,8 +952,8 @@ func Finalize(_proposalID string) (bool, bool, error) {
 		return false, false, errors.New("You didn't participate in this vote")
 	}
 
-	// Saving the old xDai balance
-	oldxDaiBalance, err := connection.BalanceAt(context.Background(), myAddress, nil)
+	// Saving the old xDAI balance
+	oldxDAIBalance, err := connection.BalanceAt(context.Background(), myAddress, nil)
 	if err != nil {
 		return false, false, errors.New("Failed to retrieve " + config.DitConfig.Currency + " balance")
 	}
@@ -974,21 +974,21 @@ func Finalize(_proposalID string) (bool, bool, error) {
 	transaction, err := ditCooordinatorInstance.FinalizeVote(auth, repoHash, big.NewInt(int64(proposalID)))
 	if err != nil {
 		if strings.Contains(err.Error(), "insufficient funds") {
-			return false, false, errors.New("Your account doesn't have enough xDai to pay for the transaction")
+			return false, false, errors.New("Your account doesn't have enough xDAI to pay for the transaction")
 		}
 		return false, false, errors.New("Failed to finalize the vote: " + err.Error())
 	}
 
 	// Waiting for the resolve transaction to be mined
-	helpers.Printf("Waiting for finalizing transaction to be mined", 0)
+	helpers.Printf("Waiting for finalizing transaction to be mined", helpers.INFO)
 	waitingFor := 0
-	newxDaiBalance := oldxDaiBalance
-	for oldxDaiBalance.Cmp(newxDaiBalance) == 0 {
+	newxDAIBalance := oldxDAIBalance
+	for oldxDAIBalance.Cmp(newxDAIBalance) == 0 {
 		waitingFor += 5
 		time.Sleep(5 * time.Second)
 		fmt.Printf(".")
 		// Checking the balance of the user every 5 seconds, if it changed, a transaction was executed
-		newxDaiBalance, err = connection.BalanceAt(context.Background(), myAddress, nil)
+		newxDAIBalance, err = connection.BalanceAt(context.Background(), myAddress, nil)
 		if err != nil {
 			return false, false, errors.New("Failed to retrieve opening status")
 		}
@@ -1026,40 +1026,40 @@ func Finalize(_proposalID string) (bool, bool, error) {
 	// Show the user how the vote ended
 	if KNWPoll.WinningPercentage.Cmp(big.NewInt(50)) == 1 {
 		if pollPassed {
-			helpers.PrintLine("Successfully finalized the vote - it passed with "+strconv.Itoa(winningPercentage)+"% approval amongst "+strconv.Itoa(totalVoters)+" validators", 0)
+			helpers.PrintLine("Successfully finalized the vote - it passed with "+strconv.Itoa(winningPercentage)+"% approval amongst "+strconv.Itoa(totalVoters)+" validators", helpers.INFO)
 			if proposal.Proposer == common.HexToAddress(config.DitConfig.EthereumKeys.Address) {
-				helpers.PrintLine("You received your stake back and will share the opposing voters slashes stakes", 0)
+				helpers.PrintLine("You received your stake back and will share the opposing voters slashes stakes", helpers.INFO)
 			}
 		} else {
-			helpers.PrintLine("Successfully finalized the vote - it didn't pass with "+strconv.Itoa(winningPercentage)+"% disapproval amongst "+strconv.Itoa(totalVoters)+" validators", 0)
+			helpers.PrintLine("Successfully finalized the vote - it didn't pass with "+strconv.Itoa(winningPercentage)+"% disapproval amongst "+strconv.Itoa(totalVoters)+" validators", helpers.INFO)
 			if proposal.Proposer == common.HexToAddress(config.DitConfig.EthereumKeys.Address) {
-				helpers.PrintLine("Your stake was slashed and will be distributed amongst the voters", 0)
+				helpers.PrintLine("Your stake was slashed and will be distributed amongst the voters", helpers.INFO)
 			}
 		}
 	} else if KNWPoll.WinningPercentage.Cmp(big.NewInt(50)) == 0 {
-		helpers.PrintLine("Successfully finalized the vote - it ended in a draw between "+strconv.Itoa(totalVoters)+" validators and didn't get accepted", 0)
-		helpers.PrintLine("You received your stake back", 0)
+		helpers.PrintLine("Successfully finalized the vote - it ended in a draw between "+strconv.Itoa(totalVoters)+" validators and didn't get accepted", helpers.INFO)
+		helpers.PrintLine("You received your stake back", helpers.INFO)
 	} else {
-		helpers.PrintLine("Successfully finalized the vote - no one voted on it and it didn't get accepted", 0)
-		helpers.PrintLine("You received your stake back", 0)
+		helpers.PrintLine("Successfully finalized the vote - no one voted on it and it didn't get accepted", helpers.INFO)
+		helpers.PrintLine("You received your stake back", helpers.INFO)
 	}
 
-	// If the user got some xDai as a reward, this will be shown to the user
-	if newxDaiBalance.Cmp(oldxDaiBalance) > 0 {
-		difference := newxDaiBalance.Sub(newxDaiBalance, oldxDaiBalance)
+	// If the user got some xDAI as a reward, this will be shown to the user
+	if newxDAIBalance.Cmp(oldxDAIBalance) > 0 {
+		difference := newxDAIBalance.Sub(newxDAIBalance, oldxDAIBalance)
 		floatDifference := new(big.Float).Quo((new(big.Float).SetInt64(difference.Int64())), big.NewFloat(1000000000000000000))
-		helpers.PrintLine(fmt.Sprintf("You gained %.2f "+config.DitConfig.Currency+"\n", floatDifference), 0)
+		helpers.PrintLine(fmt.Sprintf("You gained %.2f "+config.DitConfig.Currency+"\n", floatDifference), helpers.INFO)
 	}
 
 	// Also shwoing the user how man KNW tokens he got/lost
 	if oldKNWBalance.Cmp(newKNWBalance) < 0 {
 		difference := newKNWBalance.Sub(newKNWBalance, oldKNWBalance)
 		floatDifference := new(big.Float).Quo((new(big.Float).SetInt64(difference.Int64())), big.NewFloat(1000000000000000000))
-		helpers.PrintLine(fmt.Sprintf("You earned %.2f KNW Tokens for the knowledge label '%s'", floatDifference, repositoryArray[repoIndex].ActiveVotes[voteIndex].KnowledgeLabel), 0)
+		helpers.PrintLine(fmt.Sprintf("You earned %.2f KNW Tokens for the knowledge label '%s'", floatDifference, repositoryArray[repoIndex].ActiveVotes[voteIndex].KnowledgeLabel), helpers.INFO)
 	} else if oldKNWBalance.Cmp(newKNWBalance) > 0 {
 		difference := oldKNWBalance.Sub(oldKNWBalance, newKNWBalance)
 		floatDifference := new(big.Float).Quo((new(big.Float).SetInt64(difference.Int64())), big.NewFloat(1000000000000000000))
-		helpers.PrintLine(fmt.Sprintf("You lost %.2f KNW Tokens for the knowledge label '%s'", floatDifference, repositoryArray[repoIndex].ActiveVotes[voteIndex].KnowledgeLabel), 0)
+		helpers.PrintLine(fmt.Sprintf("You lost %.2f KNW Tokens for the knowledge label '%s'", floatDifference, repositoryArray[repoIndex].ActiveVotes[voteIndex].KnowledgeLabel), helpers.INFO)
 	}
 
 	// Saving the resolved-status in the config
@@ -1172,20 +1172,20 @@ func GetVoteInfo(_proposalID ...int) error {
 	timeRevealString := timeReveal.Format("15:04:05 on 2006/01/02")
 
 	// Printing the information about this vote
-	helpers.PrintLine("---------------------------", 0)
-	helpers.PrintLine("Proposal ID: "+strconv.Itoa(proposalID), 0)
-	helpers.PrintLine("URL: https://github.com/"+repositoryArray[repoIndex].Name+"/tree/dit_proposal_"+strconv.Itoa(proposalID), 0)
-	helpers.PrintLine("Proposer: "+proposal.Proposer.Hex(), 0)
-	helpers.PrintLine("Knowledge-Label: "+proposal.KnowledgeLabel, 0)
+	helpers.PrintLine("---------------------------", helpers.INFO)
+	helpers.PrintLine("Proposal ID: "+strconv.Itoa(proposalID), helpers.INFO)
+	helpers.PrintLine("URL: https://github.com/"+repositoryArray[repoIndex].Name+"/tree/dit_proposal_"+strconv.Itoa(proposalID), helpers.INFO)
+	helpers.PrintLine("Proposer: "+proposal.Proposer.Hex(), helpers.INFO)
+	helpers.PrintLine("Knowledge-Label: "+proposal.KnowledgeLabel, helpers.INFO)
 
 	// If the user participated in this vote, the choice and stake/KNW are also printed
 	for i := range repositoryArray[repoIndex].ActiveVotes {
 		if repositoryArray[repoIndex].ActiveVotes[i].ID == proposalID {
-			intxDai, ok := new(big.Int).SetString(repositoryArray[repoIndex].ActiveVotes[i].NumTokens, 10)
+			intxDAI, ok := new(big.Int).SetString(repositoryArray[repoIndex].ActiveVotes[i].NumTokens, 10)
 			if !ok {
 				return errors.New("Failed to parse big.int from string")
 			}
-			floatxDai := new(big.Float).Quo((new(big.Float).SetInt(intxDai)), big.NewFloat(1000000000000000000))
+			floatxDAI := new(big.Float).Quo((new(big.Float).SetInt(intxDAI)), big.NewFloat(1000000000000000000))
 			intKNW, ok := new(big.Int).SetString(repositoryArray[repoIndex].ActiveVotes[i].NumKNW, 10)
 			if !ok {
 				return errors.New("Failed to parse big.int from string")
@@ -1193,37 +1193,37 @@ func GetVoteInfo(_proposalID ...int) error {
 			floatKNW := new(big.Float).Quo((new(big.Float).SetInt(intKNW)), big.NewFloat(1000000000000000000))
 			fmt.Println()
 			if proposal.Proposer.Hex() != config.DitConfig.EthereumKeys.Address {
-				helpers.PrintLine("Your choice: "+strconv.Itoa(repositoryArray[repoIndex].ActiveVotes[i].Choice), 0)
+				helpers.PrintLine("Your choice: "+strconv.Itoa(repositoryArray[repoIndex].ActiveVotes[i].Choice), helpers.INFO)
 			}
-			helpers.PrintLine(fmt.Sprintf("You staked %.2f %s and used %f KNW", floatxDai, config.DitConfig.Currency, floatKNW), 0)
+			helpers.PrintLine(fmt.Sprintf("You staked %.2f %s and used %f KNW", floatxDAI, config.DitConfig.Currency, floatKNW), helpers.INFO)
 			break
 		}
 	}
-	helpers.PrintLine(fmt.Sprintf("Required (gross) stake: %.2f "+config.DitConfig.Currency, floatGrossStake), 0)
-	helpers.PrintLine(fmt.Sprintf("Current net stake: %.2f "+config.DitConfig.Currency, floatNetStake), 0)
+	helpers.PrintLine(fmt.Sprintf("Required (gross) stake: %.2f "+config.DitConfig.Currency, floatGrossStake), helpers.INFO)
+	helpers.PrintLine(fmt.Sprintf("Current net stake: %.2f "+config.DitConfig.Currency, floatNetStake), helpers.INFO)
 	fmt.Println()
-	helpers.PrintLine("Vote phase end: "+timeCommitString, 0)
-	helpers.PrintLine("Opening phase end: "+timeRevealString, 0)
-	helpers.PrintLine("Resolved? "+strconv.FormatBool(proposal.IsFinalized), 0)
+	helpers.PrintLine("Vote phase end: "+timeCommitString, helpers.INFO)
+	helpers.PrintLine("Opening phase end: "+timeRevealString, helpers.INFO)
+	helpers.PrintLine("Resolved? "+strconv.FormatBool(proposal.IsFinalized), helpers.INFO)
 	winningPercentage := int(KNWPoll.WinningPercentage.Int64())
 	if KNWPoll.WinningPercentage.Cmp(big.NewInt(50)) == 1 {
 		if proposal.ProposalAccepted {
-			helpers.PrintLine("Passed? Accepted with "+strconv.Itoa(winningPercentage)+"% approval", 0)
+			helpers.PrintLine("Passed? Accepted with "+strconv.Itoa(winningPercentage)+"% approval", helpers.INFO)
 		} else {
-			helpers.PrintLine("Passed? Rejected with "+strconv.Itoa(winningPercentage)+"% approval", 0)
+			helpers.PrintLine("Passed? Rejected with "+strconv.Itoa(winningPercentage)+"% approval", helpers.INFO)
 		}
 	} else if KNWPoll.WinningPercentage.Cmp(big.NewInt(50)) == 0 {
-		helpers.PrintLine("Passed? Ended in a draw", 0)
+		helpers.PrintLine("Passed? Ended in a draw", helpers.INFO)
 	} else {
-		helpers.PrintLine("Passed? No validators voted on this proposal - it didn't get accepted", 0)
+		helpers.PrintLine("Passed? No validators voted on this proposal - it didn't get accepted", helpers.INFO)
 	}
 
-	helpers.PrintLine("---------------------------", 0)
+	helpers.PrintLine("---------------------------", helpers.INFO)
 
 	return nil
 }
 
-// GetBalances will print the xDai and KNW balances
+// GetBalances will print the xDAI and KNW balances
 func GetBalances() error {
 	connection, err := getConnection()
 	if err != nil {
@@ -1266,15 +1266,15 @@ func GetBalances() error {
 
 	var floatBalance *big.Float
 	if !config.DitConfig.DemoModeActive {
-		// Retrieving the xDai balance of the user
-		xDaiBalance, err := connection.BalanceAt(context.Background(), myAddress, nil)
+		// Retrieving the xDAI balance of the user
+		xDAIBalance, err := connection.BalanceAt(context.Background(), myAddress, nil)
 		if err != nil {
 			return errors.New("Failed to retrieve " + config.DitConfig.Currency + " balance")
 		}
-		helpers.PrintLine("Balances for address "+config.DitConfig.EthereumKeys.Address+":", 0)
+		helpers.PrintLine("Balances for address "+config.DitConfig.EthereumKeys.Address+":", helpers.INFO)
 
-		// Formatting the xDai balance to a human-readable format
-		floatBalance = new(big.Float).Quo((new(big.Float).SetInt(xDaiBalance)), big.NewFloat(1000000000000000000))
+		// Formatting the xDAI balance to a human-readable format
+		floatBalance = new(big.Float).Quo((new(big.Float).SetInt(xDAIBalance)), big.NewFloat(1000000000000000000))
 	} else {
 		// Create a new instance of the ditToken to access it
 		ditTokenInstance, err := getDitTokenInstance(connection)
@@ -1282,23 +1282,23 @@ func GetBalances() error {
 			return err
 		}
 
-		// Retrieving the xDit balance of the user
-		xDitBalance, err := ditTokenInstance.BalanceOf(nil, myAddress)
+		// Retrieving the xDIT balance of the user
+		xDITBalance, err := ditTokenInstance.BalanceOf(nil, myAddress)
 		if err != nil {
 			return errors.New("Failed to retrieve " + config.DitConfig.Currency + " balance")
 		}
-		helpers.PrintLine("Balances for address "+config.DitConfig.EthereumKeys.Address+":", 0)
+		helpers.PrintLine("Balances for address "+config.DitConfig.EthereumKeys.Address+":", helpers.INFO)
 
-		// Formatting the xDai balance to a human-readable format
-		floatBalance = new(big.Float).Quo((new(big.Float).SetInt(xDitBalance)), big.NewFloat(1000000000000000000))
+		// Formatting the xDAI balance to a human-readable format
+		floatBalance = new(big.Float).Quo((new(big.Float).SetInt(xDITBalance)), big.NewFloat(1000000000000000000))
 	}
-	helpers.PrintLine(fmt.Sprintf(config.DitConfig.Currency+"-Balance: %.2f "+config.DitConfig.Currency, floatBalance), 0)
-	helpers.PrintLine("", 0)
+	helpers.PrintLine(fmt.Sprintf(config.DitConfig.Currency+"-Balance: %.2f "+config.DitConfig.Currency, floatBalance), helpers.INFO)
+	helpers.PrintLine("", helpers.INFO)
 
 	// Printing each KNW balance
-	helpers.PrintLine("KNW-Balances:", 0)
+	helpers.PrintLine("KNW-Balances:", helpers.INFO)
 	if len(labelsOfAddress) == 0 {
-		helpers.PrintLine("- No labels with any balance found", 0)
+		helpers.PrintLine("- No labels with any balance found", helpers.INFO)
 	} else {
 		for i := 0; i < len(labelsOfAddress); i++ {
 			// Retrieve each KNW balance
@@ -1308,7 +1308,7 @@ func GetBalances() error {
 			}
 			// Formatting each KNW balance to a human-readable format
 			floatBalance := new(big.Float).Quo((new(big.Float).SetInt(balanceOfLabel)), big.NewFloat(1000000000000000000))
-			helpers.PrintLine(fmt.Sprintf(" - "+labelsOfAddress[i]+": %.2f KNW", floatBalance), 0)
+			helpers.PrintLine(fmt.Sprintf(" - "+labelsOfAddress[i]+": %.2f KNW", floatBalance), helpers.INFO)
 		}
 	}
 
@@ -1381,7 +1381,7 @@ func gatherProposalInfo(_connection *ethclient.Client, _ditCoordinatorInstance *
 	newVote.CommitEnd = int(KNWPoll.CommitEndDate.Int64())
 	newVote.RevealEnd = int(KNWPoll.OpenEndDate.Int64())
 
-	// Retrieving the amount of xDai a user has staked for this vote
+	// Retrieving the amount of xDAI a user has staked for this vote
 	numTokens, err := KNWVotingInstance.GetGrossStake(nil, big.NewInt(int64(newVote.KNWVoteID)))
 	if err != nil {
 		return newVote, errors.New("Failed to retrieve grossStake")
@@ -1416,8 +1416,8 @@ func initDitRepository(_ditCoordinatorInstance *ditCoordinator.DitCoordinator, _
 	neededMajority := big.NewInt(50)
 
 	// Prompting the user to provide 1 to 3 knowledge-labels for this repository
-	helpers.PrintLine("Please provide knowledge labels that will be used for this repository:", 0)
-	helpers.PrintLine("Note: At least one has to be provided, press ENTER to skip", 0)
+	helpers.PrintLine("Please provide knowledge labels that will be used for this repository:", helpers.INFO)
+	helpers.PrintLine("Note: At least one has to be provided, press ENTER to skip", helpers.INFO)
 	var knowledgeLabels []string
 	for len(knowledgeLabels) < 3 {
 		newLabel := helpers.GetUserInput("Knowledge Label " + strconv.Itoa(len(knowledgeLabels)+1))
@@ -1444,13 +1444,13 @@ func initDitRepository(_ditCoordinatorInstance *ditCoordinator.DitCoordinator, _
 	transaction, err := _ditCoordinatorInstance.InitRepository(auth, _name, knowledgeLabels[0], knowledgeLabels[1], knowledgeLabels[2], neededMajority)
 	if err != nil {
 		if strings.Contains(err.Error(), "insufficient funds") {
-			return errors.New("Your account doesn't have enough xDai to pay for the transaction")
+			return errors.New("Your account doesn't have enough xDAI to pay for the transaction")
 		}
 		return err
 	}
 
 	// Waiting for the deployment transaction to be mined
-	helpers.Printf("Waiting for initialization transaction to be mined", 0)
+	helpers.Printf("Waiting for initialization transaction to be mined", helpers.INFO)
 	boolTrue := true
 	isInitialized := false
 	waitingFor := 0

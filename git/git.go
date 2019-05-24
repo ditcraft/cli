@@ -28,8 +28,8 @@ func GetRepository() (string, error) {
 
 	configErr := checkGitSetup()
 	if configErr != nil {
-		helpers.PrintLine("You don't have a user.email and/or user.name set in your git config. dit won't work if this is not fixed!", 2)
-		helpers.PrintLine("Please run 'git config user.name <GITHUB_USERNAME_HERE>' and 'git config user.email <GITHUB_EMAIL_HERE>'", 2)
+		helpers.PrintLine("You don't have a user.email and/or user.name set in your git config. dit won't work if this is not fixed!", helpers.ERROR)
+		helpers.PrintLine("Please run 'git config user.name <GITHUB_USERNAME_HERE>' and 'git config user.email <GITHUB_EMAIL_HERE>'", helpers.ERROR)
 		return "", errors.New("git is not configured correctly")
 	}
 
@@ -38,11 +38,6 @@ func GetRepository() (string, error) {
 
 // Clone wraps the git clone functionality and initialized the ditContract afterwards
 func Clone(_repository string) (string, error) {
-	// Only GitHub repositores are supported right now
-	// if !strings.Contains(_repository, "github.com") {
-	// 	return "", errors.New("Currently only github repositories are supported")
-	// }
-
 	// Calling git clone
 	cmdArgs := []string{"clone", _repository, "--progress"}
 	cmdOut, err := exec.Command("git", cmdArgs...).CombinedOutput()
@@ -56,9 +51,9 @@ func Clone(_repository string) (string, error) {
 		return "", errors.New("Destination path already exists")
 	}
 	if strings.Contains(string(cmdOut), "Invalid username or password") {
-		helpers.PrintLine("Wrong username or password", 2)
-		helpers.PrintLine("Note: If you have 2FA activated for GitHub, please go to: ", 1)
-		helpers.PrintLine("https://github.blog/2013-09-03-two-factor-authentication/#how-does-it-work-for-command-line-git", 1)
+		helpers.PrintLine("Wrong username or password", helpers.ERROR)
+		helpers.PrintLine("Note: If you have 2FA activated for GitHub, please go to: ", helpers.WARN)
+		helpers.PrintLine("https://github.blog/2013-09-03-two-factor-authentication/#how-does-it-work-for-command-line-git", helpers.WARN)
 		return "", errors.New("")
 	}
 	if err != nil {
@@ -70,8 +65,8 @@ func Clone(_repository string) (string, error) {
 
 	configErr := checkGitSetup()
 	if configErr != nil {
-		helpers.PrintLine("You don't have a user.email and/or user.name set in your git config. dit won't work if this is not fixed!", 1)
-		helpers.PrintLine("Please run 'git config user.name <GITHUB_USERNAME_HERE>' and 'git config user.email <GITHUB_EMAIL_HERE>'", 1)
+		helpers.PrintLine("You don't have a user.email and/or user.name set in your git config. dit won't work if this is not fixed!", helpers.WARN)
+		helpers.PrintLine("Please run 'git config user.name <GITHUB_USERNAME_HERE>' and 'git config user.email <GITHUB_EMAIL_HERE>'", helpers.WARN)
 	}
 
 	return _repository, nil
@@ -202,9 +197,9 @@ func Commit(_proposalID int, _commitMessage string) error {
 		cmdArgs = []string{"push", "-v"}
 		cmdOut, err = exec.Command(cmdName, cmdArgs...).CombinedOutput()
 		if strings.Contains(string(cmdOut), "Invalid username or password") {
-			helpers.PrintLine("Wrong username or password", 2)
-			helpers.PrintLine("Note: If you have 2FA activated for GitHub, please go to: ", 2)
-			helpers.PrintLine("https://github.blog/2013-09-03-two-factor-authentication/#how-does-it-work-for-command-line-git", 2)
+			helpers.PrintLine("Wrong username or password", helpers.ERROR)
+			helpers.PrintLine("Note: If you have 2FA activated for GitHub, please go to: ", helpers.ERROR)
+			helpers.PrintLine("https://github.blog/2013-09-03-two-factor-authentication/#how-does-it-work-for-command-line-git", helpers.ERROR)
 		}
 		if err != nil {
 			return errors.New("There was an error pushing the initial commit")
@@ -261,9 +256,9 @@ func Commit(_proposalID int, _commitMessage string) error {
 	cmdArgs = []string{"push", "--set-upstream", "origin", branchName, "-v"}
 	cmdOut, err = exec.Command(cmdName, cmdArgs...).CombinedOutput()
 	if strings.Contains(string(cmdOut), "Invalid username or password") {
-		helpers.PrintLine("Wrong username or password", 2)
-		helpers.PrintLine("Note: If you have 2FA activated for GitHub, please go to: ", 2)
-		helpers.PrintLine("https://github.blog/2013-09-03-two-factor-authentication/#how-does-it-work-for-command-line-git", 2)
+		helpers.PrintLine("Wrong username or password", helpers.ERROR)
+		helpers.PrintLine("Note: If you have 2FA activated for GitHub, please go to: ", helpers.ERROR)
+		helpers.PrintLine("https://github.blog/2013-09-03-two-factor-authentication/#how-does-it-work-for-command-line-git", helpers.ERROR)
 	}
 	if err != nil || !strings.Contains(string(cmdOut), "set up to track remote branch") {
 		return errors.New("There was an error running git push")
@@ -314,9 +309,9 @@ func Merge(_proposalID string) error {
 	cmdArgs = []string{"push", "-v"}
 	cmdOut, err := exec.Command(cmdName, cmdArgs...).CombinedOutput()
 	if strings.Contains(string(cmdOut), "Invalid username or password") {
-		helpers.PrintLine("Wrong username or password", 2)
-		helpers.PrintLine("Note: If you have 2FA activated for GitHub, please go to: ", 2)
-		helpers.PrintLine("https://github.blog/2013-09-03-two-factor-authentication/#how-does-it-work-for-command-line-git", 2)
+		helpers.PrintLine("Wrong username or password", helpers.ERROR)
+		helpers.PrintLine("Note: If you have 2FA activated for GitHub, please go to: ", helpers.ERROR)
+		helpers.PrintLine("https://github.blog/2013-09-03-two-factor-authentication/#how-does-it-work-for-command-line-git", helpers.ERROR)
 	}
 	if err != nil {
 		return errors.New("There was an error running git push")
@@ -341,9 +336,9 @@ func DeleteBranch(_proposalID string) error {
 	cmdArgs := []string{"push", "--delete", "origin", branchName}
 	cmdOut, err := exec.Command(cmdName, cmdArgs...).CombinedOutput()
 	if strings.Contains(string(cmdOut), "Invalid username or password") {
-		helpers.PrintLine("Wrong username or password", 2)
-		helpers.PrintLine("Note: If you have 2FA activated for GitHub, please go to: ", 2)
-		helpers.PrintLine("https://github.blog/2013-09-03-two-factor-authentication/#how-does-it-work-for-command-line-git", 2)
+		helpers.PrintLine("Wrong username or password", helpers.ERROR)
+		helpers.PrintLine("Note: If you have 2FA activated for GitHub, please go to: ", helpers.ERROR)
+		helpers.PrintLine("https://github.blog/2013-09-03-two-factor-authentication/#how-does-it-work-for-command-line-git", helpers.ERROR)
 	}
 	if err != nil || !strings.Contains(string(cmdOut), "deleted") {
 		return errors.New("There was an error deleting the branch remotely")
