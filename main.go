@@ -145,7 +145,7 @@ func main() {
 	case "get_address":
 		// Return the ETH address
 		helpers.PrintLine("Ethereum Address: "+config.DitConfig.EthereumKeys.Address, helpers.INFO)
-		helpers.PrintLine("URL: https://blockscout.com/poa/dai/address/"+config.DitConfig.EthereumKeys.Address, helpers.INFO)
+		helpers.PrintLine("URL: https://explorer.ditcraft.io/address/"+config.DitConfig.EthereumKeys.Address, helpers.INFO)
 		break
 	case "export_keys":
 		helpers.PrintLine("Exporting your keys will print your ethereum private key in plain text", helpers.WARN)
@@ -183,35 +183,111 @@ func main() {
 			helpers.PrintLine("ditRepository successfully initiated", helpers.INFO)
 		}
 		break
-	case "commit", "propose_commit", "demo_commit":
-		checkIfExists(args, 1, "a commit message")
-		err = git.Validate()
-		if err == nil {
-			var voteDetails string
-			var proposalID int
-
-			err = git.CheckForChanges()
+	case "merge":
+		var isOnMaster bool
+		isOnMaster, err = git.IsOnMaster()
+		if !isOnMaster {
+			_, _ = git.ExecuteCommand(true, args[:]...)
+		} else {
+			checkIfExists(args, 1, "the branch to be merged")
+			err = git.MasterIsClean()
 			if err == nil {
-				// Propose a new commit
-				if config.DitConfig.DemoModeActive {
-					voteDetails, proposalID, err = demo.ProposeCommit(args[1])
-				} else {
-					voteDetails, proposalID, err = ethereum.ProposeCommit(args[1])
-				}
+				var branchHash string
+				branchHash, err = git.GetHeadHashOfBranch(args[1])
 				if err == nil {
-					// Push the commit into a proposal branch
-					err = git.Commit(proposalID, args[1])
-					if err == nil {
-						// Print the details of the vote
-						stringLines := strings.Split(voteDetails, "\n")
-						for i := range stringLines {
-							helpers.PrintLine(stringLines[i], 0)
+					var repository, voteDetails string
+					var voteID int
+					var newVote, voteEnded, votePassed bool
+					if config.DitConfig.DemoModeActive {
+						voteID, voteEnded, votePassed, repository, err = demo.SearchForHashInVotes(branchHash)
+						if err == nil {
+							if voteID == 0 {
+								helpers.PrintLine("You are trying to merge into the master branch - this requires a vote.", helpers.INFO)
+								voteDetails, voteID, err = demo.ProposeCommit(args[1], branchHash)
+								newVote = true
+							}
+						}
+					} else {
+						voteID, voteEnded, votePassed, repository, err = demo.SearchForHashInVotes(branchHash)
+						if err == nil {
+							if voteID == 0 {
+								helpers.PrintLine("You are trying to merge into the master branch - this requires a vote.", helpers.INFO)
+								voteDetails, voteID, err = ethereum.ProposeCommit(args[1], branchHash)
+								newVote = true
+							}
+						}
+					}
+					if err == nil && voteID > 0 {
+						if newVote {
+							stringLines := strings.Split(voteDetails, "\n")
+							for i := range stringLines {
+								helpers.PrintLine(stringLines[i], helpers.INFO)
+							}
+						} else {
+							if !voteEnded {
+								helpers.PrintLine("The vote on this merge hasn't ended yet - please wait!", helpers.ERROR)
+							} else if voteEnded && !votePassed {
+								helpers.PrintLine("The vote on this merge hasn't passed - you are not allowed to merge into master!", helpers.ERROR)
+							} else if voteEnded && votePassed {
+								_, err = git.ExecuteCommand(true, args[:]...)
+								if err == nil {
+									var newHeadHash string
+									newHeadHash, err = git.GetHeadHashOfBranch("master")
+									if err == nil {
+										config.DitConfig.DemoRepositories[repository].ActiveVotes[strconv.Itoa(voteID)].NewHeadHash = newHeadHash
+										err = config.Save()
+									}
+								}
+							}
 						}
 					}
 				}
 			}
 		}
 		break
+	case "push":
+		var isOnMaster bool
+		isOnMaster, err = git.IsOnMaster()
+		if !isOnMaster {
+			_, _ = git.ExecuteCommand(true, args[:]...)
+		} else {
+			var masterHeadHash string
+			masterHeadHash, err = git.GetHeadHashOfBranch("master")
+			if err == nil {
+				var repository string
+				repository, err = git.GetRepository()
+
+				var repositoryMap map[string]*config.Repository
+				if config.DitConfig.DemoModeActive {
+					repositoryMap = config.DitConfig.DemoRepositories
+				} else {
+					repositoryMap = config.DitConfig.LiveRepositories
+				}
+
+				if err == nil && repositoryMap[repository] == nil {
+					err = errors.New("Repository hasn't been initialized")
+				}
+
+				if err == nil {
+					foundVote := false
+					for _, value := range repositoryMap[repository].ActiveVotes {
+						if value.NewHeadHash == masterHeadHash {
+							foundVote = true
+							break
+						}
+					}
+					if foundVote {
+						_, _ = git.ExecuteCommand(true, args[:]...)
+					} else {
+						helpers.PrintLine("You are not allowed to push changes to master without prior approval from the community", helpers.ERROR)
+						// TODO: offer to start a new vote on these changes
+					}
+				}
+			}
+		}
+		break
+	case "add", "checkout", "commit", "branch", "status", "reset", "pull", "fetch", "stash", "rm", "tag", "log":
+		_, _ = git.ExecuteCommand(true, args[:]...)
 	case "vote_info":
 		// Prints the details of a vote
 		if len(args) == 2 {
@@ -244,21 +320,16 @@ func main() {
 			if err == nil && isProposer {
 				fmt.Println()
 				if pollPassed {
-					// Merges the proposal branch into master after a successful vote
-					err = git.Merge(args[1])
-					if err == nil {
-						helpers.PrintLine("Successfully merged dit proposal "+args[1]+" into the master branch", helpers.INFO)
-					}
+					helpers.PrintLine("You are now allowed to merge your changes into the master branch", helpers.INFO)
 				} else {
-					// Deletes the proposal branch after an unsuccessful vote
-					err = git.DeleteBranch(args[1])
-					if err == nil {
-						helpers.PrintLine("Removed the dit proposal "+args[1]+" from the repository", helpers.INFO)
-					}
+					helpers.PrintLine("You are NOT allowed to merge your changes into the master branch", helpers.INFO)
 				}
 			}
 		}
 		break
+	case "test":
+		err = git.MasterIsClean()
+		// fmt.Println(err)
 	default:
 		printUsage()
 		break
@@ -296,10 +367,10 @@ func printUsage() {
 	fmt.Println(" - dit export_keys\t\t\t\tReturns the unencrypted ethereum private key and address")
 	fmt.Println("")
 	fmt.Println("----------- Repositories ----------")
-	fmt.Println(" - dit clone <REPOSITORY_URL>\t\t\tClones a repository (GitHub only) and automatically")
-	fmt.Println("\t\t\t\t\t\tcalls 'dit init' afterwards")
+	fmt.Println(" - dit clone <REPOSITORY_URL>\t\t\tClones a repository and automatically calls 'dit init'")
+	fmt.Println("\t\t\t\t\t\tafterwards")
 	fmt.Println(" - dit init\t\t\t\t\tRetrieves the address of the ditContract for the repository")
-	fmt.Println("\t\t\t\t\t\tyou are using (GitHub only)")
+	fmt.Println("\t\t\t\t\t\tyou are using")
 	fmt.Println(" - dit commit <COMMIT_MESSAGE>\t\t\tProposes a new commit with the specified")
 	fmt.Println("\t\t\t\t\t\tcommit message (This will start a vote)")
 	fmt.Println("")

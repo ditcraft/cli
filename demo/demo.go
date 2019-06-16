@@ -25,19 +25,8 @@ import (
 
 const correctETHAddressLength = 42
 
-var demoVoterAddresses = []string{
-	"0x0000000000000000000000000000000000000000",
-	"0x0000000000000000000000000000000000000000",
-	"0x0000000000000000000000000000000000000000",
-}
-var demoVoterPrivateKeys = []string{
-	"0000000000000000000000000000000000000000000000000000000000000000",
-	"0000000000000000000000000000000000000000000000000000000000000000",
-	"0000000000000000000000000000000000000000000000000000000000000000",
-}
-
 // ProposeCommit will start a new proposal on the ditContract of this repository
-func ProposeCommit(_commitMessage string) (string, int, error) {
+func ProposeCommit(_branch string, _branchHeadHash string) (string, int, error) {
 	if !config.DitConfig.PassedKYC {
 		passedKYC, err := CheckForKYC()
 		if err != nil {
@@ -47,16 +36,16 @@ func ProposeCommit(_commitMessage string) (string, int, error) {
 		}
 	}
 
-	// Searching for this repositories object in the config
-	repoIndex, err := searchForRepoInConfig()
+	// Retrieve the name of the repo we are in from git
+	repository, err := git.GetRepository()
 	if err != nil {
 		return "", 0, err
 	}
 
-	repoHash := getHashOfString(config.DitConfig.DemoRepositories[repoIndex].Name)
+	repoHash := getHashOfString(repository)
 
 	// Gathering the the knowledge-labels from the config
-	knowledgeLabels := config.DitConfig.DemoRepositories[repoIndex].KnowledgeLabels
+	knowledgeLabels := config.DitConfig.DemoRepositories[repository].KnowledgeLabels
 
 	connection, err := getConnection()
 	if err != nil {
@@ -95,8 +84,15 @@ func ProposeCommit(_commitMessage string) (string, int, error) {
 	myAddress := common.HexToAddress(config.DitConfig.EthereumKeys.Address)
 
 	// Prompting the user which knowledge-label he wants to use for this proposal
+	answerProposalSummary := ""
+	userInputString := "Summarize your proposed changes (max. 140 characters)"
+	for len(answerProposalSummary) < 4 || len(answerProposalSummary) > 140 {
+		answerProposalSummary = helpers.GetUserInput(userInputString)
+	}
+
+	// Prompting the user which knowledge-label he wants to use for this proposal
 	answerKnowledgeLabel := 0
-	userInputString := "Which Knowledge-Label suits this commit most?"
+	userInputString = "Which Knowledge-Label suits these changes the most?"
 	for i := range knowledgeLabels {
 		userInputString += " (" + strconv.Itoa(i+1) + ") " + knowledgeLabels[i]
 	}
@@ -139,7 +135,6 @@ func ProposeCommit(_commitMessage string) (string, int, error) {
 	answerKNW := "0"
 	floatKNWParsed, _ := strconv.ParseFloat(answerKNW, 64)
 	floatKNW := big.NewFloat(floatKNWParsed)
-
 	helpers.PrintLine(fmt.Sprintf("You have a balance of %.2f KNW for the label '%s'", floatKNWBalance, knowledgeLabels[answerKnowledgeLabel-1]), helpers.INFO)
 	if floatKNWBalance.Cmp(big.NewFloat(0)) == 1 {
 		userInputString = fmt.Sprintf("How much do you want to use?")
@@ -147,8 +142,9 @@ func ProposeCommit(_commitMessage string) (string, int, error) {
 		for keepAsking {
 			answerKNW = helpers.GetUserInput(userInputString)
 			floatKNWParsed, _ = strconv.ParseFloat(answerKNW, 64)
-			floatKNW = big.NewFloat(floatKNWParsed)
-			if floatKNW.Cmp(big.NewFloat(0)) >= 0 && floatKNW.Cmp(floatKNWBalance) <= 0 {
+			var ok bool
+			floatKNW, ok = new(big.Float).SetString(answerKNW)
+			if ok && floatKNW.Cmp(big.NewFloat(0)) >= 0 && floatKNW.Cmp(floatKNWBalance) <= 0 {
 				keepAsking = false
 			}
 		}
@@ -157,14 +153,14 @@ func ProposeCommit(_commitMessage string) (string, int, error) {
 	// Prompting the user whether he is sure of this proposal and its details
 	floatStakeString := fmt.Sprintf("%.2f", floatStakeParsed)
 	floatKNWString := fmt.Sprintf("%.2f", floatKNWParsed)
-	helpers.PrintLine("  Proposing the commit with the following settings:", helpers.INFO)
-	helpers.PrintLine("  Commit Message: "+_commitMessage+"", helpers.INFO)
+	helpers.PrintLine("  Proposing the changes with the following settings:", helpers.INFO)
+	helpers.PrintLine("  Proposal Description: '"+answerProposalSummary+"'", helpers.INFO)
 	helpers.PrintLine("  Knowledge Label: "+knowledgeLabels[answerKnowledgeLabel-1], helpers.INFO)
 	helpers.PrintLine("  Amount of KNW Tokens: "+floatKNWString+" KNW", helpers.INFO)
 	helpers.PrintLine("  The following stake will automatically be deducted: "+floatStakeString+" xDIT", helpers.INFO)
 	userIsSure := helpers.GetUserInputChoice("Is that correct?", "y", "n")
 	if userIsSure == "n" {
-		return "", 0, errors.New("Canceled proposal of commit due to users choice")
+		return "", 0, errors.New("Canceled proposal of changes due to users choice")
 	}
 	fmt.Println()
 
@@ -228,7 +224,7 @@ func ProposeCommit(_commitMessage string) (string, int, error) {
 	}
 
 	// Waiting for the proposals transaction to be mined
-	helpers.Printf("Waiting for commit proposal transaction to be mined", helpers.INFO)
+	helpers.Printf("Waiting for proposal transaction to be mined", helpers.INFO)
 	newProposalID := lastProposalID
 	waitingFor := 0
 	for newProposalID.Cmp(lastProposalID) == 0 {
@@ -256,8 +252,10 @@ func ProposeCommit(_commitMessage string) (string, int, error) {
 		return "", 0, err
 	}
 
+	newVote.BranchHash = _branchHeadHash
+
 	// Adding the new vote to the config object
-	config.DitConfig.DemoRepositories[repoIndex].ActiveVotes = append(config.DitConfig.DemoRepositories[repoIndex].ActiveVotes, newVote)
+	config.DitConfig.DemoRepositories[repository].ActiveVotes[newProposalID.String()] = &newVote
 
 	// Saving the config back to the file
 	err = config.Save()
@@ -290,22 +288,96 @@ func ProposeCommit(_commitMessage string) (string, int, error) {
 	// So it will be printed afterwards in the main routine
 	var responseString string
 	responseString += "---------------------------"
-	responseString += "\nSuccessfully proposed commit. Vote on proposal started with ID " + strconv.Itoa(int(newVote.ID)) + ""
+	responseString += "\nSuccessfully proposed merge to master. Vote on proposal started with ID " + newProposalID.String() + ""
 	responseString += fmt.Sprintf("\nYou staked %.2f %s and used %.2f KNW", floatETH, config.DitConfig.Currency, floatKNW)
 	responseString += "\nThe vote will end at " + timeRevealString
-	if config.DitConfig.DemoRepositories[repoIndex].Provider == "github" {
-		responseString += "\nYour commit is at https://" + config.DitConfig.DemoRepositories[repoIndex].Name + "/tree/dit_proposal_" + strconv.Itoa(int(newVote.ID))
+	if config.DitConfig.DemoRepositories[repository].Provider == "github" {
+		if _branch == "" {
+			_branch = "dit_proposal_" + newProposalID.String()
+		}
+		responseString += "\nYour proposed branch is at https://" + repository + "/tree/" + _branch
 	}
 	responseString += "\n---------------------------"
 
 	if config.DitConfig.DemoModeActive {
 		fmt.Println()
-		helpers.PrintLine("Since this is the demo mode, five auto-validators will automatically vote on your proposed commit. You will see the outcome after the vote ended.", 3)
-		helpers.PrintLine("All validators now have time to vote on your proposed commit until "+timeCommitString, 3)
-		helpers.PrintLine("To finalize the vote, execute '"+helpers.ColorizeCommand("finalize "+strconv.Itoa(int(newVote.ID)))+"' after "+timeRevealString, 3)
+		helpers.PrintLine("Since this is the demo mode, five auto-validators will automatically vote on your proposed changes. You will see the outcome after the vote ended.", 3)
+		helpers.PrintLine("All validators now have time to vote on your proposed changes until "+timeCommitString, 3)
+		helpers.PrintLine("To finalize the vote, execute '"+helpers.ColorizeCommand("finalize "+newProposalID.String())+"' after "+timeRevealString, 3)
 		fmt.Println()
 	}
 	return responseString, int(newProposalID.Int64()), nil
+}
+
+// SearchForHashInVotes will search for a vote on a given branch hash and return the outcome
+func SearchForHashInVotes(_branchHash string) (int, bool, bool, string, error) {
+	if !config.DitConfig.PassedKYC {
+		passedKYC, err := CheckForKYC()
+		if err != nil {
+			return 0, false, false, "", err
+		} else if !passedKYC {
+			return 0, false, false, "", errors.New("You didn't pass the KYC yet")
+		}
+	}
+
+	// Retrieve the name of the repo we are in from git
+	repository, err := git.GetRepository()
+	if err != nil {
+		return 0, false, false, "", err
+	}
+
+	if config.DitConfig.DemoRepositories[repository] == nil {
+		return 0, false, false, "", errors.New("Repository hasn't been initialized")
+	}
+
+	connection, err := getConnection()
+	if err != nil {
+		return 0, false, false, repository, err
+	}
+
+	// Create a new instance of the KNWVoting contract to access it
+	KNWVotingInstance, err := getKNWVotingInstance(connection)
+	if err != nil {
+		return 0, false, false, repository, err
+	}
+
+	// Searching for the corresponding vote in the votes stored in the config
+	var activeVote *config.ActiveVote
+	var voteID int
+	for key, value := range config.DitConfig.DemoRepositories[repository].ActiveVotes {
+		if value.BranchHash == _branchHash {
+			activeVote = value
+			voteID, _ = strconv.Atoi(key)
+			break
+		}
+	}
+	if activeVote == nil {
+		return 0, false, false, repository, nil
+	}
+
+	// Verifying whether the vote has ended
+	voteEnded, err := KNWVotingInstance.VoteEnded(nil, big.NewInt(int64(activeVote.KNWVoteID)))
+	if err != nil {
+		return voteID, false, false, repository, errors.New("Failed to retrieve vote ending status")
+	}
+
+	// If it is now active it hasn't started yet or it's over
+	if !voteEnded {
+		return voteID, false, false, repository, nil
+	}
+
+	// Verifying whether the user has revealed his vote on this proposal
+	votePassed, err := KNWVotingInstance.IsPassed(nil, big.NewInt(int64(activeVote.KNWVoteID)))
+	if err != nil {
+		return voteID, true, false, repository, errors.New("Failed to retrieve opening status")
+	}
+
+	// If this is the case, the user already revealed his vote
+	if !votePassed {
+		return voteID, true, false, repository, nil
+	}
+
+	return voteID, true, true, repository, nil
 }
 
 // CheckForKYC will return whether a user has already passed the KYC
@@ -445,26 +517,6 @@ func getConnection() (*ethclient.Client, error) {
 	return connection, nil
 }
 
-// searchForRepoInConfig will search for the current repo in the config
-func searchForRepoInConfig() (int64, error) {
-	// Retrieve the name of the repo we are in from git
-	repository, err := git.GetRepository()
-	if err != nil {
-		return 0, err
-	}
-
-	// Search for the repo in our config
-	for i := range config.DitConfig.DemoRepositories {
-		if config.DitConfig.DemoRepositories[i].Name == repository {
-			// Return the index of this repository if it was found
-			return int64(i), nil
-		}
-	}
-
-	// Return an error if nothing was found
-	return 0, errors.New("Repository hasn't been initialized")
-}
-
 func getHashOfString(_string string) [32]byte {
 	repoHash32 := [32]byte{}
 	copy(repoHash32[:], crypto.Keccak256([]byte(_string))[:])
@@ -482,7 +534,6 @@ func gatherProposalInfo(_connection *ethclient.Client, _ditCoordinatorInstance *
 	}
 
 	// Store the information about this vote in an object
-	newVote.ID = int(_proposalID)
 	newVote.KNWVoteID = int(proposal.KNWVoteID.Int64())
 	newVote.KnowledgeLabel = proposal.KnowledgeLabel
 
