@@ -24,20 +24,20 @@ var DitConfig ditConfig
 
 // Version of the config, will be incremented after every ditCLI update that modified the config file
 // or the smart contracts in a way that an update is necessaray
-var Version = 2
+var Version = 3
 
 type ditConfig struct {
-	DitCoordinator   string       `json:"dit_coordinator"`
-	KNWVoting        string       `json:"knw_voting"`
-	KNWToken         string       `json:"knw_token"`
-	DitToken         string       `json:"dit_token,omitempty"`
-	Currency         string       `json:"currency"`
-	PassedKYC        bool         `json:"passed_kyc"`
-	DemoModeActive   bool         `json:"demo_mode_active"`
-	Version          int          `json:"version"`
-	EthereumKeys     ethereumKeys `json:"ethereum_keys"`
-	LiveRepositories []Repository `json:"live_repositories"`
-	DemoRepositories []Repository `json:"demo_repositories"`
+	DitCoordinator   string                 `json:"dit_coordinator"`
+	KNWVoting        string                 `json:"knw_voting"`
+	KNWToken         string                 `json:"knw_token"`
+	DitToken         string                 `json:"dit_token,omitempty"`
+	Currency         string                 `json:"currency"`
+	PassedKYC        bool                   `json:"passed_kyc"`
+	DemoModeActive   bool                   `json:"demo_mode_active"`
+	Version          int                    `json:"version"`
+	EthereumKeys     ethereumKeys           `json:"ethereum_keys"`
+	LiveRepositories map[string]*Repository `json:"live_repositories"`
+	DemoRepositories map[string]*Repository `json:"demo_repositories"`
 }
 
 type ethereumKeys struct {
@@ -47,17 +47,17 @@ type ethereumKeys struct {
 
 // Repository struct, exported since its used in the ethereum package for new repositories
 type Repository struct {
-	Name            string       `json:"name"`
-	Provider        string       `json:"provider"`
-	KnowledgeLabels []string     `json:"knowledge_labels"`
-	ActiveVotes     []ActiveVote `json:"active_votes"`
+	Provider        string                 `json:"provider"`
+	KnowledgeLabels []string               `json:"knowledge_labels"`
+	ActiveVotes     map[string]*ActiveVote `json:"active_votes"`
 }
 
 // ActiveVote struct, exported since its used in the ethereum package for new votes
 type ActiveVote struct {
-	ID             int    `json:"id"`
 	KNWVoteID      int    `json:"knw_vote_id"`
 	KnowledgeLabel string `json:"knowledge_label"`
+	BranchHash     string `json:"branch_hash"`
+	NewHeadHash    string `json:"new_head_hash"`
 	Choice         int    `json:"choice"`
 	Salt           int    `json:"salt"`
 	NumTokens      string `json:"num_tokens"`
@@ -248,8 +248,8 @@ func Create(_demoMode bool) error {
 
 		DitConfig.EthereumKeys.PrivateKey = hex.EncodeToString(encryptedPrivateKey)
 		DitConfig.Version = Version
-		DitConfig.LiveRepositories = make([]Repository, 0)
-		DitConfig.DemoRepositories = make([]Repository, 0)
+		DitConfig.LiveRepositories = make(map[string]*Repository)
+		DitConfig.DemoRepositories = make(map[string]*Repository)
 
 		// Write the config to the file
 		err = Save()
@@ -299,8 +299,8 @@ func Update(_liveDitCoordinator string, _demoDitCoordinator string) (bool, error
 		newDitConfig.DemoModeActive = DitConfig.DemoModeActive
 		newDitConfig.DitCoordinator = DitConfig.DitCoordinator
 		newDitConfig.EthereumKeys = DitConfig.EthereumKeys
-		newDitConfig.LiveRepositories = make([]Repository, 0)
-		newDitConfig.DemoRepositories = make([]Repository, 0)
+		newDitConfig.LiveRepositories = make(map[string]*Repository)
+		newDitConfig.DemoRepositories = make(map[string]*Repository)
 		newDitConfig.Version = Version
 
 		DitConfig = newDitConfig
