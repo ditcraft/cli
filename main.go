@@ -350,7 +350,7 @@ func checkIfExists(_arguments []string, _index int, _description string) {
 }
 
 func printUsage() {
-	fmt.Println("----------- ditCLI v0.2 ----------")
+	fmt.Println("----- ditCLI v0.3 prerelease -----")
 	if config.DitConfig.DemoModeActive {
 		fmt.Println("--------- demo mode active -------")
 	} else {
@@ -361,22 +361,23 @@ func printUsage() {
 	fmt.Println(" - dit update\t\t\t\t\tUpdates the ditCLIs config after an update of the ditCLI")
 	fmt.Println(" - dit mode <MODE>\t\t\t\tSwitch between the modes of the ditCLI (live or demo)")
 	fmt.Println("")
-	fmt.Println("------------- Ethereum ------------")
+	fmt.Println("------------ Ethereum ------------")
 	fmt.Println(" - dit get_address\t\t\t\tReturns ethereum address of the account")
 	fmt.Println(" - dit get_balance\t\t\t\tReturns the " + config.DitConfig.Currency + " and KNW balance of the account")
 	fmt.Println(" - dit export_keys\t\t\t\tReturns the unencrypted ethereum private key and address")
 	fmt.Println("")
-	fmt.Println("----------- Repositories ----------")
+	fmt.Println("---------- Repositories ----------")
 	fmt.Println(" - dit clone <REPOSITORY_URL>\t\t\tClones a repository and automatically calls 'dit init'")
 	fmt.Println("\t\t\t\t\t\tafterwards")
-	fmt.Println(" - dit init\t\t\t\t\tRetrieves the address of the ditContract for the repository")
-	fmt.Println("\t\t\t\t\t\tyou are using")
-	fmt.Println(" - dit commit <COMMIT_MESSAGE>\t\t\tProposes a new commit with the specified")
-	fmt.Println("\t\t\t\t\t\tcommit message (This will start a vote)")
+	fmt.Println(" - dit init\t\t\t\t\tSets an already existing repository up for using it with dit")
 	fmt.Println("")
-	fmt.Println("------------- Voting --------------")
+	fmt.Println("------------- Voting -------------")
 	fmt.Println(" - dit vote <PROPOSAL_ID> <CHOICE> <SALT>\tCasts a concealed vote on a proposed commit")
 	fmt.Println(" - dit open <PROPOSAL_ID>\t\t\tOpens and reveals the vote commitment on a proposed commit")
 	fmt.Println(" - dit finalize <PROPOSAL_ID>\t\t\tFinalizes the vote on proposed commit and claims the tokens")
+	fmt.Println("")
+	fmt.Println("---------- Git Commands ----------")
+	fmt.Println(" You can use any git command that you are usually using with git in your workflow. If you encounter")
+	fmt.Println(" any commands that you are missing from your regular git workflow, let us know!")
 	os.Exit(0)
 }
