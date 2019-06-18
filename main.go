@@ -12,6 +12,7 @@ import (
 	"github.com/ditcraft/cli/ethereum"
 	"github.com/ditcraft/cli/git"
 	"github.com/ditcraft/cli/helpers"
+	"github.com/logrusorgru/aurora"
 )
 
 // The current dit coordinator address
@@ -183,13 +184,13 @@ func main() {
 			helpers.PrintLine("ditRepository successfully initiated", helpers.INFO)
 		}
 		break
-	case "merge":
+	case "merge", "rebase":
 		var isOnMaster bool
 		isOnMaster, err = git.IsOnMaster()
 		if !isOnMaster {
-			_, _ = git.ExecuteCommand(true, args[:]...)
+			_ = git.ExecuteCommand(args[:]...)
 		} else {
-			checkIfExists(args, 1, "the branch to be merged")
+			checkIfExists(args, 1, "the branch to be "+command+"d")
 			err = git.MasterIsClean()
 			if err == nil {
 				var branchHash string
@@ -202,7 +203,7 @@ func main() {
 						voteID, voteEnded, votePassed, repository, err = demo.SearchForHashInVotes(branchHash)
 						if err == nil {
 							if voteID == 0 {
-								helpers.PrintLine("You are trying to merge into the master branch - this requires a vote.", helpers.INFO)
+								helpers.PrintLine("You are trying to "+command+" into the master branch - this requires a vote.", helpers.INFO)
 								voteDetails, voteID, err = demo.ProposeCommit(args[1], branchHash)
 								newVote = true
 							}
@@ -211,7 +212,7 @@ func main() {
 						voteID, voteEnded, votePassed, repository, err = demo.SearchForHashInVotes(branchHash)
 						if err == nil {
 							if voteID == 0 {
-								helpers.PrintLine("You are trying to merge into the master branch - this requires a vote.", helpers.INFO)
+								helpers.PrintLine("You are trying to "+command+" into the master branch - this requires a vote.", helpers.INFO)
 								voteDetails, voteID, err = ethereum.ProposeCommit(args[1], branchHash)
 								newVote = true
 							}
@@ -225,11 +226,11 @@ func main() {
 							}
 						} else {
 							if !voteEnded {
-								helpers.PrintLine("The vote on this merge hasn't ended yet - please wait!", helpers.ERROR)
+								helpers.PrintLine("The vote on this "+command+" hasn't ended yet - please wait!", helpers.ERROR)
 							} else if voteEnded && !votePassed {
-								helpers.PrintLine("The vote on this merge hasn't passed - you are not allowed to merge into master!", helpers.ERROR)
+								helpers.PrintLine("The vote on this "+command+" hasn't passed - you are not allowed to "+command+" into master!", helpers.ERROR)
 							} else if voteEnded && votePassed {
-								_, err = git.ExecuteCommand(true, args[:]...)
+								err = git.ExecuteCommand(args[:]...)
 								if err == nil {
 									var newHeadHash string
 									newHeadHash, err = git.GetHeadHashOfBranch("master")
@@ -249,7 +250,7 @@ func main() {
 		var isOnMaster bool
 		isOnMaster, err = git.IsOnMaster()
 		if !isOnMaster {
-			_, _ = git.ExecuteCommand(true, args[:]...)
+			_ = git.ExecuteCommand(args[:]...)
 		} else {
 			var masterHeadHash string
 			masterHeadHash, err = git.GetHeadHashOfBranch("master")
@@ -277,17 +278,32 @@ func main() {
 						}
 					}
 					if foundVote {
-						_, _ = git.ExecuteCommand(true, args[:]...)
+						_ = git.ExecuteCommand(args[:]...)
 					} else {
 						helpers.PrintLine("You are not allowed to push changes to master without prior approval from the community", helpers.ERROR)
-						// TODO: offer to start a new vote on these changes
+						// TODO: offer to start a new vote on these changes?
 					}
 				}
 			}
 		}
 		break
-	case "add", "checkout", "commit", "branch", "status", "reset", "pull", "fetch", "stash", "rm", "tag", "log":
-		_, _ = git.ExecuteCommand(true, args[:]...)
+	case "add",
+		"bisect",
+		"branch",
+		"checkout",
+		"commit",
+		"diff",
+		"fetch",
+		"grep",
+		"log",
+		"pull",
+		"reset",
+		"rm",
+		"show",
+		"stash",
+		"status",
+		"tag":
+		_ = git.ExecuteCommand(args[:]...)
 	case "vote_info":
 		// Prints the details of a vote
 		if len(args) == 2 {
@@ -320,16 +336,13 @@ func main() {
 			if err == nil && isProposer {
 				fmt.Println()
 				if pollPassed {
-					helpers.PrintLine("You are now allowed to merge your changes into the master branch", helpers.INFO)
+					helpers.PrintLine("You are now allowed to integrate your changes into the master branch", helpers.INFO)
 				} else {
-					helpers.PrintLine("You are NOT allowed to merge your changes into the master branch", helpers.INFO)
+					helpers.PrintLine(fmt.Sprintf("You are %s allowed to integrate your changes into the master branch", aurora.Bold(aurora.Red("NOT"))), helpers.INFO)
 				}
 			}
 		}
 		break
-	case "test":
-		err = git.MasterIsClean()
-		// fmt.Println(err)
 	default:
 		printUsage()
 		break

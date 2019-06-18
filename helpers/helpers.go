@@ -56,7 +56,7 @@ func PrintLine(_line string, _level outputType) {
 func Printf(_line string, _level outputType) {
 	switch _level {
 	case INFO:
-		fmt.Printf(fmt.Sprintf("%s %s", aurora.Green("dit  >"), _line))
+		fmt.Printf(fmt.Sprintf("%s", _line))
 	case WARN:
 		fmt.Printf(fmt.Sprintf("%s %s %s", aurora.Bold(aurora.Brown("warn")), aurora.Bold(aurora.Brown(">")), _line))
 	case ERROR:

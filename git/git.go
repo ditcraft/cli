@@ -3,7 +3,6 @@ package git
 import (
 	"bufio"
 	"errors"
-	"fmt"
 	"io/ioutil"
 	"os"
 	"os/exec"
@@ -12,7 +11,6 @@ import (
 	"sync"
 
 	"github.com/ditcraft/cli/helpers"
-	"github.com/logrusorgru/aurora"
 )
 
 var wg sync.WaitGroup
@@ -21,7 +19,7 @@ var wg sync.WaitGroup
 // minus the "https://github.com/" part
 func GetRepository() (string, error) {
 	// Retrieving the current repository url from git
-	gitOutput, err := ExecuteCommand(false, "config", "--get", "remote.origin.url")
+	gitOutput, err := ExecuteCommandWithoutStdOut("config", "--get", "remote.origin.url")
 	if err != nil {
 		return "", errors.New("There was an error retrieving the git repositories' name. Is the repository set up correctly?")
 	}
@@ -44,7 +42,7 @@ func GetRepository() (string, error) {
 // Clone wraps the git clone functionality and initialized the ditContract afterwards
 func Clone(_repository string) (string, error) {
 	// Calling git clone
-	_, err := ExecuteCommand(true, "clone", _repository, "--progress")
+	err := ExecuteCommand("clone", _repository, "--progress")
 	if err != nil {
 		return "", err
 	}
@@ -74,7 +72,7 @@ func Clone(_repository string) (string, error) {
 // GetHeadHashOfBranch will return the hash of a branches' head commit
 func GetHeadHashOfBranch(_branch string) (string, error) {
 	// Calling git clone
-	gitOutput, err := ExecuteCommand(false, "rev-parse", _branch)
+	gitOutput, err := ExecuteCommandWithoutStdOut("rev-parse", _branch)
 	if err != nil {
 		return "", err
 	}
@@ -85,7 +83,7 @@ func GetHeadHashOfBranch(_branch string) (string, error) {
 // IsOnMaster will return a bool, indiciating whether the user is on the master branch
 func IsOnMaster() (bool, error) {
 	// Retrieving the current branch name
-	gitOutput, err := ExecuteCommand(false, "symbolic-ref", "--short", "HEAD")
+	gitOutput, err := ExecuteCommandWithoutStdOut("symbolic-ref", "--short", "HEAD")
 	if err != nil {
 		return false, errors.New("There was an error retrieving the current branch name")
 	}
@@ -99,27 +97,27 @@ func IsOnMaster() (bool, error) {
 // which will tell the merge command that there are changes that the users might try to cover up
 func MasterIsClean() error {
 	// Fetching the master branch
-	_, err := ExecuteCommand(false, "fetch")
+	err := ExecuteCommand("fetch")
 	if err != nil {
 		return errors.New("There was an error retrieving the current status of the remote master")
 	}
 
 	// Retrieving the head of the local master
-	gitOutputLocal, err := ExecuteCommand(false, "rev-parse", "@")
+	gitOutputLocal, err := ExecuteCommandWithoutStdOut("rev-parse", "@")
 	if err != nil {
 		return errors.New("There was an error retrieving the current head of the local master")
 	}
 	gitOutputLocal = strings.TrimSpace(gitOutputLocal)
 
 	// Retrieving the head of the remote master
-	gitOutputRemote, err := ExecuteCommand(false, "rev-parse", "origin/master")
+	gitOutputRemote, err := ExecuteCommandWithoutStdOut("rev-parse", "origin/master")
 	if err != nil {
 		return errors.New("There was an error retrieving the current head of the remote master")
 	}
 	gitOutputRemote = strings.TrimSpace(gitOutputRemote)
 
 	// Retrieving the head of the merge base
-	gitOutputBase, err := ExecuteCommand(false, "merge-base", "@", "origin/master")
+	gitOutputBase, err := ExecuteCommandWithoutStdOut("merge-base", "@", "origin/master")
 	if err != nil {
 		return errors.New("There was an error retrieving the current head of the remote master")
 	}
@@ -138,7 +136,7 @@ func MasterIsClean() error {
 
 func checkGitSetup() error {
 	// Verifying whether a git user email is set correctly
-	gitOutput, err := ExecuteCommand(false, "config", "user.email")
+	gitOutput, err := ExecuteCommandWithoutStdOut("config", "user.email")
 	if err != nil {
 		return err
 	}
@@ -147,7 +145,7 @@ func checkGitSetup() error {
 	}
 
 	// Verifying whether a git user name is set correctly
-	gitOutput, err = ExecuteCommand(false, "config", "user.name")
+	gitOutput, err = ExecuteCommandWithoutStdOut("config", "user.name")
 	if err != nil {
 		return err
 	}
@@ -157,12 +155,12 @@ func checkGitSetup() error {
 
 	// Verifying whether the git password is being cached
 	// If nothing is set, we will cache it for now
-	gitOutput, err = ExecuteCommand(false, "config", "credential.helper")
+	gitOutput, err = ExecuteCommandWithoutStdOut("config", "credential.helper")
 	if err != nil {
 		return err
 	}
 	if len(strings.TrimSpace(gitOutput)) <= 0 {
-		_, err = ExecuteCommand(false, "config", "credential.helper", "cache")
+		_, err = ExecuteCommandWithoutStdOut("config", "credential.helper", "cache")
 		if err != nil {
 			return err
 		}
@@ -181,13 +179,13 @@ func Validate() error {
 	repoName = strings.SplitN(repoName, "/", 2)[1]
 
 	// Verifying whether a master branch (or any branch) exists
-	gitOutputBranch, err := ExecuteCommand(false, "branch")
+	gitOutputBranch, err := ExecuteCommandWithoutStdOut("branch")
 	if err != nil {
 		return errors.New("There was an error retrieving the git repositories' branches. Is the repository set up correctly?")
 	}
 
 	// Verifying whether the connection works correctly
-	gitOutputFetch, err := ExecuteCommand(false, "fetch", "-v")
+	gitOutputFetch, err := ExecuteCommandWithoutStdOut("fetch", "-v")
 	if (!strings.Contains(gitOutputFetch, repoName) && len(strings.TrimSpace(gitOutputBranch)) > 0) || err != nil {
 		return errors.New("The connection to the git provider failed - please ensure that the repository is configured correctly")
 	}
@@ -431,8 +429,34 @@ func sanitizeURL(_url string) string {
 	return _url
 }
 
-// ExecuteCommand will run git commands and print the output if desired
-func ExecuteCommand(_printOutput bool, _args ...string) (string, error) {
+// ExecuteCommand will run git commands and redirect the output
+func ExecuteCommand(_args ...string) error {
+	cmd := exec.Command("git", _args[0:]...)
+	defer cmd.Wait()
+
+	cmd.Stdin = os.Stdin
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+
+	err := cmd.Start()
+	if err != nil {
+		return err
+	}
+
+	go func() {
+		wg.Wait()
+	}()
+
+	err = cmd.Wait()
+	if err != nil {
+		return errors.New("The git " + _args[0] + " command didn't execute properly")
+	}
+
+	return nil
+}
+
+// ExecuteCommandWithoutStdOut will run git commands and not print the output
+func ExecuteCommandWithoutStdOut(_args ...string) (string, error) {
 	cmd := exec.Command("git", _args[0:]...)
 	defer cmd.Wait()
 
@@ -453,20 +477,14 @@ func ExecuteCommand(_printOutput bool, _args ...string) (string, error) {
 	}
 
 	var output string
-	var lastLine string
-	var rowColor string
 
 	scannerStdout := bufio.NewScanner(stdout)
 	wg.Add(1)
 	go func() {
 		for scannerStdout.Scan() {
 			text := scannerStdout.Text()
-			if _printOutput {
-				rowColor = printGitOutput(text, lastLine, rowColor)
-				lastLine = text
-			} else {
-				output += text
-			}
+			output += text
+
 		}
 		wg.Done()
 	}()
@@ -477,12 +495,8 @@ func ExecuteCommand(_printOutput bool, _args ...string) (string, error) {
 	go func() {
 		for scannerStderr.Scan() {
 			text := scannerStderr.Text()
-			if _printOutput {
-				rowColor = printGitOutput(text, lastLine, rowColor)
-				lastLine = text
-			} else {
-				output += text
-			}
+			output += text
+
 		}
 		wg.Done()
 	}()
@@ -492,13 +506,10 @@ func ExecuteCommand(_printOutput bool, _args ...string) (string, error) {
 	}()
 
 	err = cmd.Wait()
-	if _printOutput && !strings.Contains(lastLine, "\n") && len(lastLine) > 0 {
-		fmt.Printf("\n")
-	}
 	if err != nil {
-		err = errors.New("The git " + _args[0] + " command didn't execute properly")
+		return output, errors.New("The git " + _args[0] + " command didn't execute properly")
 	}
-	return output, err
+	return output, nil
 }
 
 func customSplit(data []byte, atEOF bool) (advance int, token []byte, err error) {
@@ -518,36 +529,4 @@ func customSplit(data []byte, atEOF bool) (advance int, token []byte, err error)
 		return len(data), data, nil
 	}
 	return
-}
-
-func printGitOutput(_text string, _lastLine string, _color string) string {
-	if !strings.ContainsAny(_lastLine, "\r\n") && len(_lastLine) > 0 {
-		fmt.Printf("\n")
-	}
-	if strings.Contains(_text, "\t") {
-		_text = "\t" + _text
-
-		if _color == "green" {
-			_text = fmt.Sprintf("%s", aurora.Green(_text))
-		} else if _color == "red" {
-			_text = fmt.Sprintf("%s", aurora.Red(_text))
-		}
-	}
-
-	// _text = strings.Replace(_text, "\"git ", "\"dit ", -1)
-	_text = strings.Replace(_text, "git ", "dit ", -1)
-
-	if len(_text) == 0 {
-		fmt.Printf("%s\n", aurora.Green("dit  >"))
-	} else {
-		fmt.Printf("%s %s", aurora.Green("dit  >"), _text)
-	}
-
-	if strings.Contains(_text, "Changes to be committed") {
-		return "green"
-	} else if strings.Contains(_text, "Changes not staged for commit") || strings.Contains(_text, "Untracked files") {
-		return "red"
-	} else {
-		return _color
-	}
 }
