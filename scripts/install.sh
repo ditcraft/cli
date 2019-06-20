@@ -1,14 +1,12 @@
 #!/bin/bash
 
-RELEASE="stable"
-BASE_URL_STABLE="https://ditcraft.io/dl/stable/"
-BASE_URL_PRERELEASE="https://ditcraft.io/dl/prerelease/"
+BASE_URL="https://ditcraft.io/dl/"
+RELEASE=""
 FILE=""
-DOWNLOAD_URL=""
 INSTALL_SUCCESSFUL=true
 IS_UPDATE=false
 
-check_os() {
+determine_os() {
 	if [ "$(uname)" = "Linux" ] ; then
 		FILE="ditCLI-linux-amd64"
 	elif [ "$(uname)" = "Darwin" ] ; then
@@ -28,15 +26,9 @@ check_update() {
 	fi
 }
 
-get_download_url() {
-	if [ "$RELEASE" = "prerelease" ]; then
-		DOWNLOAD_URL="$BASE_URL_PRERELEASE$FILE"
-	else
-		DOWNLOAD_URL="$BASE_URL_STABLE$FILE"
-	fi
-}
-
 install() {
+	DOWNLOAD_URL="$BASE_URL$RELEASE/$FILE"
+
     TMPDIR=$(mktemp -d) && cd $TMPDIR
     curl -Ss -O $DOWNLOAD_URL
 
@@ -63,6 +55,7 @@ cleanup() {
 	rmdir $TMPDIR
 }
 
+######################################################
 # Check whether curl is installed
 which curl &> /dev/null 
 if [[ $? -ne 0 ]] ; then
@@ -70,30 +63,40 @@ if [[ $? -ne 0 ]] ; then
 	exit 1
 fi
 
+# Check command line inputs for release
+if [ "$1" != "" -a  "$1" != "" ]; then
+	if [ "$1" = "-r" ] || [ "$1" = "--release" ]; then
+		if [ "$2" = "prerelease" ]; then
+			RELEASE="prerelease"
+		elif [ "$2" = "stable" ]; then
+			RELEASE="stable"
+		fi
+	fi
+elif [ "$1" != "" ]; then
+	help
+	exit 1
+else
+	RELEASE="stable"
+fi
 
-while [ "$1" != "" ]; do
-	case $1 in
-	-r | --release )           shift
-		RELEASE=$1
-		;;
-	* )  	help
-		exit 1
-	esac
-	shift
-done
+# Print help and exit if no valid choice was done
+if [ "$RELEASE" = "" ]; then
+	help
+	exit 1
+fi
 
-check_os
+determine_os
 check_update
-get_download_url
 install
 cleanup
 
+# Print outcome
 if [ $INSTALL_SUCCESSFUL = true ] ; then
 	if [ $IS_UPDATE = true ] ; then
 		echo "ditCLI successfully updated - you are ready to go!"
 	else
 		echo "ditCLI successfully installed - you are ready to go!"
-		echo "If it's your first time using the ditCLI feel free to take a look at 'dit help'"
+		echo "If it's your first time using the ditCLI, feel free to take a look at 'dit help' to get started."
 	fi
 else
 	if [ $IS_UPDATE = true ] ; then
@@ -102,3 +105,4 @@ else
 		echo "*ERROR* ditCLI installation failed. Please refer to the error above."
 	fi
 fi
+######################################################
