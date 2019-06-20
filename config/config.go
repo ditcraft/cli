@@ -31,6 +31,10 @@ var Version = 3
 // the next one is used
 var EthereumNodes = []string{"https://node.ditcraft.io", "https://dai.poa.network"}
 
+// AllowedKnowledgeLabels contains the array of knowledge labels that a user may choose from
+// Note: This will be done in the smart contract soon
+var AllowedKnowledgeLabels = []string{"Go", "Node.js", "Solidity", "JavaScript", "Python", "Ruby", "Java", "C++"}
+
 type ditConfig struct {
 	DitCoordinator   string                 `json:"dit_coordinator"`
 	KNWVoting        string                 `json:"knw_voting"`

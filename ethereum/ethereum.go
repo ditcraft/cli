@@ -23,6 +23,7 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/ethclient"
+	"github.com/schollz/closestmatch"
 )
 
 const correctETHAddressLength = 42
@@ -1409,7 +1410,28 @@ func initDitRepository(_ditCoordinatorInstance *ditCoordinator.DitCoordinator, _
 	var knowledgeLabels []string
 	for len(knowledgeLabels) < 3 {
 		newLabel := helpers.GetUserInput("Knowledge Label " + strconv.Itoa(len(knowledgeLabels)+1))
-		if len(newLabel) > 0 {
+		foundLabel := false
+		for _, element := range config.AllowedKnowledgeLabels {
+			if element == newLabel {
+				foundLabel = true
+			}
+		}
+		if !foundLabel {
+			closestMatcher := closestmatch.New(config.AllowedKnowledgeLabels, []int{2, 3, 4, 5})
+			proposedLabel := closestMatcher.Closest(newLabel)
+			if len(proposedLabel) > 0 {
+				choice := helpers.GetUserInputChoice("Closest match found was '"+proposedLabel+"', do you want to use that?", "y", "n")
+				if choice == "y" {
+					newLabel = proposedLabel
+					foundLabel = true
+				} else {
+					fmt.Println("Please use a knowledge-label from this list: " + strings.Join(config.AllowedKnowledgeLabels, ", "))
+				}
+			} else {
+				fmt.Println("Please use a knowledge-label from this list: " + strings.Join(config.AllowedKnowledgeLabels, ", "))
+			}
+		}
+		if foundLabel && len(newLabel) > 0 {
 			knowledgeLabels = append(knowledgeLabels, newLabel)
 		}
 		if len(newLabel) == 0 && len(knowledgeLabels) > 0 {
