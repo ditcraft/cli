@@ -1594,12 +1594,26 @@ func getKNWVotingInstance(_connection *ethclient.Client) (*KNWVoting.KNWVoting, 
 
 // getConnection will return a connection to the ethereum blockchain
 func getConnection() (*ethclient.Client, error) {
-	connection, err := ethclient.Dial("https://node.ditcraft.io")
-	if err != nil {
-		return nil, errors.New("Failed to connect to the ethereum network")
+	for i := 0; i < len(config.EthereumNodes); i++ {
+		connection, err := ethclient.Dial(config.EthereumNodes[i])
+		if err != nil {
+			if i == len(config.EthereumNodes)-1 {
+				return nil, errors.New("Failed to connect to the ethereum network" + strconv.Itoa(i))
+			}
+		} else {
+			networkID, err := connection.NetworkID(context.Background())
+			if err != nil {
+				if i == len(config.EthereumNodes)-1 {
+					return nil, errors.New("Failed to connect to the ethereum network" + strconv.Itoa(i))
+				}
+			} else {
+				if networkID.Cmp(big.NewInt(100)) == 0 {
+					return connection, nil
+				}
+			}
+		}
 	}
-
-	return connection, nil
+	return nil, errors.New("Failed to connect to the ethereum network")
 }
 
 // GetHashOfString takes a string a returns it as keccak256

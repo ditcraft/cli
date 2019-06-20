@@ -27,6 +27,10 @@ var DitConfig ditConfig
 // or the smart contracts in a way that an update is necessaray
 var Version = 3
 
+// EthereumNodes is an array of rpc nodes that are used. First one is the primary, if one fails,
+// the next one is used
+var EthereumNodes = []string{"https://node.ditcraft.io", "https://dai.poa.network"}
+
 type ditConfig struct {
 	DitCoordinator   string                 `json:"dit_coordinator"`
 	KNWVoting        string                 `json:"knw_voting"`
