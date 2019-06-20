@@ -198,7 +198,7 @@ func ProposeCommit(_branch string, _branchHeadHash string) (string, int, error) 
 			time.Sleep(2 * time.Second)
 		}
 		fmt.Println()
-		helpers.PrintLine("Now the actual commit proposal will be executed", helpers.INFO)
+		helpers.PrintLine("Now the actual proposal will be executed", helpers.INFO)
 	}
 
 	// Crerating the transaction (basic values)
@@ -214,7 +214,7 @@ func ProposeCommit(_branch string, _branchHeadHash string) (string, int, error) 
 		return "", 0, errors.New("Failed to retrieve the current proposal id")
 	}
 
-	// Proposing the commit
+	// Proposing the changes
 	transaction, err := ditCoordinatorInstance.ProposeCommit(auth, repoHash, big.NewInt(int64(answerKnowledgeLabel-1)), intKNW, big.NewInt(int64(60)), big.NewInt(int64(60)), intStake)
 	if err != nil {
 		if strings.Contains(err.Error(), "insufficient funds") {

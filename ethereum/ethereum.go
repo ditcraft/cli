@@ -284,7 +284,7 @@ func ProposeCommit(_branch string, _branchHeadHash string) (string, int, error) 
 
 	// Prompting the user which knowledge-label he wants to use for this proposal
 	answerKnowledgeLabel := 0
-	userInputString = "Which Knowledge-Label suits this commit most?"
+	userInputString = "Which Knowledge-Label suits these changes the most?"
 	for i := range knowledgeLabels {
 		userInputString += " (" + strconv.Itoa(i+1) + ") " + knowledgeLabels[i]
 	}
@@ -567,7 +567,7 @@ func Vote(_proposalID string, _choice string, _salt string) error {
 	// Prompting the user whether he is sure of this vote and its details
 	floatKNWString := fmt.Sprintf("%.2f", floatKNWParsed)
 
-	helpers.PrintLine("Voting on the commit with the following settings:", helpers.INFO)
+	helpers.PrintLine("Voting on the proposal with the following settings:", helpers.INFO)
 	helpers.PrintLine("Knowledge Label: "+proposal.KnowledgeLabel, helpers.INFO)
 	helpers.PrintLine("Amount of KNW Tokens: "+floatKNWString+" KNW", helpers.INFO)
 	fmt.Println()
