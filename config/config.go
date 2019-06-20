@@ -12,6 +12,7 @@ import (
 	"io"
 	"io/ioutil"
 	"os/user"
+	"strconv"
 	"strings"
 
 	"github.com/ditcraft/cli/helpers"
@@ -120,7 +121,19 @@ func Load() error {
 	// Parsing the json into a public object
 	err = json.Unmarshal(configFile, &DitConfig)
 	if err != nil {
-		return errors.New("Failed to unmarshal JSON of config file")
+		errorExtension := " - "
+		position := strings.Index(string(configFile), "version")
+		if position != -1 {
+			_, err := strconv.Atoi(strings.Split(string(configFile)[position+9:], ",")[0])
+			if err != nil {
+				errorExtension += "Your config file seems to be corrupted"
+			} else {
+				errorExtension = ""
+			}
+		} else {
+			errorExtension += "Your config file seems to be outdated, please call '" + helpers.ColorizeCommand("update") + "' to fix this"
+		}
+		return errors.New("Failed to unmarshal JSON of config file" + errorExtension)
 	}
 
 	// If the config is valid, it will contain an ethereum address with a length of 42

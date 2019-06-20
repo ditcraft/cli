@@ -18,7 +18,6 @@ import (
 // The current dit coordinator address
 var liveDitCoodinator = "0x429e37f14462bdfca0f1168dae24f66f61e6b04c"
 var demoDitCoodinator = "0x1dc6f1edd14b0b5d24305a0cfb6d4f0a5de3b4f6"
-var configVersion = "v0.2"
 
 func main() {
 	var err error
@@ -45,9 +44,13 @@ func main() {
 	}
 
 	if err == nil && (command != "setup" && command != "update") {
-		if config.DitConfig.Version != config.Version {
+		if config.DitConfig.Version < config.Version {
 			helpers.PrintLine("Your config is not up to date, the ditCLI might not work correctly", helpers.WARN)
 			helpers.PrintLine("To fix this call '"+helpers.ColorizeCommand("update")+"'", helpers.WARN)
+		} else if config.DitConfig.Version > config.Version {
+			helpers.PrintLine("Your config file was created with a newer version of the ditCLI", helpers.ERROR)
+			helpers.PrintLine("To fix this update the ditCLI", helpers.ERROR)
+			os.Exit(0)
 		} else if (!config.DitConfig.DemoModeActive && config.DitConfig.DitCoordinator != liveDitCoodinator) || (config.DitConfig.DemoModeActive && config.DitConfig.DitCoordinator != demoDitCoodinator) {
 			helpers.PrintLine("You are using an old version of the deployed ditCoordinator contract", helpers.WARN)
 			helpers.PrintLine("To fix this call '"+helpers.ColorizeCommand("update")+"'", helpers.WARN)
