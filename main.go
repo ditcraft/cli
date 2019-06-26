@@ -19,6 +19,9 @@ import (
 var liveDitCoodinator = "0x429e37f14462bdfca0f1168dae24f66f61e6b04c"
 var demoDitCoodinator = "0x1dc6f1edd14b0b5d24305a0cfb6d4f0a5de3b4f6"
 
+// The current version
+var version = "v0.3"
+
 func main() {
 	var err error
 
@@ -97,14 +100,11 @@ func main() {
 				passedKYC, err = ethereum.CheckForKYC()
 				if err == nil && !passedKYC {
 					fmt.Println()
-					helpers.PrintLine("You didn't pass the KYC yet. Please do the KYC now:", helpers.INFO)
+					helpers.PrintLine("It seems that the smart contracts have been updated, which means that you need to re-do the KYC.", helpers.INFO)
 					helpers.PrintLine("Go to our Twitter @ditcraft and tweet the following at us:", helpers.INFO)
 					helpers.PrintLine("@ditcraft I want to try dit, the decentralized git. Please verify me "+config.DitConfig.EthereumKeys.Address+"!", helpers.INFO)
 				}
 			}
-		}
-		if err == nil {
-			helpers.PrintLine("Update successful", helpers.INFO)
 		}
 		break
 	case "mode":
@@ -142,16 +142,16 @@ func main() {
 			helpers.PrintLine("ditCoordinator successfully set", helpers.INFO)
 		}
 		break
-	case "get_balance":
+	case "get_balance", "balance":
 		// Retrieve the balances in ETH and KNW
 		err = ethereum.GetBalances()
 		break
-	case "get_address":
+	case "get_address", "address":
 		// Return the ETH address
 		helpers.PrintLine("Ethereum Address: "+config.DitConfig.EthereumKeys.Address, helpers.INFO)
 		helpers.PrintLine("URL: https://explorer.ditcraft.io/address/"+config.DitConfig.EthereumKeys.Address, helpers.INFO)
 		break
-	case "export_keys":
+	case "export_keys", "export_key":
 		helpers.PrintLine("Exporting your keys will print your ethereum private key in plain text", helpers.WARN)
 		helpers.PrintLine("This might compromise your keys, please don't proceed if you are not sure about this", helpers.WARN)
 		answer := helpers.GetUserInputChoice("Are you sure that you want to proceed?", "y", "n")
@@ -318,10 +318,15 @@ func main() {
 		break
 	case "vote":
 		checkIfExists(args, 1, "a proposal ID - dit vote <PROPOSAL_ID> <CHOICE> <SALT>")
-		checkIfExists(args, 2, "your choice (1/0) - dit vote <PROPOSAL_ID> <CHOICE> <SALT>")
+		checkIfExists(args, 2, "your choice (accept/deny) - dit vote <PROPOSAL_ID> <CHOICE> <SALT>")
 		checkIfExists(args, 3, "a salt (a non-zero number) - dit vote <PROPOSAL_ID> <CHOICE> <SALT>")
 		// Votes on a proposal
-		err = ethereum.Vote(args[1], args[2], args[3])
+		switch args[2] {
+		case "accept", "yes", "y", "yay", "1", "true":
+			err = ethereum.Vote(args[1], "1", args[3])
+		case "deny", "decline", "no", "n", "nay", "0", "false":
+			err = ethereum.Vote(args[1], "0", args[3])
+		}
 		break
 	case "open", "open_vote", "reveal_vote", "reveal":
 		checkIfExists(args, 1, "a proposal ID")
@@ -346,6 +351,8 @@ func main() {
 			}
 		}
 		break
+	case "-v", "--version", "version":
+		helpers.PrintLine(version, helpers.INFO)
 	default:
 		printUsage()
 		break
@@ -388,17 +395,21 @@ func printUsage() {
 	fmt.Println(" - dit init\t\t\t\t\tSets an already existing repository up for using it with dit")
 	fmt.Println("")
 	fmt.Println("------------- Voting -------------")
-	fmt.Println(" - dit vote <PROPOSAL_ID> <CHOICE> <SALT>\tCasts a concealed vote on a proposed commit")
-	fmt.Println(" - dit open <PROPOSAL_ID>\t\t\tOpens and reveals the vote commitment on a proposed commit")
-	fmt.Println(" - dit finalize <PROPOSAL_ID>\t\t\tFinalizes the vote on proposed commit and claims the tokens")
+	fmt.Println(" - dit merge <BRANCH>\t\t\t\tWill initiate a new vote when this command is executed in")
+	fmt.Println("\t\t\t\t\t\tthe master branch to gain community approval")
+	fmt.Println(" - dit vote <PROPOSAL_ID> <CHOICE> <SALT>\tCasts a concealed vote on a proposal where <CHOICE> is")
+	fmt.Println("\t\t\t\t\t\teither 'accept' or 'deny' and <SALT> is a random number that")
+	fmt.Println("\t\t\t\t\t\twill be used to conceal your vote until it's being opened")
+	fmt.Println(" - dit open <PROPOSAL_ID>\t\t\tOpens and reveals the vote commitment on a proposal")
+	fmt.Println(" - dit finalize <PROPOSAL_ID>\t\t\tFinalizes the vote on a proposal and claims the tokens")
 	fmt.Println("")
 	fmt.Println("---------- Git Commands ----------")
 	fmt.Println(" - dit <GIT_COMMAND>\t\t\t\tExample Usage: dit commit -m \"Add new feature\"")
 	fmt.Println("")
 	fmt.Println("   Avialable git commands within the ditCLI:")
-	fmt.Println(" - add, bisect, branch, checkout, commit\tYou can use these git commands as you are usually using them")
-	fmt.Println(" - diff, fetch, grep, log, merge, pull\t\twith the regular git client. If you are not familiar with")
-	fmt.Println(" - push, rebase, reset, rm, show, stash\t\tthe usage of one of these commands, please refer to the git ")
-	fmt.Println(" - status, tag\t\t\t\t\tclients' help by invoking 'git help' directly")
+	fmt.Println(" - add, bisect, branch, checkout, commit\tYou can use these git commands as you are usually using")
+	fmt.Println(" - diff, fetch, grep, log, merge, pull\t\tthem with the regular git client. If you are not familiar")
+	fmt.Println(" - push, rebase, reset, rm, show, stash\t\twith the usage of one of these commands, please refer to")
+	fmt.Println(" - status, tag\t\t\t\t\tthe git clients' help by invoking 'git help' directly")
 	os.Exit(0)
 }
