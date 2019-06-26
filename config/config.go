@@ -33,7 +33,7 @@ var EthereumNodes = []string{"https://node.ditcraft.io", "https://dai.poa.networ
 
 // AllowedKnowledgeLabels contains the array of knowledge labels that a user may choose from
 // Note: This will be done in the smart contract soon
-var AllowedKnowledgeLabels = []string{"Go", "Node.js", "Solidity", "JavaScript", "Python", "Ruby", "Java", "C++"}
+var AllowedKnowledgeLabels = []string{"Go", "Node.js", "Solidity", "JavaScript", "Python", "Ruby", "Java", "C++", "LaTeX"}
 
 type ditConfig struct {
 	DitCoordinator   string                 `json:"dit_coordinator"`
@@ -129,19 +129,23 @@ func Load() error {
 	// Parsing the json into a public object
 	err = json.Unmarshal(configFile, &DitConfig)
 	if err != nil {
-		errorExtension := " - "
+		errorMessage := "Failed to unmarshal JSON of config file"
 		position := strings.Index(string(configFile), "version")
 		if position != -1 {
-			_, err := strconv.Atoi(strings.Split(string(configFile)[position+9:], ",")[0])
+			versionNumberConfig, err := strconv.Atoi(strings.Split(string(configFile)[position+9:], ",")[0])
 			if err != nil {
-				errorExtension += "Your config file seems to be corrupted"
+				errorMessage += " - Your config file seems to be corrupted"
 			} else {
-				errorExtension = ""
+				if versionNumberConfig < Version {
+					errorMessage = "Your config file is outdated, please call '" + helpers.ColorizeCommand("update") + "' to fix this"
+				} else if versionNumberConfig > Version {
+					errorMessage = "Your ditCLI version is older than your config file, please update your ditCLI"
+				}
 			}
 		} else {
-			errorExtension += "Your config file seems to be outdated, please call '" + helpers.ColorizeCommand("update") + "' to fix this"
+			errorMessage = "Your config file seems to be outdated, please call '" + helpers.ColorizeCommand("update") + "' to fix this"
 		}
-		return errors.New("Failed to unmarshal JSON of config file" + errorExtension)
+		return errors.New(errorMessage)
 	}
 
 	// If the config is valid, it will contain an ethereum address with a length of 42
@@ -341,9 +345,11 @@ func Update(_liveDitCoordinator string, _demoDitCoordinator string) (bool, error
 		}
 	}
 	if didUpdate {
+		helpers.PrintLine("Update of the config was successful", helpers.INFO)
 		return true, nil
 	}
-	return false, errors.New("Your ditCLI is already up to date")
+	helpers.PrintLine("Your ditCLI is already up to date", helpers.INFO)
+	return false, nil
 }
 
 // Save will write the current config object to the file
