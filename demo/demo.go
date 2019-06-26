@@ -127,6 +127,7 @@ func ProposeCommit(_branch string, _branchHeadHash string) (string, int, error) 
 	userInputString = fmt.Sprintf("How much do you want to stake?")
 	for floatStake.Cmp(big.NewFloat(0)) == 0 || floatStake.Cmp(floatBalance) != -1 {
 		answerStake = helpers.GetUserInput(userInputString)
+		answerStake = strings.Replace(answerStake, ",", ".", -1)
 		floatStakeParsed, _ = strconv.ParseFloat(answerStake, 64)
 		floatStake = big.NewFloat(floatStakeParsed)
 	}
@@ -141,6 +142,7 @@ func ProposeCommit(_branch string, _branchHeadHash string) (string, int, error) 
 		keepAsking := true
 		for keepAsking {
 			answerKNW = helpers.GetUserInput(userInputString)
+			answerKNW = strings.Replace(answerKNW, ",", ".", -1)
 			floatKNWParsed, _ = strconv.ParseFloat(answerKNW, 64)
 			var ok bool
 			floatKNW, ok = new(big.Float).SetString(answerKNW)
@@ -150,13 +152,33 @@ func ProposeCommit(_branch string, _branchHeadHash string) (string, int, error) 
 		}
 	}
 
+	// Prompting the user how long the vote should last
+	answerLength := "0"
+	floatLengthParsed, _ := strconv.ParseFloat(answerLength, 64)
+	floatLength := big.NewFloat(floatLengthParsed)
+	userInputString = fmt.Sprintf("How long should the vote last in minutes?")
+	keepAsking := true
+	for keepAsking {
+		answerLength = helpers.GetUserInput(userInputString)
+		answerLength = strings.Replace(answerLength, ",", ".", -1)
+		floatLengthParsed, _ = strconv.ParseFloat(answerLength, 64)
+		var ok bool
+		floatLength, ok = new(big.Float).SetString(answerLength)
+		if ok && floatLength.Cmp(big.NewFloat(1)) >= 0 && floatLength.Cmp(big.NewFloat(7*24*60)) <= 0 {
+			keepAsking = false
+		}
+	}
+
 	// Prompting the user whether he is sure of this proposal and its details
 	floatStakeString := fmt.Sprintf("%.2f", floatStakeParsed)
 	floatKNWString := fmt.Sprintf("%.2f", floatKNWParsed)
+	floatLengthString := fmt.Sprintf("%.1f", floatLengthParsed)
+
 	helpers.PrintLine("  Proposing the changes with the following settings:", helpers.INFO)
 	helpers.PrintLine("  Proposal Description: '"+answerProposalSummary+"'", helpers.INFO)
 	helpers.PrintLine("  Knowledge Label: "+knowledgeLabels[answerKnowledgeLabel-1], helpers.INFO)
 	helpers.PrintLine("  Amount of KNW Tokens: "+floatKNWString+" KNW", helpers.INFO)
+	helpers.PrintLine("  Length of Vote: "+floatLengthString+" Minutes", helpers.INFO)
 	helpers.PrintLine("  The following stake will automatically be deducted: "+floatStakeString+" xDIT", helpers.INFO)
 	userIsSure := helpers.GetUserInputChoice("Is that correct?", "y", "n")
 	if userIsSure == "n" {
@@ -170,6 +192,9 @@ func ProposeCommit(_branch string, _branchHeadHash string) (string, int, error) 
 
 	weiFloatKNW, _ := (new(big.Float).Mul(floatKNW, big.NewFloat(1000000000))).Int64()
 	intKNW := (new(big.Int).Mul(big.NewInt(weiFloatKNW), big.NewInt(1000000000)))
+
+	secondFloatLength, _ := (new(big.Float).Mul(floatLength, big.NewFloat(60))).Int64()
+	intLength := big.NewInt(secondFloatLength)
 
 	approvedBalance, err := ditTokenInstance.Allowance(nil, myAddress, common.HexToAddress(config.DitConfig.DitCoordinator))
 	if err != nil {
@@ -215,7 +240,7 @@ func ProposeCommit(_branch string, _branchHeadHash string) (string, int, error) 
 	}
 
 	// Proposing the changes
-	transaction, err := ditCoordinatorInstance.ProposeCommit(auth, repoHash, big.NewInt(int64(answerKnowledgeLabel-1)), intKNW, big.NewInt(int64(60)), big.NewInt(int64(60)), intStake)
+	transaction, err := ditCoordinatorInstance.ProposeCommit(auth, repoHash, big.NewInt(int64(answerKnowledgeLabel-1)), intKNW, intLength, intLength, intStake)
 	if err != nil {
 		if strings.Contains(err.Error(), "insufficient funds") {
 			return "", 0, errors.New("Your account doesn't have enough xDai to pay for the transaction")
