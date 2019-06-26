@@ -1,5 +1,6 @@
 #!/bin/bash
 
+BASE_URL_GITHUB="https://github.com/ditcraft/cli/releases/download/"
 BASE_URL="https://ditcraft.io/dl/"
 RELEASE=""
 FILE=""
@@ -22,15 +23,56 @@ check_update() {
 		echo "Installing ditCLI $RELEASE version..."
 	else
 		IS_UPDATE=true
-		echo "Updating ditCLI $RELEASE version..."
+		NEEDS_UPDATE=false
+		remote_version=$(curl -Ss "$BASE_URL$RELEASE/version")
+		remote_semver=(${remote_version//./ })
+		local_version=$(dit version)
+		local_semver=(${local_version//./ })
+
+		remote_version="${remote_semver[0]}.${remote_semver[1]}"
+		if [ "${remote_semver[3]}" != "0" -a "${remote_semver[3]}" != "" ]; then
+			remote_version="$remote_version.${remote_semver[2]}.${remote_semver[3]}"
+		elif [ "${remote_semver[2]}" != "0" -a "${remote_semver[2]}" != "" ]; then
+			remote_version="$remote_version.${remote_semver[2]}"
+		fi
+
+		if [ "$local_version" != "" -a "${local_version:0:1}" == "v" ]; then
+			major="${local_semver[0]}"
+			minor="${local_semver[1]}"
+			patch="${local_semver[2]}"
+			local_version="${major}.${minor}"
+			if [ "$patch" == "" ]; then
+				patch="0"
+			else
+				local_version="$local_version.$patch"
+			fi
+			fix="${local_semver[3]}"
+			if [ "$fix" == "" ]; then
+				fix="0"
+			else
+				local_version="$local_version.$fix"
+			fi
+
+			echo "Updating ditCLI from $local_version to $remote_version ..."
+		else
+			echo "Updating ditCLI to $remote_version ..."
+		fi
 	fi
 }
 
 install() {
-	DOWNLOAD_URL="$BASE_URL$RELEASE/$FILE"
+	DOWNLOAD_URL=""
+	if [ "$RELEASE" = "stable" ]; then
+		# Download the latest stable release from GitHub
+		CURRENT_STABLE_VERSION=$(curl -Ss "$BASE_URL$RELEASE/version")
+		DOWNLOAD_URL="$BASE_URL_GITHUB$CURRENT_STABLE_VERSION/$FILE"
+	else
+		# Download the latest stable release from our webserver
+		DOWNLOAD_URL="$BASE_URL$RELEASE/$FILE"
+	fi
 
     TMPDIR=$(mktemp -d) && cd $TMPDIR
-    curl -Ss -O $DOWNLOAD_URL
+    curl -Ss -O -L $DOWNLOAD_URL
 
 	if [ "$(uname)" = "Linux" ] ; then
 	  sudo cp $TMPDIR/$FILE /usr/bin/dit && sudo chmod +x /usr/bin/dit
