@@ -18,24 +18,26 @@ determine_os() {
 }
 
 check_update() {
+	remote_version=$(curl -Ss "$BASE_URL$RELEASE/version")
+	remote_semver=(${remote_version//./ })
+
+	remote_version="${remote_semver[0]}.${remote_semver[1]}"
+	if [ "${remote_semver[3]}" != "0" -a "${remote_semver[3]}" != "" ]; then
+		remote_version="$remote_version.${remote_semver[2]}.${remote_semver[3]}"
+	elif [ "${remote_semver[2]}" != "0" -a "${remote_semver[2]}" != "" ]; then
+		remote_version="$remote_version.${remote_semver[2]}"
+	fi
+
 	which dit &> /dev/null 
+
 	if [[ $? -ne 0 ]] ; then
-		echo "Installing ditCLI $RELEASE version..."
+		echo "Installing ditCLI $remote_version $RELEASE..."
 	else
 		IS_UPDATE=true
 		NEEDS_UPDATE=false
-		remote_version=$(curl -Ss "$BASE_URL$RELEASE/version")
-		remote_semver=(${remote_version//./ })
 		local_version=$(dit version)
 		local_semver=(${local_version//./ })
-
-		remote_version="${remote_semver[0]}.${remote_semver[1]}"
-		if [ "${remote_semver[3]}" != "0" -a "${remote_semver[3]}" != "" ]; then
-			remote_version="$remote_version.${remote_semver[2]}.${remote_semver[3]}"
-		elif [ "${remote_semver[2]}" != "0" -a "${remote_semver[2]}" != "" ]; then
-			remote_version="$remote_version.${remote_semver[2]}"
-		fi
-
+		
 		if [ "$local_version" != "" -a "${local_version:0:1}" == "v" ]; then
 			major="${local_semver[0]}"
 			minor="${local_semver[1]}"
@@ -53,9 +55,9 @@ check_update() {
 				local_version="$local_version.$fix"
 			fi
 
-			echo "Updating ditCLI from $local_version to $remote_version ..."
+			echo "Updating ditCLI $RELEASE from $local_version to $remote_version ..."
 		else
-			echo "Updating ditCLI to $remote_version ..."
+			echo "Updating ditCLI $RELEASE to $remote_version ..."
 		fi
 	fi
 }

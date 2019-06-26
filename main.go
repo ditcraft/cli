@@ -295,6 +295,7 @@ func main() {
 		"branch",
 		"checkout",
 		"commit",
+		"config",
 		"diff",
 		"fetch",
 		"grep",
@@ -323,9 +324,17 @@ func main() {
 		// Votes on a proposal
 		switch args[2] {
 		case "accept", "yes", "y", "yay", "1", "true":
-			err = ethereum.Vote(args[1], "1", args[3])
+			if config.DitConfig.DemoModeActive {
+				err = demo.Vote(args[1], "1", args[3])
+			} else {
+				err = ethereum.Vote(args[1], "1", args[3])
+			}
 		case "deny", "decline", "no", "n", "nay", "0", "false":
-			err = ethereum.Vote(args[1], "0", args[3])
+			if config.DitConfig.DemoModeActive {
+				err = demo.Vote(args[1], "0", args[3])
+			} else {
+				err = ethereum.Vote(args[1], "0", args[3])
+			}
 		}
 		break
 	case "open", "open_vote", "reveal_vote", "reveal":

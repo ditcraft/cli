@@ -510,12 +510,7 @@ func Vote(_proposalID string, _choice string, _salt string) error {
 		return err
 	}
 
-	var repositoryMap map[string]*config.Repository
-	if config.DitConfig.DemoModeActive {
-		repositoryMap = config.DitConfig.DemoRepositories
-	} else {
-		repositoryMap = config.DitConfig.LiveRepositories
-	}
+	repositoryMap := config.DitConfig.LiveRepositories
 
 	repoHash := GetHashOfString(repository)
 
@@ -878,7 +873,7 @@ func Open(_proposalID string) error {
 	timeRevealString := timeReveal.Format("15:04:05 on 2006/01/02")
 
 	helpers.PrintLine("Successfully opened your vote", helpers.INFO)
-	helpers.PrintLine("To finalize it when the vote is over, execute '"+helpers.ColorizeCommand("finalize "+_proposalID)+"' after "+timeRevealString, 3)
+	helpers.PrintLine("To finalize it when the vote is over, execute '"+helpers.ColorizeCommand("finalize "+_proposalID)+"' after "+timeRevealString, helpers.INFO)
 
 	return nil
 }
@@ -1205,6 +1200,7 @@ func GetVoteInfo(_proposalID ...int) error {
 
 	// If the user participated in this vote, the choice and stake/KNW are also printed
 	if repositoryMap[repository].ActiveVotes[strconv.Itoa(proposalID)] != nil {
+		// TODO: FIX nil pointer crash
 		intxDAI, ok := new(big.Int).SetString(repositoryMap[repository].ActiveVotes[strconv.Itoa(proposalID)].NumTokens, 10)
 		if !ok {
 			return errors.New("Failed to parse big.int from string")
