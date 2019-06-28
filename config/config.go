@@ -355,7 +355,7 @@ func Update(_liveDitCoordinator string, _demoDitCoordinator string) (bool, error
 // Save will write the current config object to the file
 func Save() error {
 	// Convert the config object to JSON
-	jsonBytes, err := json.Marshal(DitConfig)
+	jsonBytes, err := json.MarshalIndent(DitConfig, "", "    ")
 	if err != nil {
 		return errors.New("Failed to marshal JSON of config file")
 	}
