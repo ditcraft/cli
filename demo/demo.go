@@ -138,6 +138,7 @@ func ProposeCommit(_branch string, _branchHeadHash string) (string, int, error) 
 	answerKNW := "0"
 	floatKNWParsed, _ := strconv.ParseFloat(answerKNW, 64)
 	floatKNW := big.NewFloat(floatKNWParsed)
+
 	helpers.PrintLine(fmt.Sprintf("You have a balance of %.2f KNW for the label '%s'", floatKNWBalance, knowledgeLabels[answerKnowledgeLabel-1]), helpers.INFO)
 	if floatKNWBalance.Cmp(big.NewFloat(0)) == 1 {
 		userInputString = fmt.Sprintf("How much do you want to use?")
@@ -324,13 +325,13 @@ func ProposeCommit(_branch string, _branchHeadHash string) (string, int, error) 
 		}
 		responseString += "\nYour proposed branch is at https://" + repository + "/tree/" + _branch
 	}
+	responseString += "\nTo finalize the vote, execute '" + helpers.ColorizeCommand("finalize "+newProposalID.String()) + "' after " + timeRevealString
 	responseString += "\n---------------------------"
 
 	if config.DitConfig.DemoModeActive {
 		fmt.Println()
 		helpers.PrintLine("Since this is the demo mode, five auto-validators will automatically vote on your proposed changes. You will see the outcome after the vote ended.", 3)
 		helpers.PrintLine("All validators now have time to vote on your proposed changes until "+timeCommitString, 3)
-		helpers.PrintLine("To finalize the vote, execute '"+helpers.ColorizeCommand("finalize "+newProposalID.String())+"' after "+timeRevealString, 3)
 		fmt.Println()
 	}
 	return responseString, int(newProposalID.Int64()), nil
@@ -357,8 +358,6 @@ func Vote(_proposalID string, _choice string, _salt string) error {
 	if err != nil {
 		return err
 	}
-
-	repositoryMap := config.DitConfig.DemoRepositories
 
 	repoHash := ethereum.GetHashOfString(repository)
 
@@ -402,11 +401,33 @@ func Vote(_proposalID string, _choice string, _salt string) error {
 
 	// Verifiying whether the proposal is valid (if KNWVoteID is zero its not valid or non existent)
 	if proposal.KNWVoteID.Int64() == 0 {
-		return errors.New("Invalid proposalID")
+		return errors.New("Invalid proposalID - the vote doesn't exist")
 	}
 
 	if proposal.Proposer == myAddress {
 		return errors.New("You can't vote on your own proposal")
+	}
+
+	// Verifying whether the commit period of this vote is active
+	commitPeriodActive, err := KNWVotingInstance.CommitPeriodActive(nil, proposal.KNWVoteID)
+	if err != nil {
+		return errors.New("Failed to retrieve opening status")
+	}
+
+	// If it is now active it's probably over
+	if !commitPeriodActive {
+		return errors.New("The commit phase of this vote has ended")
+	}
+
+	// Verifying whether the user has already commited a vote on this proposal
+	oldDidCommit, err := KNWVotingInstance.DidCommit(nil, myAddress, proposal.KNWVoteID)
+	if err != nil {
+		return errors.New("Failed to retrieve commit status")
+	}
+
+	// If this is the case, the user can not vote again
+	if oldDidCommit {
+		return errors.New("You already voted on this proposal")
 	}
 
 	// Retrieving the default stake from the ditContract
@@ -526,28 +547,6 @@ func Vote(_proposalID string, _choice string, _salt string) error {
 	// And finally hash this bytearray with keccak256, resulting in the votehash
 	voteHash := crypto.Keccak256Hash(bytes)
 
-	// Verifying whether the commit period of this vote is active
-	commitPeriodActive, err := KNWVotingInstance.CommitPeriodActive(nil, proposal.KNWVoteID)
-	if err != nil {
-		return errors.New("Failed to retrieve opening status")
-	}
-
-	// If it is now active it's probably over
-	if !commitPeriodActive {
-		return errors.New("The commit phase of this vote has ended")
-	}
-
-	// Verifying whether the user has already commited a vote on this proposal
-	oldDidCommit, err := KNWVotingInstance.DidCommit(nil, myAddress, proposal.KNWVoteID)
-	if err != nil {
-		return errors.New("Failed to retrieve commit status")
-	}
-
-	// If this is the case, the user can not vote again
-	if oldDidCommit {
-		return errors.New("You already voted on this proposal")
-	}
-
 	// Crerating the transaction (basic values)
 	auth, err := populateTx(connection)
 	if err != nil {
@@ -601,12 +600,7 @@ func Vote(_proposalID string, _choice string, _salt string) error {
 	newVote.Salt = salt
 
 	// Adding the new vote to the config object
-	repositoryMap[repository].ActiveVotes[_proposalID] = &newVote
-	if config.DitConfig.DemoModeActive {
-		config.DitConfig.DemoRepositories = repositoryMap
-	} else {
-		config.DitConfig.LiveRepositories = repositoryMap
-	}
+	config.DitConfig.DemoRepositories[repository].ActiveVotes[_proposalID] = &newVote
 
 	// Saving the config back to the file
 	err = config.Save()
@@ -732,11 +726,13 @@ func CheckForKYC() (bool, error) {
 		return false, nil
 	}
 
-	config.DitConfig.PassedKYC = true
+	if !config.DitConfig.PassedKYC {
+		config.DitConfig.PassedKYC = true
 
-	err = config.Save()
-	if err != nil {
-		return false, err
+		err = config.Save()
+		if err != nil {
+			return false, err
+		}
 	}
 
 	return true, nil
