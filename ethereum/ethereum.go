@@ -483,6 +483,7 @@ func ProposeCommit(_branch string, _branchHeadHash string) (string, int, error) 
 		}
 		responseString += "\nYour proposed branch is at https://" + repository + "/tree/" + _branch
 	}
+	responseString += "\nTo finalize the vote, execute '" + helpers.ColorizeCommand("finalize "+newProposalID.String()) + "' after " + timeRevealString
 	responseString += "\n---------------------------"
 
 	return responseString, int(newProposalID.Int64()), nil
@@ -509,8 +510,6 @@ func Vote(_proposalID string, _choice string, _salt string) error {
 	if err != nil {
 		return err
 	}
-
-	repositoryMap := config.DitConfig.LiveRepositories
 
 	repoHash := GetHashOfString(repository)
 
@@ -548,11 +547,33 @@ func Vote(_proposalID string, _choice string, _salt string) error {
 
 	// Verifiying whether the proposal is valid (if KNWVoteID is zero its not valid or non existent)
 	if proposal.KNWVoteID.Int64() == 0 {
-		return errors.New("Invalid proposalID")
+		return errors.New("Invalid proposalID - the vote doesn't exist")
 	}
 
 	if proposal.Proposer == myAddress {
 		return errors.New("You can't vote on your own proposal")
+	}
+
+	// Verifying whether the commit period of this vote is active
+	commitPeriodActive, err := KNWVotingInstance.CommitPeriodActive(nil, proposal.KNWVoteID)
+	if err != nil {
+		return errors.New("Failed to retrieve opening status")
+	}
+
+	// If it is now active it's probably over
+	if !commitPeriodActive {
+		return errors.New("The commit phase of this vote has ended")
+	}
+
+	// Verifying whether the user has already commited a vote on this proposal
+	oldDidCommit, err := KNWVotingInstance.DidCommit(nil, myAddress, proposal.KNWVoteID)
+	if err != nil {
+		return errors.New("Failed to retrieve commit status")
+	}
+
+	// If this is the case, the user can not vote again
+	if oldDidCommit {
+		return errors.New("You already voted on this proposal")
 	}
 
 	// Retrieving the default stake from the ditContract
@@ -633,28 +654,6 @@ func Vote(_proposalID string, _choice string, _salt string) error {
 	// And finally hash this bytearray with keccak256, resulting in the votehash
 	voteHash := crypto.Keccak256Hash(bytes)
 
-	// Verifying whether the commit period of this vote is active
-	commitPeriodActive, err := KNWVotingInstance.CommitPeriodActive(nil, proposal.KNWVoteID)
-	if err != nil {
-		return errors.New("Failed to retrieve opening status")
-	}
-
-	// If it is now active it's probably over
-	if !commitPeriodActive {
-		return errors.New("The commit phase of this vote has ended")
-	}
-
-	// Verifying whether the user has already commited a vote on this proposal
-	oldDidCommit, err := KNWVotingInstance.DidCommit(nil, myAddress, proposal.KNWVoteID)
-	if err != nil {
-		return errors.New("Failed to retrieve commit status")
-	}
-
-	// If this is the case, the user can not vote again
-	if oldDidCommit {
-		return errors.New("You already voted on this proposal")
-	}
-
 	// Crerating the transaction (basic values)
 	auth, err := populateTx(connection)
 	if err != nil {
@@ -711,12 +710,7 @@ func Vote(_proposalID string, _choice string, _salt string) error {
 	newVote.Salt = salt
 
 	// Adding the new vote to the config object
-	repositoryMap[repository].ActiveVotes[_proposalID] = &newVote
-	if config.DitConfig.DemoModeActive {
-		config.DitConfig.DemoRepositories = repositoryMap
-	} else {
-		config.DitConfig.LiveRepositories = repositoryMap
-	}
+	config.DitConfig.LiveRepositories[repository].ActiveVotes[_proposalID] = &newVote
 
 	// Saving the config back to the file
 	err = config.Save()
@@ -791,6 +785,10 @@ func Open(_proposalID string) error {
 	KNWVotingInstance, err := getKNWVotingInstance(connection)
 	if err != nil {
 		return err
+	}
+
+	if repositoryMap[repository].ActiveVotes[_proposalID] == nil {
+		return errors.New("You didn't participate in this vote")
 	}
 
 	// Verifying whether the reveal period of this vote is active
@@ -934,6 +932,10 @@ func Finalize(_proposalID string) (bool, bool, error) {
 	KNWVotingInstance, err := getKNWVotingInstance(connection)
 	if err != nil {
 		return false, false, err
+	}
+
+	if repositoryMap[repository].ActiveVotes[_proposalID] == nil {
+		return false, false, errors.New("You didn't participate in this vote")
 	}
 
 	// If this user already called the Resolve function for this vote it's not possible anymore
