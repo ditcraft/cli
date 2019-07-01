@@ -224,6 +224,77 @@ func InitDitRepository(_optionalRepository ...string) error {
 	return nil
 }
 
+// SearchForHashInVotes will search for a vote on a given branch hash and return the outcome
+func SearchForHashInVotes(_branchHash string) (int, bool, bool, string, error) {
+	if !config.DitConfig.PassedKYC {
+		passedKYC, err := CheckForKYC()
+		if err != nil {
+			return 0, false, false, "", err
+		} else if !passedKYC {
+			return 0, false, false, "", errors.New("You didn't pass the KYC yet")
+		}
+	}
+
+	// Retrieve the name of the repo we are in from git
+	repository, err := git.GetRepository()
+	if err != nil {
+		return 0, false, false, "", err
+	}
+
+	if config.DitConfig.LiveRepositories[repository] == nil {
+		return 0, false, false, "", errors.New("Repository hasn't been initialized")
+	}
+
+	connection, err := getConnection()
+	if err != nil {
+		return 0, false, false, repository, err
+	}
+
+	// Create a new instance of the KNWVoting contract to access it
+	KNWVotingInstance, err := getKNWVotingInstance(connection)
+	if err != nil {
+		return 0, false, false, repository, err
+	}
+
+	// Searching for the corresponding vote in the votes stored in the config
+	var activeVote *config.ActiveVote
+	var voteID int
+	for key, value := range config.DitConfig.LiveRepositories[repository].ActiveVotes {
+		if value.BranchHash == _branchHash {
+			activeVote = value
+			voteID, _ = strconv.Atoi(key)
+			break
+		}
+	}
+	if activeVote == nil {
+		return 0, false, false, repository, nil
+	}
+
+	// Verifying whether the vote has ended
+	voteEnded, err := KNWVotingInstance.VoteEnded(nil, big.NewInt(int64(activeVote.KNWVoteID)))
+	if err != nil {
+		return voteID, false, false, repository, errors.New("Failed to retrieve vote ending status")
+	}
+
+	// If it is now active it hasn't started yet or it's over
+	if !voteEnded {
+		return voteID, false, false, repository, nil
+	}
+
+	// Verifying whether the user has revealed his vote on this proposal
+	votePassed, err := KNWVotingInstance.IsPassed(nil, big.NewInt(int64(activeVote.KNWVoteID)))
+	if err != nil {
+		return voteID, true, false, repository, errors.New("Failed to retrieve opening status")
+	}
+
+	// If this is the case, the user already revealed his vote
+	if !votePassed {
+		return voteID, true, false, repository, nil
+	}
+
+	return voteID, true, true, repository, nil
+}
+
 // ProposeCommit will start a new proposal on the ditContract of this repository
 func ProposeCommit(_branch string, _branchHeadHash string) (string, int, error) {
 	if !config.DitConfig.PassedKYC {

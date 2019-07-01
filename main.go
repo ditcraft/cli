@@ -212,7 +212,7 @@ func main() {
 							}
 						}
 					} else {
-						voteID, voteEnded, votePassed, repository, err = demo.SearchForHashInVotes(branchHash)
+						voteID, voteEnded, votePassed, repository, err = ethereum.SearchForHashInVotes(branchHash)
 						if err == nil {
 							if voteID == 0 {
 								helpers.PrintLine("You are trying to "+command+" into the master branch - this requires a vote.", helpers.INFO)
@@ -238,7 +238,11 @@ func main() {
 									var newHeadHash string
 									newHeadHash, err = git.GetHeadHashOfBranch("master")
 									if err == nil {
-										config.DitConfig.DemoRepositories[repository].ActiveVotes[strconv.Itoa(voteID)].NewHeadHash = newHeadHash
+										if config.DitConfig.DemoModeActive {
+											config.DitConfig.DemoRepositories[repository].ActiveVotes[strconv.Itoa(voteID)].NewHeadHash = newHeadHash
+										} else {
+											config.DitConfig.LiveRepositories[repository].ActiveVotes[strconv.Itoa(voteID)].NewHeadHash = newHeadHash
+										}
 										err = config.Save()
 									}
 								}
