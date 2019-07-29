@@ -23,6 +23,7 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/ethclient"
+	"github.com/logrusorgru/aurora"
 	"github.com/schollz/closestmatch"
 )
 
@@ -155,13 +156,20 @@ func InitDitRepository(_optionalRepository ...string) error {
 		return err
 	}
 
+	// Create a new instance of the KNWToken to access it
+	KNWTokenInstance, err := getKNWTokenInstance(connection)
+	if err != nil {
+		return err
+	}
+
 	nextAddress, err := ditCoordinatorInstance.NextDitCoordinator(nil)
 	if err != nil {
 		return err
 	}
 	if nextAddress != common.HexToAddress("0") {
 		helpers.PrintLine("There was an update to the ditCraft smartcontracts. Please update your ditCLI in order to interact with them.", helpers.INFO)
-		helpers.PrintLine("Go to: https://github.com/ditcraft/cli", helpers.INFO)
+		helpers.PrintLine(fmt.Sprintf("Please execute %s to update the ditCLI", aurora.Green("bash <(curl https://get.ditcraft.io -Ls)")), helpers.INFO)
+		helpers.PrintLine("Or go to: https://github.com/ditcraft/cli", helpers.INFO)
 		os.Exit(0)
 	}
 
@@ -190,14 +198,18 @@ func InitDitRepository(_optionalRepository ...string) error {
 	}
 
 	// Retrieving the knowledge-labels of this ditContract
-	var knowledgeLabels []string
-	for i := 0; i < 3; i++ {
-		contractKnowledgeLabels, err := ditCoordinatorInstance.GetKnowledgeLabels(nil, repoHash, big.NewInt(int64(i)))
+	var knowledgeLabels []config.KnowledgeLabel
+	contractKnowledgeIDs, err := ditCoordinatorInstance.GetKnowledgeIDs(nil, repoHash)
+	if err != nil {
+		return err
+	}
+	for i := 0; i < len(contractKnowledgeIDs); i++ {
+		knowledgeLabel, err := KNWTokenInstance.LabelOfID(nil, contractKnowledgeIDs[i])
 		if err != nil {
 			return err
 		}
-		if len(contractKnowledgeLabels) > 0 {
-			knowledgeLabels = append(knowledgeLabels, contractKnowledgeLabels)
+		if len(knowledgeLabel) > 0 {
+			knowledgeLabels = append(knowledgeLabels, config.KnowledgeLabel{ID: int(contractKnowledgeIDs[i].Int64()), Label: knowledgeLabel})
 		}
 	}
 
@@ -334,7 +346,8 @@ func ProposeCommit(_branch string, _branchHeadHash string) (string, int, error) 
 	}
 	if nextAddress != common.HexToAddress("0") {
 		helpers.PrintLine("There was an update to the ditCraft smartcontracts. Please update your ditCLI in order to interact with them.", helpers.INFO)
-		helpers.PrintLine("Go to: https://github.com/ditcraft/cli", helpers.INFO)
+		helpers.PrintLine(fmt.Sprintf("Please execute %s to update the ditCLI", aurora.Green("bash <(curl https://get.ditcraft.io -Ls)")), helpers.INFO)
+		helpers.PrintLine("Or go to: https://github.com/ditcraft/cli", helpers.INFO)
 		os.Exit(0)
 	}
 
@@ -354,11 +367,13 @@ func ProposeCommit(_branch string, _branchHeadHash string) (string, int, error) 
 		answerProposalSummary = helpers.GetUserInput(userInputString)
 	}
 
+	proposalIdentifier := _branch + ":" + _branchHeadHash
+
 	// Prompting the user which knowledge-label he wants to use for this proposal
 	answerKnowledgeLabel := 0
 	userInputString = "Which Knowledge-Label suits these changes the most?"
 	for i := range knowledgeLabels {
-		userInputString += " (" + strconv.Itoa(i+1) + ") " + knowledgeLabels[i]
+		userInputString += " (" + strconv.Itoa(i+1) + ") " + knowledgeLabels[i].Label
 	}
 	for answerKnowledgeLabel < 1 || answerKnowledgeLabel > len(knowledgeLabels) {
 		answerKnowledgeLabel, _ = strconv.Atoi(helpers.GetUserInput(userInputString))
@@ -374,7 +389,7 @@ func ProposeCommit(_branch string, _branchHeadHash string) (string, int, error) 
 	floatBalance := new(big.Float).Quo((new(big.Float).SetInt(xDAIBalance)), big.NewFloat(1000000000000000000))
 
 	// Retrieving the xDIT balance of the user
-	freeKNWBalance, err := KNWTokenInstance.FreeBalanceOfLabel(nil, myAddress, knowledgeLabels[answerKnowledgeLabel-1])
+	freeKNWBalance, err := KNWTokenInstance.FreeBalanceOfID(nil, myAddress, big.NewInt(int64(knowledgeLabels[answerKnowledgeLabel-1].ID)))
 	if err != nil {
 		return "", 0, errors.New("Failed to retrieve free KNW balance")
 	}
@@ -401,7 +416,7 @@ func ProposeCommit(_branch string, _branchHeadHash string) (string, int, error) 
 	floatKNWParsed, _ := strconv.ParseFloat(answerKNW, 64)
 	floatKNW := big.NewFloat(floatKNWParsed)
 
-	helpers.PrintLine(fmt.Sprintf("You have a balance of %.2f KNW for the label '%s'", floatKNWBalance, knowledgeLabels[answerKnowledgeLabel-1]), helpers.INFO)
+	helpers.PrintLine(fmt.Sprintf("You have a balance of %.2f KNW for the label '%s'", floatKNWBalance, knowledgeLabels[answerKnowledgeLabel-1].Label), helpers.INFO)
 	if floatKNWBalance.Cmp(big.NewFloat(0)) == 1 {
 		userInputString = fmt.Sprintf("How much do you want to use?")
 		keepAsking := true
@@ -441,7 +456,7 @@ func ProposeCommit(_branch string, _branchHeadHash string) (string, int, error) 
 
 	helpers.PrintLine("  Proposing the changes with the following settings:", helpers.INFO)
 	helpers.PrintLine("  Proposal Description: '"+answerProposalSummary+"'", helpers.INFO)
-	helpers.PrintLine("  Knowledge Label: "+knowledgeLabels[answerKnowledgeLabel-1], helpers.INFO)
+	helpers.PrintLine("  Knowledge Label: "+knowledgeLabels[answerKnowledgeLabel-1].Label, helpers.INFO)
 	helpers.PrintLine("  Amount of KNW Tokens: "+floatKNWString+" KNW", helpers.INFO)
 	helpers.PrintLine("  Length of Vote: "+floatLengthString+" Minutes", helpers.INFO)
 	helpers.PrintLine("  The following stake will automatically be deducted: "+floatStakeString+"xDAI", helpers.INFO)
@@ -475,7 +490,7 @@ func ProposeCommit(_branch string, _branchHeadHash string) (string, int, error) 
 	}
 
 	// Proposing the commit
-	transaction, err := ditCoordinatorInstance.ProposeCommit(auth, repoHash, big.NewInt(int64(answerKnowledgeLabel-1)), intKNW, intLength, intLength)
+	transaction, err := ditCoordinatorInstance.ProposeCommit(auth, repoHash, answerProposalSummary, proposalIdentifier, big.NewInt(int64(knowledgeLabels[answerKnowledgeLabel-1].ID)), intKNW, intLength)
 	if err != nil {
 		if strings.Contains(err.Error(), "insufficient funds") {
 			return "", 0, errors.New("Your account doesn't have enough xDAI to pay for the transaction")
@@ -656,9 +671,15 @@ func Vote(_proposalID string, _choice string, _salt string) error {
 	floatStake := new(big.Float).Quo((new(big.Float).SetInt(requiredStake)), big.NewFloat(1000000000000000000))
 
 	// Retrieving the xDIT balance of the user
-	freeKNWBalance, err := KNWTokenInstance.FreeBalanceOfLabel(nil, myAddress, proposal.KnowledgeLabel)
+	freeKNWBalance, err := KNWTokenInstance.FreeBalanceOfID(nil, myAddress, proposal.KnowledgeID)
 	if err != nil {
 		return errors.New("Failed to retrieve free KNW balance")
+	}
+
+	// Retrieving the knowledge label
+	knowledgeLabel, err := KNWTokenInstance.LabelOfID(nil, proposal.KnowledgeID)
+	if err != nil {
+		return errors.New("Failed to retrieve knowledge label")
 	}
 
 	// Formatting the xDIT balance to a human-readable format
@@ -669,7 +690,7 @@ func Vote(_proposalID string, _choice string, _salt string) error {
 	floatKNWParsed, _ := strconv.ParseFloat(answerKNW, 64)
 	floatKNW := big.NewFloat(floatKNWParsed)
 
-	helpers.PrintLine(fmt.Sprintf("You have a balance of %.2f KNW for the label '%s'", floatKNWBalance, proposal.KnowledgeLabel), helpers.INFO)
+	helpers.PrintLine(fmt.Sprintf("You have a balance of %.2f KNW for the label '%s'", floatKNWBalance, knowledgeLabel), helpers.INFO)
 	if floatKNWBalance.Cmp(big.NewFloat(0)) == 1 {
 		userInputString := fmt.Sprintf("How much do you want to use?")
 		keepAsking := true
@@ -689,7 +710,7 @@ func Vote(_proposalID string, _choice string, _salt string) error {
 	floatKNWString := fmt.Sprintf("%.2f", floatKNWParsed)
 
 	helpers.PrintLine("Voting on the proposal with the following settings:", helpers.INFO)
-	helpers.PrintLine("Knowledge Label: "+proposal.KnowledgeLabel, helpers.INFO)
+	helpers.PrintLine("Knowledge Label: "+knowledgeLabel, helpers.INFO)
 	helpers.PrintLine("Amount of KNW Tokens: "+floatKNWString+" KNW", helpers.INFO)
 	fmt.Println()
 	helpers.PrintLine("Voting on this proposal will automatically deduct the required stake from you account.", helpers.INFO)
@@ -1052,7 +1073,7 @@ func Finalize(_proposalID string) (bool, bool, error) {
 	}
 
 	// Saving the old KNW balance
-	oldKNWBalance, err := KNWTokenInstance.BalanceOfLabel(nil, myAddress, repositoryMap[repository].ActiveVotes[_proposalID].KnowledgeLabel)
+	oldKNWBalance, err := KNWTokenInstance.BalanceOfID(nil, myAddress, big.NewInt(int64(repositoryMap[repository].ActiveVotes[_proposalID].KnowledgeLabel.ID)))
 	if err != nil {
 		return false, false, errors.New("Failed to retrieve KNW balance")
 	}
@@ -1096,7 +1117,7 @@ func Finalize(_proposalID string) (bool, bool, error) {
 	fmt.Printf("\n")
 
 	// Saving the new KNW balance after resolving the vote
-	newKNWBalance, err := KNWTokenInstance.BalanceOfLabel(nil, myAddress, repositoryMap[repository].ActiveVotes[_proposalID].KnowledgeLabel)
+	newKNWBalance, err := KNWTokenInstance.BalanceOfID(nil, myAddress, big.NewInt(int64(repositoryMap[repository].ActiveVotes[_proposalID].KnowledgeLabel.ID)))
 	if err != nil {
 		return false, false, errors.New("Failed to retrieve KNW balance")
 	}
@@ -1121,7 +1142,7 @@ func Finalize(_proposalID string) (bool, bool, error) {
 		if pollPassed {
 			helpers.PrintLine("Successfully finalized the vote - it passed with "+strconv.Itoa(winningPercentage)+"%% approval amongst "+strconv.Itoa(totalVoters)+" validators", helpers.INFO)
 			if proposal.Proposer == common.HexToAddress(config.DitConfig.EthereumKeys.Address) {
-				helpers.PrintLine("You received your stake back and will share the opposing voters slashes stakes", helpers.INFO)
+				helpers.PrintLine("You received your stake back and will share the opposing voters slashed stakes", helpers.INFO)
 			}
 		} else {
 			helpers.PrintLine("Successfully finalized the vote - it didn't pass with "+strconv.Itoa(winningPercentage)+"%% disapproval amongst "+strconv.Itoa(totalVoters)+" validators", helpers.INFO)
@@ -1148,11 +1169,11 @@ func Finalize(_proposalID string) (bool, bool, error) {
 	if oldKNWBalance.Cmp(newKNWBalance) < 0 {
 		difference := newKNWBalance.Sub(newKNWBalance, oldKNWBalance)
 		floatDifference := new(big.Float).Quo((new(big.Float).SetInt64(difference.Int64())), big.NewFloat(1000000000000000000))
-		helpers.PrintLine(fmt.Sprintf("You earned %.2f KNW Tokens for the knowledge label '%s'", floatDifference, repositoryMap[repository].ActiveVotes[_proposalID].KnowledgeLabel), helpers.INFO)
+		helpers.PrintLine(fmt.Sprintf("You earned %.2f KNW Tokens for the knowledge label '%s'", floatDifference, repositoryMap[repository].ActiveVotes[_proposalID].KnowledgeLabel.Label), helpers.INFO)
 	} else if oldKNWBalance.Cmp(newKNWBalance) > 0 {
 		difference := oldKNWBalance.Sub(oldKNWBalance, newKNWBalance)
 		floatDifference := new(big.Float).Quo((new(big.Float).SetInt64(difference.Int64())), big.NewFloat(1000000000000000000))
-		helpers.PrintLine(fmt.Sprintf("You lost %.2f KNW Tokens for the knowledge label '%s'", floatDifference, repositoryMap[repository].ActiveVotes[_proposalID].KnowledgeLabel), helpers.INFO)
+		helpers.PrintLine(fmt.Sprintf("You lost %.2f KNW Tokens for the knowledge label '%s'", floatDifference, repositoryMap[repository].ActiveVotes[_proposalID].KnowledgeLabel.Label), helpers.INFO)
 	}
 
 	// Saving the resolved-status in the config
@@ -1207,6 +1228,12 @@ func GetVoteInfo(_proposalID ...int) error {
 		return err
 	}
 
+	// Create a new instance of the KNWToken contract to access it
+	KNWTokenInstance, err := getKNWTokenInstance(connection)
+	if err != nil {
+		return err
+	}
+
 	// Retrieving the current proposalID
 	currentProposalIDBigInt, err := ditCooordinatorInstance.GetCurrentProposalID(nil, repoHash)
 	if err != nil {
@@ -1244,6 +1271,11 @@ func GetVoteInfo(_proposalID ...int) error {
 		return errors.New("Failed to retrieve vote information")
 	}
 
+	knowledgeLabel, err := KNWTokenInstance.LabelOfID(nil, proposal.KnowledgeID)
+	if err != nil {
+		return errors.New("Failed to retrieve knowledge label")
+	}
+
 	// Retrieving grossStake from this vote
 	grossStake, err := KNWVotingInstance.GetGrossStake(nil, proposal.KNWVoteID)
 	if err != nil {
@@ -1267,9 +1299,17 @@ func GetVoteInfo(_proposalID ...int) error {
 	// Printing the information about this vote
 	helpers.PrintLine("---------------------------", helpers.INFO)
 	helpers.PrintLine("Proposal ID: "+strconv.Itoa(proposalID), helpers.INFO)
-	helpers.PrintLine("URL: https://github.com/"+repository+"/tree/dit_proposal_"+strconv.Itoa(proposalID), helpers.INFO)
+	helpers.PrintLine("Description: "+proposal.Description, helpers.INFO)
+	identifierParts := strings.Split(proposal.Identifier, ":")
+	if len(identifierParts) == 1 {
+		helpers.PrintLine("Branch: dit_proposal_"+strconv.Itoa(proposalID), helpers.INFO)
+		helpers.PrintLine("URL: https://"+repository+"/tree/"+identifierParts[0], helpers.INFO)
+	} else {
+		helpers.PrintLine("Branch: "+identifierParts[0], helpers.INFO)
+		helpers.PrintLine("URL: https://"+repository+"/tree/"+identifierParts[1], helpers.INFO)
+	}
 	helpers.PrintLine("Proposer: "+proposal.Proposer.Hex(), helpers.INFO)
-	helpers.PrintLine("Knowledge-Label: "+proposal.KnowledgeLabel, helpers.INFO)
+	helpers.PrintLine("Knowledge-Label: "+knowledgeLabel, helpers.INFO)
 
 	// If the user participated in this vote, the choice and stake/KNW are also printed
 	if repositoryMap[repository].ActiveVotes[strconv.Itoa(proposalID)] != nil {
@@ -1335,25 +1375,10 @@ func GetBalances() error {
 		return err
 	}
 
-	// Retrieving the number of knowledge-labels where the user has a balance in
-	labelCount, err := KNWTokenInstance.LabelCountOfAddress(nil, myAddress)
+	// Retrieving the number of knowledge ids that exist
+	amountOfIDs, err := KNWTokenInstance.AmountOfIDs(nil)
 	if err != nil {
 		return errors.New("Failed to retrieve knowledge label count of address")
-	}
-
-	// Converting this count to an int
-	labelCountInt := labelCount.Int64()
-
-	// Retrieving each of the labels
-	var labelsOfAddress []string
-	for i := 1; i <= int(labelCountInt); i++ {
-		newLabel, err := KNWTokenInstance.LabelOfAddress(nil, myAddress, big.NewInt(int64(i)))
-		if err != nil {
-			return errors.New("Failed to retrieve knowledge label count of address")
-		}
-		if len(newLabel) > 0 {
-			labelsOfAddress = append(labelsOfAddress, newLabel)
-		}
 	}
 
 	var floatBalance *big.Float
@@ -1373,7 +1398,7 @@ func GetBalances() error {
 		if err != nil {
 			return err
 		}
-
+		fmt.Println(myAddress.Hex())
 		// Retrieving the xDIT balance of the user
 		xDITBalance, err := ditTokenInstance.BalanceOf(nil, myAddress)
 		if err != nil {
@@ -1388,19 +1413,27 @@ func GetBalances() error {
 
 	// Printing each KNW balance
 	helpers.PrintLine("KNW-Balances:", helpers.INFO)
-	if len(labelsOfAddress) == 0 {
-		helpers.PrintLine("- No labels with any balance found", helpers.INFO)
-	} else {
-		for i := 0; i < len(labelsOfAddress); i++ {
-			// Retrieve each KNW balance
-			balanceOfLabel, err := KNWTokenInstance.BalanceOfLabel(nil, myAddress, labelsOfAddress[i])
+	atLeastOneBalance := false
+	for i := 0; i < int(amountOfIDs.Int64()); i++ {
+		// Retrieve each KNW balance
+		balanceOfID, err := KNWTokenInstance.BalanceOfID(nil, myAddress, big.NewInt(int64(i)))
+		if err != nil {
+			return err
+		}
+		if balanceOfID.Cmp(big.NewInt(10^16)) >= 0 {
+			atLeastOneBalance = true
+			knowledgeLabel, err := KNWTokenInstance.LabelOfID(nil, big.NewInt(int64(i)))
 			if err != nil {
 				return err
 			}
 			// Formatting each KNW balance to a human-readable format
-			floatBalance := new(big.Float).Quo((new(big.Float).SetInt(balanceOfLabel)), big.NewFloat(1000000000000000000))
-			helpers.PrintLine(fmt.Sprintf(" - "+labelsOfAddress[i]+": %.2f KNW", floatBalance), helpers.INFO)
+			floatBalance := new(big.Float).Quo((new(big.Float).SetInt(balanceOfID)), big.NewFloat(1000000000000000000))
+			helpers.PrintLine(fmt.Sprintf(" - "+knowledgeLabel+": %.2f KNW", floatBalance), helpers.INFO)
 		}
+	}
+
+	if !atLeastOneBalance {
+		helpers.PrintLine("- No labels with any balance found", helpers.INFO)
 	}
 	helpers.PrintLine("", helpers.INFO)
 	helpers.PrintLine("URL: https://explorer.ditcraft.io/address/"+config.DitConfig.EthereumKeys.Address, helpers.INFO)
@@ -1452,9 +1485,21 @@ func gatherProposalInfo(_connection *ethclient.Client, _ditCoordinatorInstance *
 		return newVote, errors.New("Failed to retrieve the new proposal")
 	}
 
+	// Create a new instance of the KNWToken contract to access it
+	KNWTokenInstance, err := getKNWTokenInstance(_connection)
+	if err != nil {
+		return newVote, err
+	}
+
+	knowledgeLabel, err := KNWTokenInstance.LabelOfID(nil, proposal.KnowledgeID)
+	if err != nil {
+		return newVote, err
+	}
+
 	// Store the information about this vote in an object
 	newVote.KNWVoteID = int(proposal.KNWVoteID.Int64())
-	newVote.KnowledgeLabel = proposal.KnowledgeLabel
+	newVote.KnowledgeLabel.ID = int(proposal.KnowledgeID.Int64())
+	newVote.KnowledgeLabel.Label = knowledgeLabel
 
 	// Create a new instance of the KNWVoting contract to access it
 	KNWVotingInstance, err := getKNWVotingInstance(_connection)
@@ -1505,22 +1550,46 @@ func initDitRepository(_ditCoordinatorInstance *ditCoordinator.DitCoordinator, _
 		return err
 	}
 
+	// Create a new instance of the KNWToken contract to access it
+	KNWTokenInstance, err := getKNWTokenInstance(connection)
+	if err != nil {
+		return err
+	}
+
+	amountOfIDs, err := KNWTokenInstance.AmountOfIDs(nil)
+	if err != nil {
+		return err
+	}
+
+	var allowedKnowledgeLabels []string
+	labelToID := make(map[string]*big.Int)
+	for i := 0; i < int(amountOfIDs.Int64()); i++ {
+		knowledgeLabel, err := KNWTokenInstance.LabelOfID(nil, big.NewInt(int64(i)))
+		if err != nil {
+			return err
+		}
+		labelComponents := strings.Split(knowledgeLabel, "/")
+		allowedKnowledgeLabels = append(allowedKnowledgeLabels, labelComponents[1])
+		labelToID[labelComponents[1]] = big.NewInt(int64(i))
+	}
+
 	neededMajority := big.NewInt(50)
 
-	// Prompting the user to provide 1 to 3 knowledge-labels for this repository
+	// Prompting the user to provide knowledge-labels for this repository
 	helpers.PrintLine("Please provide knowledge labels that will be used for this repository:", helpers.INFO)
-	helpers.PrintLine("Note: At least one has to be provided, press ENTER to skip", helpers.INFO)
-	var knowledgeLabels []string
-	for len(knowledgeLabels) < 3 {
-		newLabel := helpers.GetUserInput("Knowledge Label " + strconv.Itoa(len(knowledgeLabels)+1))
+	helpers.PrintLine("Note: At least one has to be provided, press ENTER to finish", helpers.INFO)
+	var knowledgeIDs []*big.Int
+	for len(knowledgeIDs) < 10 && len(allowedKnowledgeLabels) > 0 {
+		newLabel := helpers.GetUserInput("Knowledge Label " + strconv.Itoa(len(knowledgeIDs)+1))
 		foundLabel := false
-		for _, element := range config.AllowedKnowledgeLabels {
+		for _, element := range allowedKnowledgeLabels {
 			if element == newLabel {
 				foundLabel = true
+				break
 			}
 		}
 		if !foundLabel {
-			closestMatcher := closestmatch.New(config.AllowedKnowledgeLabels, []int{2, 3, 4, 5})
+			closestMatcher := closestmatch.New(allowedKnowledgeLabels, []int{2, 3, 4, 5})
 			proposedLabel := closestMatcher.Closest(newLabel)
 			if len(proposedLabel) > 0 {
 				choice := helpers.GetUserInputChoice("Closest match found was '"+proposedLabel+"', do you want to use that?", "y", "n")
@@ -1528,21 +1597,24 @@ func initDitRepository(_ditCoordinatorInstance *ditCoordinator.DitCoordinator, _
 					newLabel = proposedLabel
 					foundLabel = true
 				} else {
-					fmt.Println("Please use a knowledge-label from this list: " + strings.Join(config.AllowedKnowledgeLabels, ", "))
+					fmt.Println("Please use a knowledge-label from this list: " + strings.Join(allowedKnowledgeLabels, ", "))
 				}
-			} else {
-				fmt.Println("Please use a knowledge-label from this list: " + strings.Join(config.AllowedKnowledgeLabels, ", "))
+			} else if len(newLabel) != 0 {
+				fmt.Println("Please use a knowledge-label from this list: " + strings.Join(allowedKnowledgeLabels, ", "))
 			}
 		}
 		if foundLabel && len(newLabel) > 0 {
-			knowledgeLabels = append(knowledgeLabels, newLabel)
-		}
-		if len(newLabel) == 0 && len(knowledgeLabels) > 0 {
-			if len(knowledgeLabels) < 3 {
-				for i := 0; i <= 3-len(knowledgeLabels); i++ {
-					knowledgeLabels = append(knowledgeLabels, "")
+			knowledgeIDs = append(knowledgeIDs, labelToID[newLabel])
+			delete(labelToID, newLabel)
+			for i := range allowedKnowledgeLabels {
+				if allowedKnowledgeLabels[i] == newLabel {
+					allowedKnowledgeLabels[i] = allowedKnowledgeLabels[len(allowedKnowledgeLabels)-1]
+					allowedKnowledgeLabels = allowedKnowledgeLabels[:len(allowedKnowledgeLabels)-1]
+					break
 				}
 			}
+		}
+		if len(newLabel) == 0 && len(knowledgeIDs) > 0 {
 			break
 		}
 	}
@@ -1554,7 +1626,7 @@ func initDitRepository(_ditCoordinatorInstance *ditCoordinator.DitCoordinator, _
 	}
 
 	// Initializing the repository = deploying a new ditContract
-	transaction, err := _ditCoordinatorInstance.InitRepository(auth, _name, knowledgeLabels[0], knowledgeLabels[1], knowledgeLabels[2], neededMajority)
+	transaction, err := _ditCoordinatorInstance.InitRepository(auth, _name, knowledgeIDs, neededMajority)
 	if err != nil {
 		if strings.Contains(err.Error(), "insufficient funds") {
 			return errors.New("Your account doesn't have enough xDAI to pay for the transaction")

@@ -25,15 +25,11 @@ var DitConfig ditConfig
 
 // Version of the config, will be incremented after every ditCLI update that modified the config file
 // or the smart contracts in a way that an update is necessaray
-var Version = 3
+var Version = 4
 
 // EthereumNodes is an array of rpc nodes that are used. First one is the primary, if one fails,
 // the next one is used
 var EthereumNodes = []string{"https://node.ditcraft.io", "https://dai.poa.network"}
-
-// AllowedKnowledgeLabels contains the array of knowledge labels that a user may choose from
-// Note: This will be done in the smart contract soon
-var AllowedKnowledgeLabels = []string{"Go", "Node.js", "Solidity", "JavaScript", "Python", "Ruby", "Java", "C++", "LaTeX"}
 
 type ditConfig struct {
 	DitCoordinator   string                 `json:"dit_coordinator"`
@@ -44,6 +40,7 @@ type ditConfig struct {
 	PassedKYC        bool                   `json:"passed_kyc"`
 	DemoModeActive   bool                   `json:"demo_mode_active"`
 	Version          int                    `json:"version"`
+	APIKey           string                 `json:"api_key"`
 	EthereumKeys     ethereumKeys           `json:"ethereum_keys"`
 	LiveRepositories map[string]*Repository `json:"live_repositories"`
 	DemoRepositories map[string]*Repository `json:"demo_repositories"`
@@ -57,24 +54,30 @@ type ethereumKeys struct {
 // Repository struct, exported since its used in the ethereum package for new repositories
 type Repository struct {
 	Provider        string                 `json:"provider"`
-	KnowledgeLabels []string               `json:"knowledge_labels"`
+	KnowledgeLabels []KnowledgeLabel       `json:"knowledge_labels"`
 	ActiveVotes     map[string]*ActiveVote `json:"active_votes"`
+}
+
+// KnowledgeLabel struct, exported since its used in the ethereum package for new repositories
+type KnowledgeLabel struct {
+	ID    int    `json:"id"`
+	Label string `json:"label"`
 }
 
 // ActiveVote struct, exported since its used in the ethereum package for new votes
 type ActiveVote struct {
-	KNWVoteID      int    `json:"knw_vote_id"`
-	KnowledgeLabel string `json:"knowledge_label"`
-	BranchHash     string `json:"branch_hash"`
-	NewHeadHash    string `json:"new_head_hash"`
-	Choice         int    `json:"choice"`
-	Salt           int    `json:"salt"`
-	NumTokens      string `json:"num_tokens"`
-	NumVotes       string `json:"num_votes"`
-	NumKNW         string `json:"num_knw"`
-	CommitEnd      int    `json:"commit_end"`
-	RevealEnd      int    `json:"reveal_end"`
-	Resolved       bool   `json:"resolved"`
+	KNWVoteID      int            `json:"knw_vote_id"`
+	KnowledgeLabel KnowledgeLabel `json:"knowledge_label"`
+	BranchHash     string         `json:"branch_hash"`
+	NewHeadHash    string         `json:"new_head_hash"`
+	Choice         int            `json:"choice"`
+	Salt           int            `json:"salt"`
+	NumTokens      string         `json:"num_tokens"`
+	NumVotes       string         `json:"num_votes"`
+	NumKNW         string         `json:"num_knw"`
+	CommitEnd      int            `json:"commit_end"`
+	RevealEnd      int            `json:"reveal_end"`
+	Resolved       bool           `json:"resolved"`
 }
 
 // GetPrivateKey will prompt the user for his password and return the decrypted ethereum private key
@@ -112,11 +115,37 @@ func GetPrivateKey(_forTransaction bool) (string, error) {
 					return "", errors.New("There was an error during the private key decryption, probably due to a wrong password")
 				}
 			} else {
+				if len(DitConfig.APIKey) == 0 {
+					_ = createAPIKey(string(decryptedPrivateKey), true)
+				}
 				return string(decryptedPrivateKey), nil
 			}
 		}
 	}
 	return "", errors.New("Failed to decrypt the encrypted private key")
+}
+
+func createAPIKey(_privateKey string, _save bool) error {
+	privateKey, err := crypto.HexToECDSA(_privateKey)
+	if err != nil {
+		return errors.New("Failed to convert ethereum private-key")
+	}
+	hash := crypto.Keccak256Hash([]byte("api"))
+	apiRequestSignature, err := crypto.Sign(hash.Bytes(), privateKey)
+	if err != nil {
+		return errors.New("Failed to sign api request token with ethereum key")
+	}
+
+	DitConfig.APIKey = hex.EncodeToString(apiRequestSignature)
+
+	if _save {
+		err = Save()
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
 
 // Load will load the config and set it to the exported variable "DitConfig"
@@ -232,6 +261,11 @@ func Create(_demoMode bool) error {
 			} else {
 				return errors.New("Invalid ethereum private-key")
 			}
+		}
+
+		err := createAPIKey(DitConfig.EthereumKeys.PrivateKey, false)
+		if err != nil {
+			return err
 		}
 
 		// Prompting the user to set a password for the private keys encryption

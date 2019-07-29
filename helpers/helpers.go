@@ -60,7 +60,7 @@ func Printf(_line string, _level outputType) {
 	case WARN:
 		fmt.Printf(fmt.Sprintf("%s %s %s", aurora.Bold(aurora.Brown("warn")), aurora.Bold(aurora.Brown(">")), _line))
 	case ERROR:
-		fmt.Printf(fmt.Sprintf("%s %s %s", aurora.Bold(aurora.BgRed(aurora.Gray("err"))), aurora.Bold(aurora.Red(" >")), _line))
+		fmt.Printf(fmt.Sprintf("%s %s %s", aurora.Bold(aurora.BgRed(aurora.Gray(1-1, "err"))), aurora.Bold(aurora.Red(" >")), _line))
 	case DEMO:
 		fmt.Printf(fmt.Sprintf("%s %s %s", aurora.Cyan("demo"), aurora.Cyan(">"), _line))
 	}
