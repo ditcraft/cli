@@ -28,10 +28,33 @@ var (
 )
 
 // KNWTokenABI is the input ABI used to generate the binding from.
-const KNWTokenABI = "[{\"constant\":true,\"inputs\":[{\"name\":\"_address\",\"type\":\"address\"},{\"name\":\"_label\",\"type\":\"string\"}],\"name\":\"freeBalanceOfLabel\",\"outputs\":[{\"name\":\"freeBalance\",\"type\":\"uint256\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[],\"name\":\"name\",\"outputs\":[{\"name\":\"\",\"type\":\"string\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[],\"name\":\"totalSupply\",\"outputs\":[{\"name\":\"\",\"type\":\"uint256\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"name\":\"_contractAddress\",\"type\":\"address\"}],\"name\":\"addVotingContract\",\"outputs\":[{\"name\":\"success\",\"type\":\"bool\"}],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[],\"name\":\"decimals\",\"outputs\":[{\"name\":\"\",\"type\":\"uint8\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[{\"name\":\"_address\",\"type\":\"address\"},{\"name\":\"_labelID\",\"type\":\"uint256\"}],\"name\":\"labelOfAddress\",\"outputs\":[{\"name\":\"label\",\"type\":\"string\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"name\":\"_address\",\"type\":\"address\"},{\"name\":\"_label\",\"type\":\"string\"},{\"name\":\"_amount\",\"type\":\"uint256\"}],\"name\":\"lockTokens\",\"outputs\":[{\"name\":\"success\",\"type\":\"bool\"}],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[],\"name\":\"symbol\",\"outputs\":[{\"name\":\"\",\"type\":\"string\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[{\"name\":\"_address\",\"type\":\"address\"},{\"name\":\"_label\",\"type\":\"string\"}],\"name\":\"balanceOfLabel\",\"outputs\":[{\"name\":\"balance\",\"type\":\"uint256\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"name\":\"_address\",\"type\":\"address\"},{\"name\":\"_label\",\"type\":\"string\"},{\"name\":\"_amount\",\"type\":\"uint256\"}],\"name\":\"mint\",\"outputs\":[{\"name\":\"success\",\"type\":\"bool\"}],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[{\"name\":\"_label\",\"type\":\"string\"}],\"name\":\"totalLabelSupply\",\"outputs\":[{\"name\":\"totalSupplyOfLabel\",\"type\":\"uint256\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"name\":\"_address\",\"type\":\"address\"},{\"name\":\"_label\",\"type\":\"string\"},{\"name\":\"_amount\",\"type\":\"uint256\"}],\"name\":\"burn\",\"outputs\":[{\"name\":\"success\",\"type\":\"bool\"}],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"name\":\"_address\",\"type\":\"address\"},{\"name\":\"_label\",\"type\":\"string\"},{\"name\":\"_numberOfTokens\",\"type\":\"uint256\"}],\"name\":\"unlockTokens\",\"outputs\":[{\"name\":\"success\",\"type\":\"bool\"}],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[{\"name\":\"_address\",\"type\":\"address\"}],\"name\":\"labelCountOfAddress\",\"outputs\":[{\"name\":\"labelCount\",\"type\":\"uint256\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[{\"name\":\"\",\"type\":\"address\"}],\"name\":\"votingContracts\",\"outputs\":[{\"name\":\"\",\"type\":\"bool\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"name\":\"who\",\"type\":\"address\"},{\"indexed\":false,\"name\":\"label\",\"type\":\"string\"},{\"indexed\":false,\"name\":\"value\",\"type\":\"uint256\"}],\"name\":\"Mint\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"name\":\"who\",\"type\":\"address\"},{\"indexed\":false,\"name\":\"label\",\"type\":\"string\"},{\"indexed\":false,\"name\":\"value\",\"type\":\"uint256\"}],\"name\":\"Burn\",\"type\":\"event\"}]"
+const KNWTokenABI = "[{\"constant\":true,\"inputs\":[],\"name\":\"name\",\"outputs\":[{\"name\":\"\",\"type\":\"string\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"name\":\"_address\",\"type\":\"address\"},{\"name\":\"_id\",\"type\":\"uint256\"},{\"name\":\"_amount\",\"type\":\"uint256\"}],\"name\":\"mint\",\"outputs\":[{\"name\":\"success\",\"type\":\"bool\"}],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[],\"name\":\"totalSupply\",\"outputs\":[{\"name\":\"\",\"type\":\"uint256\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"name\":\"_address\",\"type\":\"address\"}],\"name\":\"replaceManager\",\"outputs\":[{\"name\":\"success\",\"type\":\"bool\"}],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[{\"name\":\"_id\",\"type\":\"uint256\"}],\"name\":\"totalIDSupply\",\"outputs\":[{\"name\":\"totalSupplyOfID\",\"type\":\"uint256\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[],\"name\":\"decimals\",\"outputs\":[{\"name\":\"\",\"type\":\"uint8\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[{\"name\":\"_address\",\"type\":\"address\"},{\"name\":\"_id\",\"type\":\"uint256\"}],\"name\":\"balanceOfID\",\"outputs\":[{\"name\":\"balance\",\"type\":\"uint256\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[],\"name\":\"manager\",\"outputs\":[{\"name\":\"\",\"type\":\"address\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"name\":\"_address\",\"type\":\"address\"}],\"name\":\"authorizeAddress\",\"outputs\":[{\"name\":\"success\",\"type\":\"bool\"}],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"name\":\"_newLabel\",\"type\":\"string\"}],\"name\":\"addNewLabel\",\"outputs\":[{\"name\":\"success\",\"type\":\"bool\"}],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"name\":\"_address\",\"type\":\"address\"}],\"name\":\"removeAddress\",\"outputs\":[{\"name\":\"success\",\"type\":\"bool\"}],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[],\"name\":\"symbol\",\"outputs\":[{\"name\":\"\",\"type\":\"string\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"name\":\"_address\",\"type\":\"address\"},{\"name\":\"_id\",\"type\":\"uint256\"},{\"name\":\"_amount\",\"type\":\"uint256\"}],\"name\":\"lockTokens\",\"outputs\":[{\"name\":\"success\",\"type\":\"bool\"}],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[{\"name\":\"_address\",\"type\":\"address\"},{\"name\":\"_id\",\"type\":\"uint256\"}],\"name\":\"freeBalanceOfID\",\"outputs\":[{\"name\":\"freeBalance\",\"type\":\"uint256\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[{\"name\":\"_id\",\"type\":\"uint256\"}],\"name\":\"labelOfID\",\"outputs\":[{\"name\":\"label\",\"type\":\"string\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"name\":\"_address\",\"type\":\"address\"},{\"name\":\"_id\",\"type\":\"uint256\"},{\"name\":\"_amount\",\"type\":\"uint256\"}],\"name\":\"unlockTokens\",\"outputs\":[{\"name\":\"success\",\"type\":\"bool\"}],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[{\"name\":\"\",\"type\":\"address\"}],\"name\":\"authorizedAddresses\",\"outputs\":[{\"name\":\"\",\"type\":\"bool\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"name\":\"_address\",\"type\":\"address\"},{\"name\":\"_id\",\"type\":\"uint256\"},{\"name\":\"_amount\",\"type\":\"uint256\"}],\"name\":\"burn\",\"outputs\":[{\"name\":\"success\",\"type\":\"bool\"}],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[],\"name\":\"amountOfIDs\",\"outputs\":[{\"name\":\"amount\",\"type\":\"uint256\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"constructor\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"name\":\"who\",\"type\":\"address\"},{\"indexed\":false,\"name\":\"id\",\"type\":\"uint256\"},{\"indexed\":false,\"name\":\"value\",\"type\":\"uint256\"}],\"name\":\"Mint\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"name\":\"who\",\"type\":\"address\"},{\"indexed\":false,\"name\":\"id\",\"type\":\"uint256\"},{\"indexed\":false,\"name\":\"value\",\"type\":\"uint256\"}],\"name\":\"Burn\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"name\":\"id\",\"type\":\"uint256\"},{\"indexed\":false,\"name\":\"label\",\"type\":\"string\"}],\"name\":\"NewLabel\",\"type\":\"event\"}]"
+
+// KNWTokenFuncSigs maps the 4-byte function signature to its string representation.
+var KNWTokenFuncSigs = map[string]string{
+	"4ac99804": "addNewLabel(string)",
+	"ffe03eba": "amountOfIDs()",
+	"4a5db3b5": "authorizeAddress(address)",
+	"f19e207e": "authorizedAddresses(address)",
+	"3938400b": "balanceOfID(address,uint256)",
+	"f5298aca": "burn(address,uint256,uint256)",
+	"313ce567": "decimals()",
+	"b5c2cdba": "freeBalanceOfID(address,uint256)",
+	"cce38484": "labelOfID(uint256)",
+	"a25983e5": "lockTokens(address,uint256,uint256)",
+	"481c6a75": "manager()",
+	"156e29f6": "mint(address,uint256,uint256)",
+	"06fdde03": "name()",
+	"4ba79dfe": "removeAddress(address)",
+	"23447982": "replaceManager(address)",
+	"95d89b41": "symbol()",
+	"2d243d1e": "totalIDSupply(uint256)",
+	"18160ddd": "totalSupply()",
+	"cd3877df": "unlockTokens(address,uint256,uint256)",
+}
 
 // KNWTokenBin is the compiled bytecode used for deploying new contracts.
-const KNWTokenBin = `0x608060405234801561001057600080fd5b506112f7806100206000396000f3006080604052600436106100da5763ffffffff7c010000000000000000000000000000000000000000000000000000000060003504166306970f1c81146100df57806306fdde031461011e57806318160ddd146101a857806320c7ad57146101bd578063313ce567146101f257806358e546cf1461021d578063735997981461024157806395d89b4114610271578063b88c0f9814610286578063ba7aef43146102b3578063c1a63f3c146102e3578063c45b71de14610303578063d950df3414610333578063e7017fc414610363578063fa06792b14610384575b600080fd5b3480156100eb57600080fd5b5061010c60048035600160a060020a031690602480359081019101356103a5565b60408051918252519081900360200190f35b34801561012a57600080fd5b50610133610445565b6040805160208082528351818301528351919283929083019185019080838360005b8381101561016d578181015183820152602001610155565b50505050905090810190601f16801561019a5780820380516001836020036101000a031916815260200191505b509250505060405180910390f35b3480156101b457600080fd5b5061010c61047c565b3480156101c957600080fd5b506101de600160a060020a0360043516610483565b604080519115158252519081900360200190f35b3480156101fe57600080fd5b50610207610534565b6040805160ff9092168252519081900360200190f35b34801561022957600080fd5b50610133600160a060020a0360043516602435610539565b34801561024d57600080fd5b506101de60048035600160a060020a031690602480359081019101356044356105eb565b34801561027d57600080fd5b506101336107d7565b34801561029257600080fd5b5061010c60048035600160a060020a0316906024803590810191013561080e565b3480156102bf57600080fd5b506101de60048035600160a060020a03169060248035908101910135604435610854565b3480156102ef57600080fd5b5061010c6004803560248101910135610bbf565b34801561030f57600080fd5b506101de60048035600160a060020a03169060248035908101910135604435610bee565b34801561033f57600080fd5b506101de60048035600160a060020a03169060248035908101910135604435610f19565b34801561036f57600080fd5b5061010c600160a060020a03600435166110f1565b34801561039057600080fd5b506101de600160a060020a036004351661110c565b600160a060020a038316600090815260016020526040808220905161043d9190859085908083838082843782019150509250505090815260200160405180910390205460008087600160a060020a0316600160a060020a03168152602001908152602001600020858560405180838380828437909101948552505060405192839003602001909220549291505063ffffffff61112116565b949350505050565b60408051808201909152600f81527f4b6e6f776c6564676520546f6b656e0000000000000000000000000000000000602082015281565b6005545b90565b6000600160a060020a038216151561050b576040805160e560020a62461bcd02815260206004820152602860248201527f566f74696e6720636f6e7472616374732720616464726573732063616e27742060448201527f626520656d707479000000000000000000000000000000000000000000000000606482015290519081900360840190fd5b50600160a060020a03166000908152600760205260409020805460ff1916600190811790915590565b601281565b600160a060020a0382166000908152600260208181526040808420858552825292839020805484516001821615610100026000190190911693909304601f810183900483028401830190945283835260609390918301828280156105de5780601f106105b3576101008083540402835291602001916105de565b820191906000526020600020905b8154815290600101906020018083116105c157829003601f168201915b5050505050905092915050565b336000818152600760205260408120549091829160ff16151561060d57600080fd5b6106ae6001600089600160a060020a0316600160a060020a031681526020019081526020016000208787604051808383808284378201915050925050509081526020016040518091039020546000808a600160a060020a0316600160a060020a03168152602001908152602001600020888860405180838380828437909101948552505060405192839003602001909220549291505063ffffffff61112116565b91508382101561072e576040805160e560020a62461bcd02815260206004820152602560248201527f43616e2774206c6f636b206d6f726520746f6b656e73207468616e206176616960448201527f6c61626c65000000000000000000000000000000000000000000000000000000606482015290519081900360840190fd5b61078884600160008a600160a060020a0316600160a060020a03168152602001908152602001600020888860405180838380828437909101948552505060405192839003602001909220549291505063ffffffff6111a916565b600160a060020a03881660009081526001602052604090819020905188908890808383808284379091019485525050604051928390036020019092209290925550600198975050505050505050565b60408051808201909152600381527f4b4e570000000000000000000000000000000000000000000000000000000000602082015281565b600160a060020a03831660009081526020819052604080822090518490849080838380828437909101948552505060405192839003602001909220549695505050505050565b3360008181526007602052604081205490919060ff16151561087557600080fd5b600160a060020a03861615156108d5576040805160e560020a62461bcd02815260206004820152601660248201527f416464726573732063616e277420626520656d70747900000000000000000000604482015290519081900360640190fd5b6000841161092d576040805160e560020a62461bcd02815260206004820152601e60248201527f4b6e6f776c656467652d4c6162656c2063616e277420626520656d7074790000604482015290519081900360640190fd5b600554610940908463ffffffff6111a916565b60058190555061097d836006878760405180838380828437909101948552505060405192839003602001909220549291505063ffffffff6111a916565b60068686604051808383808284378201915050925050509081526020016040518091039020819055506109ff8360008089600160a060020a0316600160a060020a03168152602001908152602001600020878760405180838380828437909101948552505060405192839003602001909220549291505063ffffffff6111a916565b60008088600160a060020a0316600160a060020a03168152602001908152602001600020868660405180838380828437909101948552505060408051938490036020908101852095909555600160a060020a038b166000908152600490955290932092508791879150808383808284379091019485525050604051928390036020019092205460ff1615159150610b51905057600160a060020a038616600090815260036020526040902054610abc90600163ffffffff6111a916565b600160a060020a03871660009081526003602090815260408083208490556002825280832093835292905220610af3908686611233565b5060016004600088600160a060020a0316600160a060020a03168152602001908152602001600020868660405180838380828437909101948552505060405192839003602001909220805493151560ff199094169390931790925550505b85600160a060020a03167fec4de1eef14af3ae5d77facf1ed7a9d3d50f6285573ee0ec155fc11217fc3442868686604051808060200183815260200182810382528585828181526020019250808284376040519201829003965090945050505050a250600195945050505050565b600060068383604051808383808284379091019485525050604051928390036020019092205495945050505050565b3360008181526007602052604081205490919060ff161515610c0f57600080fd5b600160a060020a0386161515610c6f576040805160e560020a62461bcd02815260206004820152601660248201527f416464726573732063616e277420626520656d70747900000000000000000000604482015290519081900360640190fd5b60008411610cc7576040805160e560020a62461bcd02815260206004820152601e60248201527f4b6e6f776c656467652d4c6162656c2063616e277420626520656d7074790000604482015290519081900360640190fd5b8260008088600160a060020a0316600160a060020a0316815260200190815260200160002086866040518083838082843782019150509250505090815260200160405180910390205410151515610d8e576040805160e560020a62461bcd02815260206004820152602a60248201527f43616e2774206275726e206d6f7265204b4e57207468616e207468652061646460448201527f7265737320686f6c647300000000000000000000000000000000000000000000606482015290519081900360840190fd5b600554610da1908463ffffffff61112116565b600581905550610dde836006878760405180838380828437909101948552505060405192839003602001909220549291505063ffffffff61112116565b6006868660405180838380828437820191505092505050908152602001604051809103902081905550610e608360008089600160a060020a0316600160a060020a03168152602001908152602001600020878760405180838380828437909101948552505060405192839003602001909220549291505063ffffffff61112116565b60008088600160a060020a0316600160a060020a0316815260200190815260200160002086866040518083838082843782019150509250505090815260200160405180910390208190555085600160a060020a03167ffdf096248d2b7b0aef506231c043107c21faacc26193881b3f0cdc8b5479692a868686604051808060200183815260200182810382528585828181526020019250808284376040519201829003965090945050505050a250600195945050505050565b3360008181526007602052604081205490919060ff161515610f3a57600080fd5b60008087600160a060020a0316600160a060020a031681526020019081526020016000208585604051808383808284378201915050925050509081526020016040518091039020546001600088600160a060020a0316600160a060020a0316815260200190815260200160002086866040518083838082843782019150509250505090815260200160405180910390205411151515611049576040805160e560020a62461bcd02815260206004820152602660248201527f43616e74206c6f636b206d6f7265204b4e57207468616e20616e20616464726560448201527f7373206861730000000000000000000000000000000000000000000000000000606482015290519081900360840190fd5b6110a3836001600089600160a060020a0316600160a060020a03168152602001908152602001600020878760405180838380828437909101948552505060405192839003602001909220549291505063ffffffff61112116565b600160a060020a038716600090815260016020526040908190209051879087908083838082843790910194855250506040519283900360200190922092909255506001979650505050505050565b600160a060020a031660009081526003602052604090205490565b60076020526000908152604090205460ff1681565b600080838311156111a2576040805160e560020a62461bcd02815260206004820152603560248201527f43616e27742073756274726163742061206e756d6265722066726f6d2061207360448201527f6d616c6c6572206f6e6520776974682075696e74730000000000000000000000606482015290519081900360840190fd5b5050900390565b60008282018381101561122c576040805160e560020a62461bcd02815260206004820152602a60248201527f526573756c742068617320746f20626520626967676572207468616e20626f7460448201527f682073756d6d616e647300000000000000000000000000000000000000000000606482015290519081900360840190fd5b9392505050565b828054600181600116156101000203166002900490600052602060002090601f016020900481019282601f106112745782800160ff198235161785556112a1565b828001600101855582156112a1579182015b828111156112a1578235825591602001919060010190611286565b506112ad9291506112b1565b5090565b61048091905b808211156112ad57600081556001016112b75600a165627a7a723058202606207f26af739b5c06a6330737b278e218ae421e2bf77fb1be33979ad3daba0029`
+var KNWTokenBin = "0x608060405234801561001057600080fd5b50600580546001600160a01b03191633179055610fec806100326000396000f3fe608060405234801561001057600080fd5b50600436106101215760003560e01c80634ac99804116100ad578063cce3848411610071578063cce38484146103d6578063cd3877df146103f3578063f19e207e14610425578063f5298aca1461044b578063ffe03eba1461047d57610121565b80634ac99804146102da5780634ba79dfe1461034a57806395d89b4114610370578063a25983e514610378578063b5c2cdba146103aa57610121565b80632d243d1e116100f45780632d243d1e14610229578063313ce567146102465780633938400b14610264578063481c6a75146102905780634a5db3b5146102b457610121565b806306fdde0314610126578063156e29f6146101a357806318160ddd146101e95780632344798214610203575b600080fd5b61012e610485565b6040805160208082528351818301528351919283929083019185019080838360005b83811015610168578181015183820152602001610150565b50505050905090810190601f1680156101955780820380516001836020036101000a031916815260200191505b509250505060405180910390f35b6101d5600480360360608110156101b957600080fd5b506001600160a01b0381351690602081013590604001356104b0565b604080519115158252519081900360200190f35b6101f1610641565b60408051918252519081900360200190f35b6101d56004803603602081101561021957600080fd5b50356001600160a01b0316610648565b6101f16004803603602081101561023f57600080fd5b503561069e565b61024e6106b0565b6040805160ff9092168252519081900360200190f35b6101f16004803603604081101561027a57600080fd5b506001600160a01b0381351690602001356106b5565b6102986106db565b604080516001600160a01b039092168252519081900360200190f35b6101d5600480360360208110156102ca57600080fd5b50356001600160a01b03166106ea565b6101d5600480360360208110156102f057600080fd5b81019060208101813564010000000081111561030b57600080fd5b82018360208201111561031d57600080fd5b8035906020019184600183028401116401000000008311171561033f57600080fd5b509092509050610775565b6101d56004803603602081101561036057600080fd5b50356001600160a01b0316610844565b61012e6108cb565b6101d56004803603606081101561038e57600080fd5b506001600160a01b0381351690602081013590604001356108ea565b6101f1600480360360408110156103c057600080fd5b506001600160a01b0381351690602001356109f9565b61012e600480360360208110156103ec57600080fd5b5035610a48565b6101d56004803603606081101561040957600080fd5b506001600160a01b038135169060208101359060400135610af1565b6101d56004803603602081101561043b57600080fd5b50356001600160a01b0316610be8565b6101d56004803603606081101561046157600080fd5b506001600160a01b038135169060208101359060400135610bfd565b6101f1610d8e565b6040518060400160405280600f81526020016e25b737bbb632b233b2902a37b5b2b760891b81525081565b3360008181526006602052604081205490919060ff166104cf57600080fd5b6001600160a01b038516610523576040805162461bcd60e51b8152602060048201526016602482015275416464726573732063616e277420626520656d70747960501b604482015290519081900360640190fd5b60045484106105635760405162461bcd60e51b815260040180806020018281038252602a815260200180610f69602a913960400191505060405180910390fd5b600254610576908463ffffffff610d9416565b600255600084815260036020526040902054610598908463ffffffff610d9416565b6000858152600360209081526040808320939093556001600160a01b0388168252818152828220878352905220546105d6908463ffffffff610d9416565b6001600160a01b038616600081815260208181526040808320898452825291829020939093558051878152928301869052805191927f4c209b5fc8ad50758f13e2e1088ba56a560dff690a1c6fef26394f4c03821c4f929081900390910190a2506001949350505050565b6002545b90565b60055460009033906001600160a01b0316811461066457600080fd5b6001600160a01b03831661067757600080fd5b600580546001600160a01b0385166001600160a01b03199091161790556001915050919050565b60009081526003602052604090205490565b601281565b6001600160a01b0391909116600090815260208181526040808320938352929052205490565b6005546001600160a01b031681565b60055460009033906001600160a01b0316811461070657600080fd5b6001600160a01b03831661074b5760405162461bcd60e51b815260040180806020018281038252602c815260200180610f13602c913960400191505060405180910390fd5b50506001600160a01b03166000908152600660205260409020805460ff1916600190811790915590565b60055460009033906001600160a01b0316811461079157600080fd5b60048054600181018083556000929092526107cf907f8a35acfbc15ff81a39ae7d344fd709f28e8600b4aa8c65c6b64bfe7fe36bd19b018686610e1f565b50506001600480549050037ff7e3164ba69dd943954519f6bce38af5edcad970e8160eace0ff12489b95ea3b858560405180806020018281038252848482818152602001925080828437600083820152604051601f909101601f19169092018290039550909350505050a25060019392505050565b60055460009033906001600160a01b0316811461086057600080fd5b6001600160a01b0383166108a55760405162461bcd60e51b815260040180806020018281038252602c815260200180610f13602c913960400191505060405180910390fd5b50506001600160a01b03166000908152600660205260409020805460ff19169055600190565b604051806040016040528060038152602001624b4e5760e81b81525081565b3360008181526006602052604081205490919060ff1661090957600080fd5b6001600160a01b03851660008181526001602090815260408083208884528252808320549383528282528083208884529091528120549091610951919063ffffffff610dd816565b9050838110156109925760405162461bcd60e51b8152600401808060200182810382526025815260200180610f936025913960400191505060405180910390fd5b6001600160a01b03861660009081526001602090815260408083208884529091529020546109c6908563ffffffff610d9416565b6001600160a01b03871660009081526001602081815260408084208a855290915290912091909155925050509392505050565b6001600160a01b03821660008181526001602090815260408083208584528252808320549383528282528083208584529091528120549091610a41919063ffffffff610dd816565b9392505050565b606060048281548110610a5757fe5b600091825260209182902001805460408051601f6002600019610100600187161502019094169390930492830185900485028101850190915281815292830182828015610ae55780601f10610aba57610100808354040283529160200191610ae5565b820191906000526020600020905b815481529060010190602001808311610ac857829003601f168201915b50505050509050919050565b3360008181526006602052604081205490919060ff16610b1057600080fd5b6001600160a01b038516600081815260208181526040808320888452825280832054938352600182528083208884529091529020541115610b825760405162461bcd60e51b8152600401808060200182810382526026815260200180610eed6026913960400191505060405180910390fd5b6001600160a01b0385166000908152600160209081526040808320878452909152902054610bb6908463ffffffff610dd816565b6001600160a01b0386166000908152600160208181526040808420898552909152909120919091559150509392505050565b60066020526000908152604090205460ff1681565b3360008181526006602052604081205490919060ff16610c1c57600080fd5b6001600160a01b038516610c70576040805162461bcd60e51b8152602060048201526016602482015275416464726573732063616e277420626520656d70747960501b604482015290519081900360640190fd5b6004548410610cb05760405162461bcd60e51b815260040180806020018281038252602a815260200180610f69602a913960400191505060405180910390fd5b600254610cc3908463ffffffff610dd816565b600255600084815260036020526040902054610ce5908463ffffffff610dd816565b6000858152600360209081526040808320939093556001600160a01b038816825281815282822087835290522054610d23908463ffffffff610dd816565b6001600160a01b038616600081815260208181526040808320898452825291829020939093558051878152928301869052805191927f49995e5dd6158cf69ad3e9777c46755a1a826a446c6416992167462dad033b2a929081900390910190a2506001949350505050565b60045490565b600082820183811015610a415760405162461bcd60e51b815260040180806020018281038252602a815260200180610f3f602a913960400191505060405180910390fd5b600082821115610e195760405162461bcd60e51b8152600401808060200182810382526035815260200180610eb86035913960400191505060405180910390fd5b50900390565b828054600181600116156101000203166002900490600052602060002090601f016020900481019282601f10610e605782800160ff19823516178555610e8d565b82800160010185558215610e8d579182015b82811115610e8d578235825591602001919060010190610e72565b50610e99929150610e9d565b5090565b61064591905b80821115610e995760008155600101610ea356fe43616e27742073756274726163742061206e756d6265722066726f6d206120736d616c6c6572206f6e6520776974682075696e747343616e74206c6f636b206d6f7265204b4e57207468616e20616e206164647265737320686173417574686f72697a656420636f6e7472616374732720616464726573732063616e277420626520656d707479526573756c742068617320746f20626520626967676572207468616e20626f74682073756d6d616e64734944206e6565647320746f2062652077697468696e2072616e6765206f6620616c6c6f7765642049447343616e2774206c6f636b206d6f726520746f6b656e73207468616e20617661696c61626c65a265627a7a72305820f0d82f23a89471622e930bbcb6fd02a2571c01d8fe213ac6411019eca596377664736f6c634300050a0032"
 
 // DeployKNWToken deploys a new Ethereum contract, binding an instance of KNWToken to it.
 func DeployKNWToken(auth *bind.TransactOpts, backend bind.ContractBackend) (common.Address, *types.Transaction, *KNWToken, error) {
@@ -39,6 +62,7 @@ func DeployKNWToken(auth *bind.TransactOpts, backend bind.ContractBackend) (comm
 	if err != nil {
 		return common.Address{}, nil, nil, err
 	}
+
 	address, tx, contract, err := bind.DeployContract(auth, parsed, common.FromHex(KNWTokenBin), backend)
 	if err != nil {
 		return common.Address{}, nil, nil, err
@@ -188,30 +212,82 @@ func (_KNWToken *KNWTokenTransactorRaw) Transact(opts *bind.TransactOpts, method
 	return _KNWToken.Contract.contract.Transact(opts, method, params...)
 }
 
-// BalanceOfLabel is a free data retrieval call binding the contract method 0xb88c0f98.
+// AmountOfIDs is a free data retrieval call binding the contract method 0xffe03eba.
 //
-// Solidity: function balanceOfLabel(address _address, string _label) constant returns(uint256 balance)
-func (_KNWToken *KNWTokenCaller) BalanceOfLabel(opts *bind.CallOpts, _address common.Address, _label string) (*big.Int, error) {
+// Solidity: function amountOfIDs() constant returns(uint256 amount)
+func (_KNWToken *KNWTokenCaller) AmountOfIDs(opts *bind.CallOpts) (*big.Int, error) {
 	var (
 		ret0 = new(*big.Int)
 	)
 	out := ret0
-	err := _KNWToken.contract.Call(opts, out, "balanceOfLabel", _address, _label)
+	err := _KNWToken.contract.Call(opts, out, "amountOfIDs")
 	return *ret0, err
 }
 
-// BalanceOfLabel is a free data retrieval call binding the contract method 0xb88c0f98.
+// AmountOfIDs is a free data retrieval call binding the contract method 0xffe03eba.
 //
-// Solidity: function balanceOfLabel(address _address, string _label) constant returns(uint256 balance)
-func (_KNWToken *KNWTokenSession) BalanceOfLabel(_address common.Address, _label string) (*big.Int, error) {
-	return _KNWToken.Contract.BalanceOfLabel(&_KNWToken.CallOpts, _address, _label)
+// Solidity: function amountOfIDs() constant returns(uint256 amount)
+func (_KNWToken *KNWTokenSession) AmountOfIDs() (*big.Int, error) {
+	return _KNWToken.Contract.AmountOfIDs(&_KNWToken.CallOpts)
 }
 
-// BalanceOfLabel is a free data retrieval call binding the contract method 0xb88c0f98.
+// AmountOfIDs is a free data retrieval call binding the contract method 0xffe03eba.
 //
-// Solidity: function balanceOfLabel(address _address, string _label) constant returns(uint256 balance)
-func (_KNWToken *KNWTokenCallerSession) BalanceOfLabel(_address common.Address, _label string) (*big.Int, error) {
-	return _KNWToken.Contract.BalanceOfLabel(&_KNWToken.CallOpts, _address, _label)
+// Solidity: function amountOfIDs() constant returns(uint256 amount)
+func (_KNWToken *KNWTokenCallerSession) AmountOfIDs() (*big.Int, error) {
+	return _KNWToken.Contract.AmountOfIDs(&_KNWToken.CallOpts)
+}
+
+// AuthorizedAddresses is a free data retrieval call binding the contract method 0xf19e207e.
+//
+// Solidity: function authorizedAddresses(address ) constant returns(bool)
+func (_KNWToken *KNWTokenCaller) AuthorizedAddresses(opts *bind.CallOpts, arg0 common.Address) (bool, error) {
+	var (
+		ret0 = new(bool)
+	)
+	out := ret0
+	err := _KNWToken.contract.Call(opts, out, "authorizedAddresses", arg0)
+	return *ret0, err
+}
+
+// AuthorizedAddresses is a free data retrieval call binding the contract method 0xf19e207e.
+//
+// Solidity: function authorizedAddresses(address ) constant returns(bool)
+func (_KNWToken *KNWTokenSession) AuthorizedAddresses(arg0 common.Address) (bool, error) {
+	return _KNWToken.Contract.AuthorizedAddresses(&_KNWToken.CallOpts, arg0)
+}
+
+// AuthorizedAddresses is a free data retrieval call binding the contract method 0xf19e207e.
+//
+// Solidity: function authorizedAddresses(address ) constant returns(bool)
+func (_KNWToken *KNWTokenCallerSession) AuthorizedAddresses(arg0 common.Address) (bool, error) {
+	return _KNWToken.Contract.AuthorizedAddresses(&_KNWToken.CallOpts, arg0)
+}
+
+// BalanceOfID is a free data retrieval call binding the contract method 0x3938400b.
+//
+// Solidity: function balanceOfID(address _address, uint256 _id) constant returns(uint256 balance)
+func (_KNWToken *KNWTokenCaller) BalanceOfID(opts *bind.CallOpts, _address common.Address, _id *big.Int) (*big.Int, error) {
+	var (
+		ret0 = new(*big.Int)
+	)
+	out := ret0
+	err := _KNWToken.contract.Call(opts, out, "balanceOfID", _address, _id)
+	return *ret0, err
+}
+
+// BalanceOfID is a free data retrieval call binding the contract method 0x3938400b.
+//
+// Solidity: function balanceOfID(address _address, uint256 _id) constant returns(uint256 balance)
+func (_KNWToken *KNWTokenSession) BalanceOfID(_address common.Address, _id *big.Int) (*big.Int, error) {
+	return _KNWToken.Contract.BalanceOfID(&_KNWToken.CallOpts, _address, _id)
+}
+
+// BalanceOfID is a free data retrieval call binding the contract method 0x3938400b.
+//
+// Solidity: function balanceOfID(address _address, uint256 _id) constant returns(uint256 balance)
+func (_KNWToken *KNWTokenCallerSession) BalanceOfID(_address common.Address, _id *big.Int) (*big.Int, error) {
+	return _KNWToken.Contract.BalanceOfID(&_KNWToken.CallOpts, _address, _id)
 }
 
 // Decimals is a free data retrieval call binding the contract method 0x313ce567.
@@ -240,82 +316,82 @@ func (_KNWToken *KNWTokenCallerSession) Decimals() (uint8, error) {
 	return _KNWToken.Contract.Decimals(&_KNWToken.CallOpts)
 }
 
-// FreeBalanceOfLabel is a free data retrieval call binding the contract method 0x06970f1c.
+// FreeBalanceOfID is a free data retrieval call binding the contract method 0xb5c2cdba.
 //
-// Solidity: function freeBalanceOfLabel(address _address, string _label) constant returns(uint256 freeBalance)
-func (_KNWToken *KNWTokenCaller) FreeBalanceOfLabel(opts *bind.CallOpts, _address common.Address, _label string) (*big.Int, error) {
+// Solidity: function freeBalanceOfID(address _address, uint256 _id) constant returns(uint256 freeBalance)
+func (_KNWToken *KNWTokenCaller) FreeBalanceOfID(opts *bind.CallOpts, _address common.Address, _id *big.Int) (*big.Int, error) {
 	var (
 		ret0 = new(*big.Int)
 	)
 	out := ret0
-	err := _KNWToken.contract.Call(opts, out, "freeBalanceOfLabel", _address, _label)
+	err := _KNWToken.contract.Call(opts, out, "freeBalanceOfID", _address, _id)
 	return *ret0, err
 }
 
-// FreeBalanceOfLabel is a free data retrieval call binding the contract method 0x06970f1c.
+// FreeBalanceOfID is a free data retrieval call binding the contract method 0xb5c2cdba.
 //
-// Solidity: function freeBalanceOfLabel(address _address, string _label) constant returns(uint256 freeBalance)
-func (_KNWToken *KNWTokenSession) FreeBalanceOfLabel(_address common.Address, _label string) (*big.Int, error) {
-	return _KNWToken.Contract.FreeBalanceOfLabel(&_KNWToken.CallOpts, _address, _label)
+// Solidity: function freeBalanceOfID(address _address, uint256 _id) constant returns(uint256 freeBalance)
+func (_KNWToken *KNWTokenSession) FreeBalanceOfID(_address common.Address, _id *big.Int) (*big.Int, error) {
+	return _KNWToken.Contract.FreeBalanceOfID(&_KNWToken.CallOpts, _address, _id)
 }
 
-// FreeBalanceOfLabel is a free data retrieval call binding the contract method 0x06970f1c.
+// FreeBalanceOfID is a free data retrieval call binding the contract method 0xb5c2cdba.
 //
-// Solidity: function freeBalanceOfLabel(address _address, string _label) constant returns(uint256 freeBalance)
-func (_KNWToken *KNWTokenCallerSession) FreeBalanceOfLabel(_address common.Address, _label string) (*big.Int, error) {
-	return _KNWToken.Contract.FreeBalanceOfLabel(&_KNWToken.CallOpts, _address, _label)
+// Solidity: function freeBalanceOfID(address _address, uint256 _id) constant returns(uint256 freeBalance)
+func (_KNWToken *KNWTokenCallerSession) FreeBalanceOfID(_address common.Address, _id *big.Int) (*big.Int, error) {
+	return _KNWToken.Contract.FreeBalanceOfID(&_KNWToken.CallOpts, _address, _id)
 }
 
-// LabelCountOfAddress is a free data retrieval call binding the contract method 0xe7017fc4.
+// LabelOfID is a free data retrieval call binding the contract method 0xcce38484.
 //
-// Solidity: function labelCountOfAddress(address _address) constant returns(uint256 labelCount)
-func (_KNWToken *KNWTokenCaller) LabelCountOfAddress(opts *bind.CallOpts, _address common.Address) (*big.Int, error) {
-	var (
-		ret0 = new(*big.Int)
-	)
-	out := ret0
-	err := _KNWToken.contract.Call(opts, out, "labelCountOfAddress", _address)
-	return *ret0, err
-}
-
-// LabelCountOfAddress is a free data retrieval call binding the contract method 0xe7017fc4.
-//
-// Solidity: function labelCountOfAddress(address _address) constant returns(uint256 labelCount)
-func (_KNWToken *KNWTokenSession) LabelCountOfAddress(_address common.Address) (*big.Int, error) {
-	return _KNWToken.Contract.LabelCountOfAddress(&_KNWToken.CallOpts, _address)
-}
-
-// LabelCountOfAddress is a free data retrieval call binding the contract method 0xe7017fc4.
-//
-// Solidity: function labelCountOfAddress(address _address) constant returns(uint256 labelCount)
-func (_KNWToken *KNWTokenCallerSession) LabelCountOfAddress(_address common.Address) (*big.Int, error) {
-	return _KNWToken.Contract.LabelCountOfAddress(&_KNWToken.CallOpts, _address)
-}
-
-// LabelOfAddress is a free data retrieval call binding the contract method 0x58e546cf.
-//
-// Solidity: function labelOfAddress(address _address, uint256 _labelID) constant returns(string label)
-func (_KNWToken *KNWTokenCaller) LabelOfAddress(opts *bind.CallOpts, _address common.Address, _labelID *big.Int) (string, error) {
+// Solidity: function labelOfID(uint256 _id) constant returns(string label)
+func (_KNWToken *KNWTokenCaller) LabelOfID(opts *bind.CallOpts, _id *big.Int) (string, error) {
 	var (
 		ret0 = new(string)
 	)
 	out := ret0
-	err := _KNWToken.contract.Call(opts, out, "labelOfAddress", _address, _labelID)
+	err := _KNWToken.contract.Call(opts, out, "labelOfID", _id)
 	return *ret0, err
 }
 
-// LabelOfAddress is a free data retrieval call binding the contract method 0x58e546cf.
+// LabelOfID is a free data retrieval call binding the contract method 0xcce38484.
 //
-// Solidity: function labelOfAddress(address _address, uint256 _labelID) constant returns(string label)
-func (_KNWToken *KNWTokenSession) LabelOfAddress(_address common.Address, _labelID *big.Int) (string, error) {
-	return _KNWToken.Contract.LabelOfAddress(&_KNWToken.CallOpts, _address, _labelID)
+// Solidity: function labelOfID(uint256 _id) constant returns(string label)
+func (_KNWToken *KNWTokenSession) LabelOfID(_id *big.Int) (string, error) {
+	return _KNWToken.Contract.LabelOfID(&_KNWToken.CallOpts, _id)
 }
 
-// LabelOfAddress is a free data retrieval call binding the contract method 0x58e546cf.
+// LabelOfID is a free data retrieval call binding the contract method 0xcce38484.
 //
-// Solidity: function labelOfAddress(address _address, uint256 _labelID) constant returns(string label)
-func (_KNWToken *KNWTokenCallerSession) LabelOfAddress(_address common.Address, _labelID *big.Int) (string, error) {
-	return _KNWToken.Contract.LabelOfAddress(&_KNWToken.CallOpts, _address, _labelID)
+// Solidity: function labelOfID(uint256 _id) constant returns(string label)
+func (_KNWToken *KNWTokenCallerSession) LabelOfID(_id *big.Int) (string, error) {
+	return _KNWToken.Contract.LabelOfID(&_KNWToken.CallOpts, _id)
+}
+
+// Manager is a free data retrieval call binding the contract method 0x481c6a75.
+//
+// Solidity: function manager() constant returns(address)
+func (_KNWToken *KNWTokenCaller) Manager(opts *bind.CallOpts) (common.Address, error) {
+	var (
+		ret0 = new(common.Address)
+	)
+	out := ret0
+	err := _KNWToken.contract.Call(opts, out, "manager")
+	return *ret0, err
+}
+
+// Manager is a free data retrieval call binding the contract method 0x481c6a75.
+//
+// Solidity: function manager() constant returns(address)
+func (_KNWToken *KNWTokenSession) Manager() (common.Address, error) {
+	return _KNWToken.Contract.Manager(&_KNWToken.CallOpts)
+}
+
+// Manager is a free data retrieval call binding the contract method 0x481c6a75.
+//
+// Solidity: function manager() constant returns(address)
+func (_KNWToken *KNWTokenCallerSession) Manager() (common.Address, error) {
+	return _KNWToken.Contract.Manager(&_KNWToken.CallOpts)
 }
 
 // Name is a free data retrieval call binding the contract method 0x06fdde03.
@@ -370,30 +446,30 @@ func (_KNWToken *KNWTokenCallerSession) Symbol() (string, error) {
 	return _KNWToken.Contract.Symbol(&_KNWToken.CallOpts)
 }
 
-// TotalLabelSupply is a free data retrieval call binding the contract method 0xc1a63f3c.
+// TotalIDSupply is a free data retrieval call binding the contract method 0x2d243d1e.
 //
-// Solidity: function totalLabelSupply(string _label) constant returns(uint256 totalSupplyOfLabel)
-func (_KNWToken *KNWTokenCaller) TotalLabelSupply(opts *bind.CallOpts, _label string) (*big.Int, error) {
+// Solidity: function totalIDSupply(uint256 _id) constant returns(uint256 totalSupplyOfID)
+func (_KNWToken *KNWTokenCaller) TotalIDSupply(opts *bind.CallOpts, _id *big.Int) (*big.Int, error) {
 	var (
 		ret0 = new(*big.Int)
 	)
 	out := ret0
-	err := _KNWToken.contract.Call(opts, out, "totalLabelSupply", _label)
+	err := _KNWToken.contract.Call(opts, out, "totalIDSupply", _id)
 	return *ret0, err
 }
 
-// TotalLabelSupply is a free data retrieval call binding the contract method 0xc1a63f3c.
+// TotalIDSupply is a free data retrieval call binding the contract method 0x2d243d1e.
 //
-// Solidity: function totalLabelSupply(string _label) constant returns(uint256 totalSupplyOfLabel)
-func (_KNWToken *KNWTokenSession) TotalLabelSupply(_label string) (*big.Int, error) {
-	return _KNWToken.Contract.TotalLabelSupply(&_KNWToken.CallOpts, _label)
+// Solidity: function totalIDSupply(uint256 _id) constant returns(uint256 totalSupplyOfID)
+func (_KNWToken *KNWTokenSession) TotalIDSupply(_id *big.Int) (*big.Int, error) {
+	return _KNWToken.Contract.TotalIDSupply(&_KNWToken.CallOpts, _id)
 }
 
-// TotalLabelSupply is a free data retrieval call binding the contract method 0xc1a63f3c.
+// TotalIDSupply is a free data retrieval call binding the contract method 0x2d243d1e.
 //
-// Solidity: function totalLabelSupply(string _label) constant returns(uint256 totalSupplyOfLabel)
-func (_KNWToken *KNWTokenCallerSession) TotalLabelSupply(_label string) (*big.Int, error) {
-	return _KNWToken.Contract.TotalLabelSupply(&_KNWToken.CallOpts, _label)
+// Solidity: function totalIDSupply(uint256 _id) constant returns(uint256 totalSupplyOfID)
+func (_KNWToken *KNWTokenCallerSession) TotalIDSupply(_id *big.Int) (*big.Int, error) {
+	return _KNWToken.Contract.TotalIDSupply(&_KNWToken.CallOpts, _id)
 }
 
 // TotalSupply is a free data retrieval call binding the contract method 0x18160ddd.
@@ -422,135 +498,172 @@ func (_KNWToken *KNWTokenCallerSession) TotalSupply() (*big.Int, error) {
 	return _KNWToken.Contract.TotalSupply(&_KNWToken.CallOpts)
 }
 
-// VotingContracts is a free data retrieval call binding the contract method 0xfa06792b.
+// AddNewLabel is a paid mutator transaction binding the contract method 0x4ac99804.
 //
-// Solidity: function votingContracts(address ) constant returns(bool)
-func (_KNWToken *KNWTokenCaller) VotingContracts(opts *bind.CallOpts, arg0 common.Address) (bool, error) {
-	var (
-		ret0 = new(bool)
-	)
-	out := ret0
-	err := _KNWToken.contract.Call(opts, out, "votingContracts", arg0)
-	return *ret0, err
+// Solidity: function addNewLabel(string _newLabel) returns(bool success)
+func (_KNWToken *KNWTokenTransactor) AddNewLabel(opts *bind.TransactOpts, _newLabel string) (*types.Transaction, error) {
+	return _KNWToken.contract.Transact(opts, "addNewLabel", _newLabel)
 }
 
-// VotingContracts is a free data retrieval call binding the contract method 0xfa06792b.
+// AddNewLabel is a paid mutator transaction binding the contract method 0x4ac99804.
 //
-// Solidity: function votingContracts(address ) constant returns(bool)
-func (_KNWToken *KNWTokenSession) VotingContracts(arg0 common.Address) (bool, error) {
-	return _KNWToken.Contract.VotingContracts(&_KNWToken.CallOpts, arg0)
+// Solidity: function addNewLabel(string _newLabel) returns(bool success)
+func (_KNWToken *KNWTokenSession) AddNewLabel(_newLabel string) (*types.Transaction, error) {
+	return _KNWToken.Contract.AddNewLabel(&_KNWToken.TransactOpts, _newLabel)
 }
 
-// VotingContracts is a free data retrieval call binding the contract method 0xfa06792b.
+// AddNewLabel is a paid mutator transaction binding the contract method 0x4ac99804.
 //
-// Solidity: function votingContracts(address ) constant returns(bool)
-func (_KNWToken *KNWTokenCallerSession) VotingContracts(arg0 common.Address) (bool, error) {
-	return _KNWToken.Contract.VotingContracts(&_KNWToken.CallOpts, arg0)
+// Solidity: function addNewLabel(string _newLabel) returns(bool success)
+func (_KNWToken *KNWTokenTransactorSession) AddNewLabel(_newLabel string) (*types.Transaction, error) {
+	return _KNWToken.Contract.AddNewLabel(&_KNWToken.TransactOpts, _newLabel)
 }
 
-// AddVotingContract is a paid mutator transaction binding the contract method 0x20c7ad57.
+// AuthorizeAddress is a paid mutator transaction binding the contract method 0x4a5db3b5.
 //
-// Solidity: function addVotingContract(address _contractAddress) returns(bool success)
-func (_KNWToken *KNWTokenTransactor) AddVotingContract(opts *bind.TransactOpts, _contractAddress common.Address) (*types.Transaction, error) {
-	return _KNWToken.contract.Transact(opts, "addVotingContract", _contractAddress)
+// Solidity: function authorizeAddress(address _address) returns(bool success)
+func (_KNWToken *KNWTokenTransactor) AuthorizeAddress(opts *bind.TransactOpts, _address common.Address) (*types.Transaction, error) {
+	return _KNWToken.contract.Transact(opts, "authorizeAddress", _address)
 }
 
-// AddVotingContract is a paid mutator transaction binding the contract method 0x20c7ad57.
+// AuthorizeAddress is a paid mutator transaction binding the contract method 0x4a5db3b5.
 //
-// Solidity: function addVotingContract(address _contractAddress) returns(bool success)
-func (_KNWToken *KNWTokenSession) AddVotingContract(_contractAddress common.Address) (*types.Transaction, error) {
-	return _KNWToken.Contract.AddVotingContract(&_KNWToken.TransactOpts, _contractAddress)
+// Solidity: function authorizeAddress(address _address) returns(bool success)
+func (_KNWToken *KNWTokenSession) AuthorizeAddress(_address common.Address) (*types.Transaction, error) {
+	return _KNWToken.Contract.AuthorizeAddress(&_KNWToken.TransactOpts, _address)
 }
 
-// AddVotingContract is a paid mutator transaction binding the contract method 0x20c7ad57.
+// AuthorizeAddress is a paid mutator transaction binding the contract method 0x4a5db3b5.
 //
-// Solidity: function addVotingContract(address _contractAddress) returns(bool success)
-func (_KNWToken *KNWTokenTransactorSession) AddVotingContract(_contractAddress common.Address) (*types.Transaction, error) {
-	return _KNWToken.Contract.AddVotingContract(&_KNWToken.TransactOpts, _contractAddress)
+// Solidity: function authorizeAddress(address _address) returns(bool success)
+func (_KNWToken *KNWTokenTransactorSession) AuthorizeAddress(_address common.Address) (*types.Transaction, error) {
+	return _KNWToken.Contract.AuthorizeAddress(&_KNWToken.TransactOpts, _address)
 }
 
-// Burn is a paid mutator transaction binding the contract method 0xc45b71de.
+// Burn is a paid mutator transaction binding the contract method 0xf5298aca.
 //
-// Solidity: function burn(address _address, string _label, uint256 _amount) returns(bool success)
-func (_KNWToken *KNWTokenTransactor) Burn(opts *bind.TransactOpts, _address common.Address, _label string, _amount *big.Int) (*types.Transaction, error) {
-	return _KNWToken.contract.Transact(opts, "burn", _address, _label, _amount)
+// Solidity: function burn(address _address, uint256 _id, uint256 _amount) returns(bool success)
+func (_KNWToken *KNWTokenTransactor) Burn(opts *bind.TransactOpts, _address common.Address, _id *big.Int, _amount *big.Int) (*types.Transaction, error) {
+	return _KNWToken.contract.Transact(opts, "burn", _address, _id, _amount)
 }
 
-// Burn is a paid mutator transaction binding the contract method 0xc45b71de.
+// Burn is a paid mutator transaction binding the contract method 0xf5298aca.
 //
-// Solidity: function burn(address _address, string _label, uint256 _amount) returns(bool success)
-func (_KNWToken *KNWTokenSession) Burn(_address common.Address, _label string, _amount *big.Int) (*types.Transaction, error) {
-	return _KNWToken.Contract.Burn(&_KNWToken.TransactOpts, _address, _label, _amount)
+// Solidity: function burn(address _address, uint256 _id, uint256 _amount) returns(bool success)
+func (_KNWToken *KNWTokenSession) Burn(_address common.Address, _id *big.Int, _amount *big.Int) (*types.Transaction, error) {
+	return _KNWToken.Contract.Burn(&_KNWToken.TransactOpts, _address, _id, _amount)
 }
 
-// Burn is a paid mutator transaction binding the contract method 0xc45b71de.
+// Burn is a paid mutator transaction binding the contract method 0xf5298aca.
 //
-// Solidity: function burn(address _address, string _label, uint256 _amount) returns(bool success)
-func (_KNWToken *KNWTokenTransactorSession) Burn(_address common.Address, _label string, _amount *big.Int) (*types.Transaction, error) {
-	return _KNWToken.Contract.Burn(&_KNWToken.TransactOpts, _address, _label, _amount)
+// Solidity: function burn(address _address, uint256 _id, uint256 _amount) returns(bool success)
+func (_KNWToken *KNWTokenTransactorSession) Burn(_address common.Address, _id *big.Int, _amount *big.Int) (*types.Transaction, error) {
+	return _KNWToken.Contract.Burn(&_KNWToken.TransactOpts, _address, _id, _amount)
 }
 
-// LockTokens is a paid mutator transaction binding the contract method 0x73599798.
+// LockTokens is a paid mutator transaction binding the contract method 0xa25983e5.
 //
-// Solidity: function lockTokens(address _address, string _label, uint256 _amount) returns(bool success)
-func (_KNWToken *KNWTokenTransactor) LockTokens(opts *bind.TransactOpts, _address common.Address, _label string, _amount *big.Int) (*types.Transaction, error) {
-	return _KNWToken.contract.Transact(opts, "lockTokens", _address, _label, _amount)
+// Solidity: function lockTokens(address _address, uint256 _id, uint256 _amount) returns(bool success)
+func (_KNWToken *KNWTokenTransactor) LockTokens(opts *bind.TransactOpts, _address common.Address, _id *big.Int, _amount *big.Int) (*types.Transaction, error) {
+	return _KNWToken.contract.Transact(opts, "lockTokens", _address, _id, _amount)
 }
 
-// LockTokens is a paid mutator transaction binding the contract method 0x73599798.
+// LockTokens is a paid mutator transaction binding the contract method 0xa25983e5.
 //
-// Solidity: function lockTokens(address _address, string _label, uint256 _amount) returns(bool success)
-func (_KNWToken *KNWTokenSession) LockTokens(_address common.Address, _label string, _amount *big.Int) (*types.Transaction, error) {
-	return _KNWToken.Contract.LockTokens(&_KNWToken.TransactOpts, _address, _label, _amount)
+// Solidity: function lockTokens(address _address, uint256 _id, uint256 _amount) returns(bool success)
+func (_KNWToken *KNWTokenSession) LockTokens(_address common.Address, _id *big.Int, _amount *big.Int) (*types.Transaction, error) {
+	return _KNWToken.Contract.LockTokens(&_KNWToken.TransactOpts, _address, _id, _amount)
 }
 
-// LockTokens is a paid mutator transaction binding the contract method 0x73599798.
+// LockTokens is a paid mutator transaction binding the contract method 0xa25983e5.
 //
-// Solidity: function lockTokens(address _address, string _label, uint256 _amount) returns(bool success)
-func (_KNWToken *KNWTokenTransactorSession) LockTokens(_address common.Address, _label string, _amount *big.Int) (*types.Transaction, error) {
-	return _KNWToken.Contract.LockTokens(&_KNWToken.TransactOpts, _address, _label, _amount)
+// Solidity: function lockTokens(address _address, uint256 _id, uint256 _amount) returns(bool success)
+func (_KNWToken *KNWTokenTransactorSession) LockTokens(_address common.Address, _id *big.Int, _amount *big.Int) (*types.Transaction, error) {
+	return _KNWToken.Contract.LockTokens(&_KNWToken.TransactOpts, _address, _id, _amount)
 }
 
-// Mint is a paid mutator transaction binding the contract method 0xba7aef43.
+// Mint is a paid mutator transaction binding the contract method 0x156e29f6.
 //
-// Solidity: function mint(address _address, string _label, uint256 _amount) returns(bool success)
-func (_KNWToken *KNWTokenTransactor) Mint(opts *bind.TransactOpts, _address common.Address, _label string, _amount *big.Int) (*types.Transaction, error) {
-	return _KNWToken.contract.Transact(opts, "mint", _address, _label, _amount)
+// Solidity: function mint(address _address, uint256 _id, uint256 _amount) returns(bool success)
+func (_KNWToken *KNWTokenTransactor) Mint(opts *bind.TransactOpts, _address common.Address, _id *big.Int, _amount *big.Int) (*types.Transaction, error) {
+	return _KNWToken.contract.Transact(opts, "mint", _address, _id, _amount)
 }
 
-// Mint is a paid mutator transaction binding the contract method 0xba7aef43.
+// Mint is a paid mutator transaction binding the contract method 0x156e29f6.
 //
-// Solidity: function mint(address _address, string _label, uint256 _amount) returns(bool success)
-func (_KNWToken *KNWTokenSession) Mint(_address common.Address, _label string, _amount *big.Int) (*types.Transaction, error) {
-	return _KNWToken.Contract.Mint(&_KNWToken.TransactOpts, _address, _label, _amount)
+// Solidity: function mint(address _address, uint256 _id, uint256 _amount) returns(bool success)
+func (_KNWToken *KNWTokenSession) Mint(_address common.Address, _id *big.Int, _amount *big.Int) (*types.Transaction, error) {
+	return _KNWToken.Contract.Mint(&_KNWToken.TransactOpts, _address, _id, _amount)
 }
 
-// Mint is a paid mutator transaction binding the contract method 0xba7aef43.
+// Mint is a paid mutator transaction binding the contract method 0x156e29f6.
 //
-// Solidity: function mint(address _address, string _label, uint256 _amount) returns(bool success)
-func (_KNWToken *KNWTokenTransactorSession) Mint(_address common.Address, _label string, _amount *big.Int) (*types.Transaction, error) {
-	return _KNWToken.Contract.Mint(&_KNWToken.TransactOpts, _address, _label, _amount)
+// Solidity: function mint(address _address, uint256 _id, uint256 _amount) returns(bool success)
+func (_KNWToken *KNWTokenTransactorSession) Mint(_address common.Address, _id *big.Int, _amount *big.Int) (*types.Transaction, error) {
+	return _KNWToken.Contract.Mint(&_KNWToken.TransactOpts, _address, _id, _amount)
 }
 
-// UnlockTokens is a paid mutator transaction binding the contract method 0xd950df34.
+// RemoveAddress is a paid mutator transaction binding the contract method 0x4ba79dfe.
 //
-// Solidity: function unlockTokens(address _address, string _label, uint256 _numberOfTokens) returns(bool success)
-func (_KNWToken *KNWTokenTransactor) UnlockTokens(opts *bind.TransactOpts, _address common.Address, _label string, _numberOfTokens *big.Int) (*types.Transaction, error) {
-	return _KNWToken.contract.Transact(opts, "unlockTokens", _address, _label, _numberOfTokens)
+// Solidity: function removeAddress(address _address) returns(bool success)
+func (_KNWToken *KNWTokenTransactor) RemoveAddress(opts *bind.TransactOpts, _address common.Address) (*types.Transaction, error) {
+	return _KNWToken.contract.Transact(opts, "removeAddress", _address)
 }
 
-// UnlockTokens is a paid mutator transaction binding the contract method 0xd950df34.
+// RemoveAddress is a paid mutator transaction binding the contract method 0x4ba79dfe.
 //
-// Solidity: function unlockTokens(address _address, string _label, uint256 _numberOfTokens) returns(bool success)
-func (_KNWToken *KNWTokenSession) UnlockTokens(_address common.Address, _label string, _numberOfTokens *big.Int) (*types.Transaction, error) {
-	return _KNWToken.Contract.UnlockTokens(&_KNWToken.TransactOpts, _address, _label, _numberOfTokens)
+// Solidity: function removeAddress(address _address) returns(bool success)
+func (_KNWToken *KNWTokenSession) RemoveAddress(_address common.Address) (*types.Transaction, error) {
+	return _KNWToken.Contract.RemoveAddress(&_KNWToken.TransactOpts, _address)
 }
 
-// UnlockTokens is a paid mutator transaction binding the contract method 0xd950df34.
+// RemoveAddress is a paid mutator transaction binding the contract method 0x4ba79dfe.
 //
-// Solidity: function unlockTokens(address _address, string _label, uint256 _numberOfTokens) returns(bool success)
-func (_KNWToken *KNWTokenTransactorSession) UnlockTokens(_address common.Address, _label string, _numberOfTokens *big.Int) (*types.Transaction, error) {
-	return _KNWToken.Contract.UnlockTokens(&_KNWToken.TransactOpts, _address, _label, _numberOfTokens)
+// Solidity: function removeAddress(address _address) returns(bool success)
+func (_KNWToken *KNWTokenTransactorSession) RemoveAddress(_address common.Address) (*types.Transaction, error) {
+	return _KNWToken.Contract.RemoveAddress(&_KNWToken.TransactOpts, _address)
+}
+
+// ReplaceManager is a paid mutator transaction binding the contract method 0x23447982.
+//
+// Solidity: function replaceManager(address _address) returns(bool success)
+func (_KNWToken *KNWTokenTransactor) ReplaceManager(opts *bind.TransactOpts, _address common.Address) (*types.Transaction, error) {
+	return _KNWToken.contract.Transact(opts, "replaceManager", _address)
+}
+
+// ReplaceManager is a paid mutator transaction binding the contract method 0x23447982.
+//
+// Solidity: function replaceManager(address _address) returns(bool success)
+func (_KNWToken *KNWTokenSession) ReplaceManager(_address common.Address) (*types.Transaction, error) {
+	return _KNWToken.Contract.ReplaceManager(&_KNWToken.TransactOpts, _address)
+}
+
+// ReplaceManager is a paid mutator transaction binding the contract method 0x23447982.
+//
+// Solidity: function replaceManager(address _address) returns(bool success)
+func (_KNWToken *KNWTokenTransactorSession) ReplaceManager(_address common.Address) (*types.Transaction, error) {
+	return _KNWToken.Contract.ReplaceManager(&_KNWToken.TransactOpts, _address)
+}
+
+// UnlockTokens is a paid mutator transaction binding the contract method 0xcd3877df.
+//
+// Solidity: function unlockTokens(address _address, uint256 _id, uint256 _amount) returns(bool success)
+func (_KNWToken *KNWTokenTransactor) UnlockTokens(opts *bind.TransactOpts, _address common.Address, _id *big.Int, _amount *big.Int) (*types.Transaction, error) {
+	return _KNWToken.contract.Transact(opts, "unlockTokens", _address, _id, _amount)
+}
+
+// UnlockTokens is a paid mutator transaction binding the contract method 0xcd3877df.
+//
+// Solidity: function unlockTokens(address _address, uint256 _id, uint256 _amount) returns(bool success)
+func (_KNWToken *KNWTokenSession) UnlockTokens(_address common.Address, _id *big.Int, _amount *big.Int) (*types.Transaction, error) {
+	return _KNWToken.Contract.UnlockTokens(&_KNWToken.TransactOpts, _address, _id, _amount)
+}
+
+// UnlockTokens is a paid mutator transaction binding the contract method 0xcd3877df.
+//
+// Solidity: function unlockTokens(address _address, uint256 _id, uint256 _amount) returns(bool success)
+func (_KNWToken *KNWTokenTransactorSession) UnlockTokens(_address common.Address, _id *big.Int, _amount *big.Int) (*types.Transaction, error) {
+	return _KNWToken.Contract.UnlockTokens(&_KNWToken.TransactOpts, _address, _id, _amount)
 }
 
 // KNWTokenBurnIterator is returned from FilterBurn and is used to iterate over the raw logs and unpacked data for Burn events raised by the KNWToken contract.
@@ -623,14 +736,14 @@ func (it *KNWTokenBurnIterator) Close() error {
 // KNWTokenBurn represents a Burn event raised by the KNWToken contract.
 type KNWTokenBurn struct {
 	Who   common.Address
-	Label string
+	Id    *big.Int
 	Value *big.Int
 	Raw   types.Log // Blockchain specific contextual infos
 }
 
-// FilterBurn is a free log retrieval operation binding the contract event 0xfdf096248d2b7b0aef506231c043107c21faacc26193881b3f0cdc8b5479692a.
+// FilterBurn is a free log retrieval operation binding the contract event 0x49995e5dd6158cf69ad3e9777c46755a1a826a446c6416992167462dad033b2a.
 //
-// Solidity: event Burn(address indexed who, string label, uint256 value)
+// Solidity: event Burn(address indexed who, uint256 id, uint256 value)
 func (_KNWToken *KNWTokenFilterer) FilterBurn(opts *bind.FilterOpts, who []common.Address) (*KNWTokenBurnIterator, error) {
 
 	var whoRule []interface{}
@@ -645,9 +758,9 @@ func (_KNWToken *KNWTokenFilterer) FilterBurn(opts *bind.FilterOpts, who []commo
 	return &KNWTokenBurnIterator{contract: _KNWToken.contract, event: "Burn", logs: logs, sub: sub}, nil
 }
 
-// WatchBurn is a free log subscription operation binding the contract event 0xfdf096248d2b7b0aef506231c043107c21faacc26193881b3f0cdc8b5479692a.
+// WatchBurn is a free log subscription operation binding the contract event 0x49995e5dd6158cf69ad3e9777c46755a1a826a446c6416992167462dad033b2a.
 //
-// Solidity: event Burn(address indexed who, string label, uint256 value)
+// Solidity: event Burn(address indexed who, uint256 id, uint256 value)
 func (_KNWToken *KNWTokenFilterer) WatchBurn(opts *bind.WatchOpts, sink chan<- *KNWTokenBurn, who []common.Address) (event.Subscription, error) {
 
 	var whoRule []interface{}
@@ -685,6 +798,17 @@ func (_KNWToken *KNWTokenFilterer) WatchBurn(opts *bind.WatchOpts, sink chan<- *
 			}
 		}
 	}), nil
+}
+
+// ParseBurn is a log parse operation binding the contract event 0x49995e5dd6158cf69ad3e9777c46755a1a826a446c6416992167462dad033b2a.
+//
+// Solidity: event Burn(address indexed who, uint256 id, uint256 value)
+func (_KNWToken *KNWTokenFilterer) ParseBurn(log types.Log) (*KNWTokenBurn, error) {
+	event := new(KNWTokenBurn)
+	if err := _KNWToken.contract.UnpackLog(event, "Burn", log); err != nil {
+		return nil, err
+	}
+	return event, nil
 }
 
 // KNWTokenMintIterator is returned from FilterMint and is used to iterate over the raw logs and unpacked data for Mint events raised by the KNWToken contract.
@@ -757,14 +881,14 @@ func (it *KNWTokenMintIterator) Close() error {
 // KNWTokenMint represents a Mint event raised by the KNWToken contract.
 type KNWTokenMint struct {
 	Who   common.Address
-	Label string
+	Id    *big.Int
 	Value *big.Int
 	Raw   types.Log // Blockchain specific contextual infos
 }
 
-// FilterMint is a free log retrieval operation binding the contract event 0xec4de1eef14af3ae5d77facf1ed7a9d3d50f6285573ee0ec155fc11217fc3442.
+// FilterMint is a free log retrieval operation binding the contract event 0x4c209b5fc8ad50758f13e2e1088ba56a560dff690a1c6fef26394f4c03821c4f.
 //
-// Solidity: event Mint(address indexed who, string label, uint256 value)
+// Solidity: event Mint(address indexed who, uint256 id, uint256 value)
 func (_KNWToken *KNWTokenFilterer) FilterMint(opts *bind.FilterOpts, who []common.Address) (*KNWTokenMintIterator, error) {
 
 	var whoRule []interface{}
@@ -779,9 +903,9 @@ func (_KNWToken *KNWTokenFilterer) FilterMint(opts *bind.FilterOpts, who []commo
 	return &KNWTokenMintIterator{contract: _KNWToken.contract, event: "Mint", logs: logs, sub: sub}, nil
 }
 
-// WatchMint is a free log subscription operation binding the contract event 0xec4de1eef14af3ae5d77facf1ed7a9d3d50f6285573ee0ec155fc11217fc3442.
+// WatchMint is a free log subscription operation binding the contract event 0x4c209b5fc8ad50758f13e2e1088ba56a560dff690a1c6fef26394f4c03821c4f.
 //
-// Solidity: event Mint(address indexed who, string label, uint256 value)
+// Solidity: event Mint(address indexed who, uint256 id, uint256 value)
 func (_KNWToken *KNWTokenFilterer) WatchMint(opts *bind.WatchOpts, sink chan<- *KNWTokenMint, who []common.Address) (event.Subscription, error) {
 
 	var whoRule []interface{}
@@ -821,11 +945,171 @@ func (_KNWToken *KNWTokenFilterer) WatchMint(opts *bind.WatchOpts, sink chan<- *
 	}), nil
 }
 
+// ParseMint is a log parse operation binding the contract event 0x4c209b5fc8ad50758f13e2e1088ba56a560dff690a1c6fef26394f4c03821c4f.
+//
+// Solidity: event Mint(address indexed who, uint256 id, uint256 value)
+func (_KNWToken *KNWTokenFilterer) ParseMint(log types.Log) (*KNWTokenMint, error) {
+	event := new(KNWTokenMint)
+	if err := _KNWToken.contract.UnpackLog(event, "Mint", log); err != nil {
+		return nil, err
+	}
+	return event, nil
+}
+
+// KNWTokenNewLabelIterator is returned from FilterNewLabel and is used to iterate over the raw logs and unpacked data for NewLabel events raised by the KNWToken contract.
+type KNWTokenNewLabelIterator struct {
+	Event *KNWTokenNewLabel // Event containing the contract specifics and raw log
+
+	contract *bind.BoundContract // Generic contract to use for unpacking event data
+	event    string              // Event name to use for unpacking event data
+
+	logs chan types.Log        // Log channel receiving the found contract events
+	sub  ethereum.Subscription // Subscription for errors, completion and termination
+	done bool                  // Whether the subscription completed delivering logs
+	fail error                 // Occurred error to stop iteration
+}
+
+// Next advances the iterator to the subsequent event, returning whether there
+// are any more events found. In case of a retrieval or parsing error, false is
+// returned and Error() can be queried for the exact failure.
+func (it *KNWTokenNewLabelIterator) Next() bool {
+	// If the iterator failed, stop iterating
+	if it.fail != nil {
+		return false
+	}
+	// If the iterator completed, deliver directly whatever's available
+	if it.done {
+		select {
+		case log := <-it.logs:
+			it.Event = new(KNWTokenNewLabel)
+			if err := it.contract.UnpackLog(it.Event, it.event, log); err != nil {
+				it.fail = err
+				return false
+			}
+			it.Event.Raw = log
+			return true
+
+		default:
+			return false
+		}
+	}
+	// Iterator still in progress, wait for either a data or an error event
+	select {
+	case log := <-it.logs:
+		it.Event = new(KNWTokenNewLabel)
+		if err := it.contract.UnpackLog(it.Event, it.event, log); err != nil {
+			it.fail = err
+			return false
+		}
+		it.Event.Raw = log
+		return true
+
+	case err := <-it.sub.Err():
+		it.done = true
+		it.fail = err
+		return it.Next()
+	}
+}
+
+// Error returns any retrieval or parsing error occurred during filtering.
+func (it *KNWTokenNewLabelIterator) Error() error {
+	return it.fail
+}
+
+// Close terminates the iteration process, releasing any pending underlying
+// resources.
+func (it *KNWTokenNewLabelIterator) Close() error {
+	it.sub.Unsubscribe()
+	return nil
+}
+
+// KNWTokenNewLabel represents a NewLabel event raised by the KNWToken contract.
+type KNWTokenNewLabel struct {
+	Id    *big.Int
+	Label string
+	Raw   types.Log // Blockchain specific contextual infos
+}
+
+// FilterNewLabel is a free log retrieval operation binding the contract event 0xf7e3164ba69dd943954519f6bce38af5edcad970e8160eace0ff12489b95ea3b.
+//
+// Solidity: event NewLabel(uint256 indexed id, string label)
+func (_KNWToken *KNWTokenFilterer) FilterNewLabel(opts *bind.FilterOpts, id []*big.Int) (*KNWTokenNewLabelIterator, error) {
+
+	var idRule []interface{}
+	for _, idItem := range id {
+		idRule = append(idRule, idItem)
+	}
+
+	logs, sub, err := _KNWToken.contract.FilterLogs(opts, "NewLabel", idRule)
+	if err != nil {
+		return nil, err
+	}
+	return &KNWTokenNewLabelIterator{contract: _KNWToken.contract, event: "NewLabel", logs: logs, sub: sub}, nil
+}
+
+// WatchNewLabel is a free log subscription operation binding the contract event 0xf7e3164ba69dd943954519f6bce38af5edcad970e8160eace0ff12489b95ea3b.
+//
+// Solidity: event NewLabel(uint256 indexed id, string label)
+func (_KNWToken *KNWTokenFilterer) WatchNewLabel(opts *bind.WatchOpts, sink chan<- *KNWTokenNewLabel, id []*big.Int) (event.Subscription, error) {
+
+	var idRule []interface{}
+	for _, idItem := range id {
+		idRule = append(idRule, idItem)
+	}
+
+	logs, sub, err := _KNWToken.contract.WatchLogs(opts, "NewLabel", idRule)
+	if err != nil {
+		return nil, err
+	}
+	return event.NewSubscription(func(quit <-chan struct{}) error {
+		defer sub.Unsubscribe()
+		for {
+			select {
+			case log := <-logs:
+				// New log arrived, parse the event and forward to the user
+				event := new(KNWTokenNewLabel)
+				if err := _KNWToken.contract.UnpackLog(event, "NewLabel", log); err != nil {
+					return err
+				}
+				event.Raw = log
+
+				select {
+				case sink <- event:
+				case err := <-sub.Err():
+					return err
+				case <-quit:
+					return nil
+				}
+			case err := <-sub.Err():
+				return err
+			case <-quit:
+				return nil
+			}
+		}
+	}), nil
+}
+
+// ParseNewLabel is a log parse operation binding the contract event 0xf7e3164ba69dd943954519f6bce38af5edcad970e8160eace0ff12489b95ea3b.
+//
+// Solidity: event NewLabel(uint256 indexed id, string label)
+func (_KNWToken *KNWTokenFilterer) ParseNewLabel(log types.Log) (*KNWTokenNewLabel, error) {
+	event := new(KNWTokenNewLabel)
+	if err := _KNWToken.contract.UnpackLog(event, "NewLabel", log); err != nil {
+		return nil, err
+	}
+	return event, nil
+}
+
 // SafeMathABI is the input ABI used to generate the binding from.
 const SafeMathABI = "[{\"constant\":true,\"inputs\":[{\"name\":\"a\",\"type\":\"uint256\"}],\"name\":\"sqrt\",\"outputs\":[{\"name\":\"\",\"type\":\"uint256\"}],\"payable\":false,\"stateMutability\":\"pure\",\"type\":\"function\"}]"
 
+// SafeMathFuncSigs maps the 4-byte function signature to its string representation.
+var SafeMathFuncSigs = map[string]string{
+	"677342ce": "sqrt(uint256)",
+}
+
 // SafeMathBin is the compiled bytecode used for deploying new contracts.
-const SafeMathBin = `0x61016b610030600b82828239805160001a6073146000811461002057610022565bfe5b5030600052607381538281f30073000000000000000000000000000000000000000030146080604052600436106100575763ffffffff7c0100000000000000000000000000000000000000000000000000000000600035041663677342ce811461005c575b600080fd5b610067600435610079565b60408051918252519081900360200190f35b6000808083151561008d5760009250610138565b6001840184106100fe57604080517f08c379a000000000000000000000000000000000000000000000000000000000815260206004820152601560248201527f466c6177656420696e70757420666f7220737172740000000000000000000000604482015290519081900360640190fd5b505060026001830104825b80821015610134575080600281808681151561012157fe5b040181151561012c57fe5b049150610109565b8192505b50509190505600a165627a7a72305820ce9eba5c2c770e6489e8634ca0a14db23dee696aa56e1247aac6317c7eab01bd0029`
+var SafeMathBin = "0x610129610026600b82828239805160001a60731461001957fe5b30600052607381538281f3fe730000000000000000000000000000000000000000301460806040526004361060335760003560e01c8063677342ce146038575b600080fd5b605260048036036020811015604c57600080fd5b50356064565b60408051918252519081900360200190f35b60008160715750600060ef565b81826001011160bf576040805162461bcd60e51b8152602060048201526015602482015274119b185dd959081a5b9c1d5d08199bdc881cdc5c9d605a1b604482015290519081900360640190fd5b60026001830104825b8082101560eb57508060028180868160dc57fe5b04018160e457fe5b04915060c8565b5090505b91905056fea265627a7a72305820953020e84b9f63c03b694ac9fe34b1131c3ea11c415e206ee9a52f32f26c3bd364736f6c634300050a0032"
 
 // DeploySafeMath deploys a new Ethereum contract, binding an instance of SafeMath to it.
 func DeploySafeMath(auth *bind.TransactOpts, backend bind.ContractBackend) (common.Address, *types.Transaction, *SafeMath, error) {
@@ -833,6 +1117,7 @@ func DeploySafeMath(auth *bind.TransactOpts, backend bind.ContractBackend) (comm
 	if err != nil {
 		return common.Address{}, nil, nil, err
 	}
+
 	address, tx, contract, err := bind.DeployContract(auth, parsed, common.FromHex(SafeMathBin), backend)
 	if err != nil {
 		return common.Address{}, nil, nil, err
