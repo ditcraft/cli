@@ -16,8 +16,8 @@ import (
 )
 
 // The current dit coordinator address
-var liveDitCoodinator = "0x429e37f14462bdfca0f1168dae24f66f61e6b04c"
-var demoDitCoodinator = "0x1dc6f1edd14b0b5d24305a0cfb6d4f0a5de3b4f6"
+var liveDitCoodinator = "0x4BB184D45e8e3a6dC6684fda7110894cd6226f16"
+var demoDitCoodinator = "0x9A65c773A216a4F4748B1D65C0fB039d9F2b223D"
 
 // The current version
 var version = "v0.3"
@@ -322,22 +322,25 @@ func main() {
 		}
 		break
 	case "vote":
-		checkIfExists(args, 1, "a proposal ID - dit vote <PROPOSAL_ID> <CHOICE> <SALT>")
-		checkIfExists(args, 2, "your choice (accept/deny) - dit vote <PROPOSAL_ID> <CHOICE> <SALT>")
-		checkIfExists(args, 3, "a salt (a non-zero number) - dit vote <PROPOSAL_ID> <CHOICE> <SALT>")
+		checkIfExists(args, 1, "a proposal ID - dit vote <PROPOSAL_ID> <CHOICE> <SALT (optional)>")
+		checkIfExists(args, 2, "your choice (accept/deny) - dit vote <PROPOSAL_ID> <CHOICE> <SALT (optional)>")
+		salt := ""
+		if len(args) > 3 {
+			salt = args[3]
+		}
 		// Votes on a proposal
 		switch args[2] {
 		case "accept", "yes", "y", "yay", "1", "true":
 			if config.DitConfig.DemoModeActive {
-				err = demo.Vote(args[1], "1", args[3])
+				err = demo.Vote(args[1], "1", salt)
 			} else {
-				err = ethereum.Vote(args[1], "1", args[3])
+				err = ethereum.Vote(args[1], "1", salt)
 			}
 		case "deny", "decline", "no", "n", "nay", "0", "false":
 			if config.DitConfig.DemoModeActive {
-				err = demo.Vote(args[1], "0", args[3])
+				err = demo.Vote(args[1], "0", salt)
 			} else {
-				err = ethereum.Vote(args[1], "0", args[3])
+				err = ethereum.Vote(args[1], "0", salt)
 			}
 		}
 		break
@@ -410,9 +413,10 @@ func printUsage() {
 	fmt.Println("------------- Voting -------------")
 	fmt.Println(" - dit merge <BRANCH>\t\t\t\tWill initiate a new vote when this command is executed in")
 	fmt.Println("\t\t\t\t\t\tthe master branch to gain community approval")
-	fmt.Println(" - dit vote <PROPOSAL_ID> <CHOICE> <SALT>\tCasts a concealed vote on a proposal where <CHOICE> is")
-	fmt.Println("\t\t\t\t\t\teither 'accept' or 'deny' and <SALT> is a random number that")
-	fmt.Println("\t\t\t\t\t\twill be used to conceal your vote until it's being opened")
+	fmt.Println(" - dit vote <PROPOSAL_ID> <CHOICE>\t\tCasts a concealed vote on a proposal where <CHOICE> is")
+	fmt.Println("\t\t\t\t\t\teither 'accept' or 'deny'. If a <SALT> is appended as a")
+	fmt.Println("\t\t\t\t\t\tthird argument it will be used, otherwise the client will")
+	fmt.Println("\t\t\t\t\t\tgenerate a random one to conceal the vote")
 	fmt.Println(" - dit open <PROPOSAL_ID>\t\t\tOpens and reveals the vote commitment on a proposal")
 	fmt.Println(" - dit finalize <PROPOSAL_ID>\t\t\tFinalizes the vote on a proposal and claims the tokens")
 	fmt.Println("")

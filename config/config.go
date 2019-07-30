@@ -25,7 +25,7 @@ var DitConfig ditConfig
 
 // Version of the config, will be incremented after every ditCLI update that modified the config file
 // or the smart contracts in a way that an update is necessaray
-var Version = 4
+var Version = 5
 
 // EthereumNodes is an array of rpc nodes that are used. First one is the primary, if one fails,
 // the next one is used
@@ -71,7 +71,7 @@ type ActiveVote struct {
 	BranchHash     string         `json:"branch_hash"`
 	NewHeadHash    string         `json:"new_head_hash"`
 	Choice         int            `json:"choice"`
-	Salt           int            `json:"salt"`
+	Salt           string         `json:"salt"`
 	NumTokens      string         `json:"num_tokens"`
 	NumVotes       string         `json:"num_votes"`
 	NumKNW         string         `json:"num_knw"`

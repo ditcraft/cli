@@ -2,6 +2,7 @@ package ethereum
 
 import (
 	"context"
+	"crypto/rand"
 	"errors"
 	"fmt"
 	"math/big"
@@ -268,6 +269,12 @@ func SearchForHashInVotes(_branchHash string) (int, bool, bool, string, error) {
 		return 0, false, false, repository, err
 	}
 
+	// Create a new instance of the KNWToken to access it
+	ditCoordinatorInstance, err := getDitCoordinatorInstance(connection)
+	if err != nil {
+		return 0, false, false, repository, err
+	}
+
 	// Searching for the corresponding vote in the votes stored in the config
 	var activeVote *config.ActiveVote
 	var voteID int
@@ -302,6 +309,20 @@ func SearchForHashInVotes(_branchHash string) (int, bool, bool, string, error) {
 	// If this is the case, the user already revealed his vote
 	if !votePassed {
 		return voteID, true, false, repository, nil
+	}
+
+	proposal, err := ditCoordinatorInstance.ProposalsOfRepository(nil, GetHashOfString(repository), big.NewInt(int64(voteID)))
+	if err != nil {
+		return voteID, true, false, repository, errors.New("Failed to retrieve proposal status")
+	}
+
+	if int(proposal.KNWVoteID.Int64()) != activeVote.KNWVoteID {
+		return voteID, true, false, repository, errors.New("Unable to retrieve correct vote from smart contract")
+	}
+
+	splitIdentifier := strings.Split(proposal.Identifier, ":")
+	if _branchHash != splitIdentifier[len(splitIdentifier)-1] {
+		return voteID, true, false, repository, errors.New("Head hash of proposal and branch don't match")
 	}
 
 	return voteID, true, true, repository, nil
@@ -589,7 +610,24 @@ func Vote(_proposalID string, _choice string, _salt string) error {
 	// Converting the stdin string input of the user into Ints
 	proposalID, _ := strconv.Atoi(_proposalID)
 	choice, _ := strconv.Atoi(_choice)
-	salt, _ := strconv.Atoi(_salt)
+
+	var salt *big.Int
+	if len(_salt) > 0 {
+		var ok bool
+		salt, ok = new(big.Int).SetString(_salt, 10)
+		if !ok {
+			return errors.New("Invalid salt")
+		}
+	} else {
+		max := new(big.Int)
+		max.Exp(big.NewInt(2), big.NewInt(130), nil).Sub(max, big.NewInt(1))
+
+		var err error
+		salt, err = rand.Int(rand.Reader, max)
+		if err != nil {
+			return errors.New("Error during salt generation: " + err.Error())
+		}
+	}
 
 	// Retrieve the name of the repo we are in from git
 	repository, err := git.GetRepository()
@@ -740,7 +778,7 @@ func Vote(_proposalID string, _choice string, _salt string) error {
 	// We will now put pack this abi object into a bytearray
 	bytes, _ := arguments.Pack(
 		big.NewInt(int64(choice)),
-		big.NewInt(int64(salt)),
+		salt,
 	)
 
 	// And finally hash this bytearray with keccak256, resulting in the votehash
@@ -799,7 +837,7 @@ func Vote(_proposalID string, _choice string, _salt string) error {
 	// We will also store the users choice and salt, so that the user doesn't need to remember the salt
 	// when he will reveal the vote later on
 	newVote.Choice = choice
-	newVote.Salt = salt
+	newVote.Salt = salt.String()
 
 	// Adding the new vote to the config object
 	config.DitConfig.LiveRepositories[repository].ActiveVotes[_proposalID] = &newVote
@@ -924,7 +962,10 @@ func Open(_proposalID string) error {
 
 	// Gathering the original choice and the salt from the config
 	choice := big.NewInt(int64(repositoryMap[repository].ActiveVotes[_proposalID].Choice))
-	salt := big.NewInt(int64(repositoryMap[repository].ActiveVotes[_proposalID].Salt))
+	salt, ok := new(big.Int).SetString(repositoryMap[repository].ActiveVotes[_proposalID].Salt, 10)
+	if !ok {
+		return errors.New("Error during salt recovery: " + err.Error())
+	}
 
 	// Revealing the vote on the proposal
 	transaction, err := ditCooordinatorInstance.OpenVoteOnProposal(auth, repoHash, big.NewInt(int64(proposalID)), choice, salt)
