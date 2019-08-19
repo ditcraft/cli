@@ -119,7 +119,7 @@ func MasterIsClean() error {
 	// Retrieving the head of the merge base
 	gitOutputBase, err := ExecuteCommandWithoutStdOut("merge-base", "@", "origin/master")
 	if err != nil {
-		return errors.New("There was an error retrieving the current head of the remote master")
+		return errors.New("There was an error retrieving the current head of the remote merge base")
 	}
 	gitOutputBase = strings.TrimSpace(gitOutputBase)
 

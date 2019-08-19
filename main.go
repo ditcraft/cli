@@ -12,6 +12,7 @@ import (
 	"github.com/ditcraft/cli/ethereum"
 	"github.com/ditcraft/cli/git"
 	"github.com/ditcraft/cli/helpers"
+	"github.com/ditcraft/cli/router"
 	"github.com/logrusorgru/aurora"
 )
 
@@ -144,7 +145,7 @@ func main() {
 		break
 	case "get_balance", "balance":
 		// Retrieve the balances in ETH and KNW
-		err = ethereum.GetBalances()
+		err = router.GetBalances()
 		break
 	case "get_address", "address":
 		// Return the ETH address
@@ -287,17 +288,41 @@ func main() {
 					if foundVote {
 						_ = git.ExecuteCommand(args[:]...)
 					} else {
-						helpers.PrintLine("You are not allowed to push changes to master without prior approval from the community", helpers.ERROR)
+						_, errRevParse := git.ExecuteCommandWithoutStdOut("rev-parse", "origin/master")
+						changes, errTree := git.ExecuteCommandWithoutStdOut("ls-tree", "--name-only", "-r", masterHeadHash)
+						if errRevParse != nil && errTree == nil {
+							changes = strings.ToLower(changes)
+							changes = strings.Replace(changes, ".md", "", 1)
+							if changes == "readme" {
+								// Allowing the push in this case since it's the first one and
+								// only contains a README to ensure that the ditCLI works correctly
+								_ = git.ExecuteCommand(args[:]...)
+							}
+						} else {
+							helpers.PrintLine("You are not allowed to push changes to master without prior approval from the community", helpers.ERROR)
+						}
 						// TODO: offer to start a new vote on these changes?
 					}
 				}
 			}
 		}
 		break
+	case "checkout":
+		var isOnMaster bool
+		isOnMaster, err = git.IsOnMaster()
+		if isOnMaster {
+			var output string
+			output, err = git.ExecuteCommandWithoutStdOut("status")
+			if strings.Contains(output, "No commits yet") {
+				helpers.PrintLine("It seems that the master branch is empty and you want to switch to another branch.", helpers.ERROR)
+				helpers.PrintLine("The ditCLI depends on an exisiting master-branch with a valid state, please create a README first to initialize the master branch.", helpers.ERROR)
+				os.Exit(0)
+			}
+		}
+		_ = git.ExecuteCommand(args[:]...)
 	case "add",
 		"bisect",
 		"branch",
-		"checkout",
 		"commit",
 		"config",
 		"diff",
@@ -389,7 +414,8 @@ func checkIfExists(_arguments []string, _index int, _description string) {
 }
 
 func printUsage() {
-	fmt.Println("----- ditCLI v0.3 prerelease -----")
+	// fmt.Println("---- ditCLI v0.3.1 prerelease ----")
+	fmt.Println("----------- ditCLI v0.3 ----------")
 	if config.DitConfig.DemoModeActive {
 		fmt.Println("--------- demo mode active -------")
 	} else {
