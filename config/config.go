@@ -161,7 +161,7 @@ func Load() error {
 		errorMessage := "Failed to unmarshal JSON of config file"
 		position := strings.Index(string(configFile), "version")
 		if position != -1 {
-			versionNumberConfig, err := strconv.Atoi(strings.Split(string(configFile)[position+9:], ",")[0])
+			versionNumberConfig, err := strconv.Atoi(strings.TrimSpace(strings.Split(string(configFile)[position+9:], ",")[0]))
 			if err != nil {
 				errorMessage += " - Your config file seems to be corrupted"
 			} else {
