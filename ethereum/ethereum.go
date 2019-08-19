@@ -1397,14 +1397,14 @@ func GetVoteInfo(_proposalID ...int) error {
 }
 
 // GetBalances will print the xDAI and KNW balances
-func GetBalances() error {
+func GetBalances() (float64, []string, []float64, error) {
 	connection, err := getConnection()
 	if err != nil {
-		return err
+		return 0, nil, nil, err
 	}
 
 	if len(config.DitConfig.KNWToken) != correctETHAddressLength {
-		return errors.New("Invalid KNWToken address, please do '" + helpers.ColorizeCommand("set_coordinator") + "' first")
+		return 0, nil, nil, errors.New("Invalid KNWToken address, please do '" + helpers.ColorizeCommand("set_coordinator") + "' first")
 	}
 
 	// Convertig the hex-string-formatted address into an address object
@@ -1413,73 +1413,66 @@ func GetBalances() error {
 	// Create a new instance of the KNWToken to access it
 	KNWTokenInstance, err := getKNWTokenInstance(connection)
 	if err != nil {
-		return err
+		return 0, nil, nil, err
 	}
 
 	// Retrieving the number of knowledge ids that exist
 	amountOfIDs, err := KNWTokenInstance.AmountOfIDs(nil)
 	if err != nil {
-		return errors.New("Failed to retrieve knowledge label count of address")
+		return 0, nil, nil, errors.New("Failed to retrieve knowledge label count of address")
 	}
 
-	var floatBalance *big.Float
+	var bigFloatBalance *big.Float
 	if !config.DitConfig.DemoModeActive {
 		// Retrieving the xDAI balance of the user
 		xDAIBalance, err := connection.BalanceAt(context.Background(), myAddress, nil)
 		if err != nil {
-			return errors.New("Failed to retrieve " + config.DitConfig.Currency + " balance")
+			return 0, nil, nil, errors.New("Failed to retrieve " + config.DitConfig.Currency + " balance")
 		}
 		helpers.PrintLine("Balances for address "+config.DitConfig.EthereumKeys.Address+":", helpers.INFO)
 
 		// Formatting the xDAI balance to a human-readable format
-		floatBalance = new(big.Float).Quo((new(big.Float).SetInt(xDAIBalance)), big.NewFloat(1000000000000000000))
+		bigFloatBalance = new(big.Float).Quo((new(big.Float).SetInt(xDAIBalance)), big.NewFloat(1000000000000000000))
 	} else {
 		// Create a new instance of the ditToken to access it
 		ditTokenInstance, err := getDitTokenInstance(connection)
 		if err != nil {
-			return err
+			return 0, nil, nil, err
 		}
-		fmt.Println(myAddress.Hex())
 		// Retrieving the xDIT balance of the user
 		xDITBalance, err := ditTokenInstance.BalanceOf(nil, myAddress)
 		if err != nil {
-			return errors.New("Failed to retrieve " + config.DitConfig.Currency + " balance")
+			return 0, nil, nil, errors.New("Failed to retrieve " + config.DitConfig.Currency + " balance")
 		}
 
 		// Formatting the xDAI balance to a human-readable format
-		floatBalance = new(big.Float).Quo((new(big.Float).SetInt(xDITBalance)), big.NewFloat(1000000000000000000))
+		bigFloatBalance = new(big.Float).Quo((new(big.Float).SetInt(xDITBalance)), big.NewFloat(1000000000000000000))
 	}
-	helpers.PrintLine(fmt.Sprintf(config.DitConfig.Currency+"-Balance: %.2f "+config.DitConfig.Currency, floatBalance), helpers.INFO)
-	helpers.PrintLine("", helpers.INFO)
 
-	// Printing each KNW balance
-	helpers.PrintLine("KNW-Balances:", helpers.INFO)
-	atLeastOneBalance := false
+	floatBalance, _ := bigFloatBalance.Float64()
+
+	// Retrieving each KNW balance
+	var labelArray []string
+	var balanceArray []float64
 	for i := 0; i < int(amountOfIDs.Int64()); i++ {
 		// Retrieve each KNW balance
 		balanceOfID, err := KNWTokenInstance.BalanceOfID(nil, myAddress, big.NewInt(int64(i)))
 		if err != nil {
-			return err
+			return floatBalance, nil, nil, err
 		}
 		if balanceOfID.Cmp(big.NewInt(10^16)) >= 0 {
-			atLeastOneBalance = true
 			knowledgeLabel, err := KNWTokenInstance.LabelOfID(nil, big.NewInt(int64(i)))
 			if err != nil {
-				return err
+				return floatBalance, nil, nil, err
 			}
 			// Formatting each KNW balance to a human-readable format
-			floatBalance := new(big.Float).Quo((new(big.Float).SetInt(balanceOfID)), big.NewFloat(1000000000000000000))
-			helpers.PrintLine(fmt.Sprintf(" - "+knowledgeLabel+": %.2f KNW", floatBalance), helpers.INFO)
+			floatBalance, _ := (new(big.Float).Quo((new(big.Float).SetInt(balanceOfID)), big.NewFloat(1000000000000000000))).Float64()
+			labelArray = append(labelArray, knowledgeLabel)
+			balanceArray = append(balanceArray, floatBalance)
 		}
 	}
 
-	if !atLeastOneBalance {
-		helpers.PrintLine("- No labels with any balance found", helpers.INFO)
-	}
-	helpers.PrintLine("", helpers.INFO)
-	helpers.PrintLine("URL: https://explorer.ditcraft.io/address/"+config.DitConfig.EthereumKeys.Address, helpers.INFO)
-
-	return nil
+	return floatBalance, labelArray, balanceArray, nil
 }
 
 // CheckForKYC will return whether a user has already passed the KYC
