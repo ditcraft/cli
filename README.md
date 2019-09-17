@@ -40,7 +40,7 @@ If you want to build the ditCLI yourself feel free to do so by following this gu
 * Install the necessary dependencies with `go get -d ./...`
 * Build the ditCLI with `go build -o dit main.go`
 * For Linux/MacOS: Move `dit` to /usr/local/bin and grant execution permissions
-    * `mv dit /usr/local/bin/dit && chmod +x /ust/local/bin/dit`
+    * `mv dit /usr/local/bin/dit && chmod +x /usr/local/bin/dit`
 
 ## Demo-Mode Usage
 To test the ditCLI you can follow this guideline, showcasing you the features:
