@@ -6,7 +6,6 @@ import (
 	"errors"
 	"fmt"
 	"math/big"
-	"os"
 	"strconv"
 	"strings"
 	"time"
@@ -70,7 +69,7 @@ func ProposeCommit(_branch string, _branchHeadHash string) (string, int, error) 
 		helpers.PrintLine("There was an update to the ditCraft smartcontracts. Please update your ditCLI in order to interact with them.", helpers.INFO)
 		helpers.PrintLine(fmt.Sprintf("Please execute %s to update the ditCLI", aurora.Green("bash <(curl https://get.ditcraft.io -Ls)")), helpers.INFO)
 		helpers.PrintLine("Or go to: https://github.com/ditcraft/cli", helpers.INFO)
-		os.Exit(0)
+		helpers.ExitAndLog(0)
 	}
 
 	// Create a new instance of the KNWToken to access it
@@ -274,7 +273,7 @@ func ProposeCommit(_branch string, _branchHeadHash string) (string, int, error) 
 			fmt.Printf("\n")
 			helpers.PrintLine("Waiting for over 3 minutes, maybe the transaction or the network failed?", 1)
 			helpers.PrintLine("Check at: https://blockscout.com/poa/dai/tx/"+transaction.Hash().Hex(), 1)
-			os.Exit(0)
+			helpers.ExitAndLog(0)
 		}
 	}
 	fmt.Printf("\n")
@@ -512,7 +511,7 @@ func Vote(_proposalID string, _choice string, _salt string) error {
 	if answer == "n" {
 		// If not: exit
 		helpers.PrintLine("No vote executed due to users choice", 1)
-		os.Exit(0)
+		helpers.ExitAndLog(0)
 	}
 
 	fmt.Println("")
@@ -611,7 +610,7 @@ func Vote(_proposalID string, _choice string, _salt string) error {
 			fmt.Printf("\n")
 			helpers.PrintLine("Waiting for over 3 minutes, maybe the transaction or the network failed?", 1)
 			helpers.PrintLine("Check at: https://blockscout.com/poa/dai/tx/"+transaction.Hash().Hex(), 1)
-			os.Exit(0)
+			helpers.ExitAndLog(0)
 		}
 	}
 	fmt.Printf("\n")

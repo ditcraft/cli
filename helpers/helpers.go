@@ -4,7 +4,9 @@ import (
 	"bufio"
 	"fmt"
 	"os"
+	"time"
 
+	ditLog "github.com/ditcraft/cli/log"
 	"github.com/logrusorgru/aurora"
 )
 
@@ -12,10 +14,11 @@ type outputType int
 
 // outputTypes that can be printed
 const (
-	ERROR outputType = 0
-	WARN  outputType = 1
-	INFO  outputType = 2
-	DEMO  outputType = 3
+	ERROR        outputType = 0
+	WARN         outputType = 1
+	INFO         outputType = 2
+	DEMO         outputType = 3
+	CONFIDENTIAL outputType = 4
 )
 
 // GetUserInputChoice will prompt the user if there are only two choices (like a or b)
@@ -27,6 +30,7 @@ func GetUserInputChoice(_prompt string, _selection1 string, _selection2 string) 
 		Printf(_prompt+" ("+_selection1+"/"+_selection2+"): ", INFO)
 		answer, _ = reader.ReadString('\n')
 		answer = answer[0:1]
+		ditLog.AddToLog(answer + "\n")
 	}
 	return answer
 }
@@ -38,6 +42,9 @@ func GetUserInput(_prompt string) string {
 	Printf(_prompt+": ", INFO)
 	answer, _ := reader.ReadString('\n')
 	answer = answer[0 : len(answer)-1]
+
+	ditLog.AddToLog(answer + "\n")
+
 	return answer
 }
 
@@ -50,18 +57,36 @@ func ColorizeCommand(_command string) string {
 func PrintLine(_line string, _level outputType) {
 	Printf(_line, _level)
 	fmt.Printf("\n")
+	if _level != CONFIDENTIAL {
+		ditLog.AddToLog("\n")
+	}
 }
 
 // Printf will print a log output without a line ending
 func Printf(_line string, _level outputType) {
+	var output string
 	switch _level {
-	case INFO:
-		fmt.Printf(fmt.Sprintf("%s", _line))
+	case INFO, CONFIDENTIAL:
+		output = fmt.Sprintf("%s", _line)
 	case WARN:
-		fmt.Printf(fmt.Sprintf("%s %s %s", aurora.Bold(aurora.Brown("warn")), aurora.Bold(aurora.Brown(">")), _line))
+		output = fmt.Sprintf("%s %s %s", aurora.Bold(aurora.Brown("warn")), aurora.Bold(aurora.Brown(">")), _line)
 	case ERROR:
-		fmt.Printf(fmt.Sprintf("%s %s %s", aurora.Bold(aurora.BgRed(aurora.Gray(1-1, "err"))), aurora.Bold(aurora.Red(" >")), _line))
+		output = fmt.Sprintf("%s %s %s", aurora.Bold(aurora.BgRed(aurora.Gray(1-1, "err"))), aurora.Bold(aurora.Red(" >")), _line)
 	case DEMO:
-		fmt.Printf(fmt.Sprintf("%s %s %s", aurora.Cyan("demo"), aurora.Cyan(">"), _line))
+		output = fmt.Sprintf("%s %s %s", aurora.Cyan("demo"), aurora.Cyan(">"), _line)
 	}
+	fmt.Printf(output)
+	if _level != CONFIDENTIAL {
+		dt := time.Now()
+		ditLog.AddToLog("[" + dt.Format("01-02-2006 15:04:05") + "] " + output)
+	}
+}
+
+// ExitAndLog finalizes the logging and exits the program
+func ExitAndLog(code int) {
+	err := ditLog.FinalizeEntry()
+	if err != nil {
+		fmt.Printf(fmt.Sprintf("%s %s %s", aurora.Bold(aurora.BgRed(aurora.Gray(1-1, "err"))), aurora.Bold(aurora.Red(" >")), err.Error()))
+	}
+	os.Exit(code)
 }

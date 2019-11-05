@@ -7,11 +7,14 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/ditcraft/cli/api"
+
 	"github.com/ditcraft/cli/config"
 	"github.com/ditcraft/cli/demo"
 	"github.com/ditcraft/cli/ethereum"
 	"github.com/ditcraft/cli/git"
 	"github.com/ditcraft/cli/helpers"
+	ditLog "github.com/ditcraft/cli/log"
 	"github.com/ditcraft/cli/router"
 	"github.com/logrusorgru/aurora"
 )
@@ -21,7 +24,7 @@ var liveDitCoodinator = "0x4BB184D45e8e3a6dC6684fda7110894cd6226f16"
 var demoDitCoodinator = "0x9A65c773A216a4F4748B1D65C0fB039d9F2b223D"
 
 // The current version
-var version = "v0.3"
+var version = "v0.3.1"
 
 func main() {
 	var err error
@@ -31,20 +34,31 @@ func main() {
 	// Loading the config
 	err = config.Load()
 
+	// Loading the logfile
+	err = ditLog.Load()
+
 	// If no arguments are provided print the usage information
 	if len(args) == 0 {
 		printUsage()
+		os.Exit(0)
 	}
 
 	// Converting everything to lowercase, so that a command will not fail if something
 	// is capitalized by accident
 	command := strings.ToLower(args[0])
 
+	logErr := ditLog.AddCommand("dit " + strings.Join(args, " "))
+	if logErr != nil {
+		if len(logErr.Error()) > 0 {
+			helpers.PrintLine(logErr.Error(), helpers.ERROR)
+		}
+	}
+
 	// If there is an error during the config load and the user is not
 	// in the process of setting dit up: print an error
 	if err != nil && command != "setup" && command != "update" {
 		helpers.PrintLine(err.Error(), helpers.ERROR)
-		os.Exit(0)
+		helpers.ExitAndLog(0)
 	}
 
 	if err == nil && (command != "setup" && command != "update") {
@@ -54,7 +68,7 @@ func main() {
 		} else if config.DitConfig.Version > config.Version {
 			helpers.PrintLine("Your config file was created with a newer version of the ditCLI", helpers.ERROR)
 			helpers.PrintLine("To fix this update the ditCLI", helpers.ERROR)
-			os.Exit(0)
+			helpers.ExitAndLog(0)
 		} else if (!config.DitConfig.DemoModeActive && config.DitConfig.DitCoordinator != liveDitCoodinator) || (config.DitConfig.DemoModeActive && config.DitConfig.DitCoordinator != demoDitCoodinator) {
 			helpers.PrintLine("You are using an old version of the deployed ditCoordinator contract", helpers.WARN)
 			helpers.PrintLine("To fix this call '"+helpers.ColorizeCommand("update")+"'", helpers.WARN)
@@ -85,8 +99,8 @@ func main() {
 				if err == nil && !passedKYC {
 					fmt.Println()
 					helpers.PrintLine("You didn't pass the KYC yet. Please do the KYC now:", helpers.INFO)
-					helpers.PrintLine("Go to our Twitter @ditcraft and tweet the following at us:", helpers.INFO)
-					helpers.PrintLine("@ditcraft I want to use dit, the decentralized git client! Please verify me "+config.DitConfig.EthereumKeys.Address+"", helpers.INFO)
+					helpers.PrintLine("Visit the ditExplorer (https://explorer.ditcraft.io), login via GitHub or Twitter and follow the instructions.", helpers.INFO)
+					helpers.PrintLine("Provide your ditCLI's address in the process: "+config.DitConfig.EthereumKeys.Address+"", helpers.INFO)
 				}
 			}
 		}
@@ -102,8 +116,8 @@ func main() {
 				if err == nil && !passedKYC {
 					fmt.Println()
 					helpers.PrintLine("It seems that the smart contracts have been updated, which means that you need to re-do the KYC.", helpers.INFO)
-					helpers.PrintLine("Go to our Twitter @ditcraft and tweet the following at us:", helpers.INFO)
-					helpers.PrintLine("@ditcraft I want to try dit, the decentralized git. Please verify me "+config.DitConfig.EthereumKeys.Address+"!", helpers.INFO)
+					helpers.PrintLine("Visit the ditExplorer (https://explorer.ditcraft.io), login via GitHub or Twitter and follow the instructions.", helpers.INFO)
+					helpers.PrintLine("Provide your ditCLI's address in the process: "+config.DitConfig.EthereumKeys.Address+"", helpers.INFO)
 				}
 			}
 		}
@@ -119,7 +133,7 @@ func main() {
 			config.DitConfig.DemoModeActive = true
 		} else {
 			printUsage()
-			os.Exit(0)
+			helpers.ExitAndLog(0)
 		}
 		err = ethereum.SetDitCoordinator(ditCoordinatorAddress)
 		if err == nil {
@@ -131,8 +145,8 @@ func main() {
 			if err == nil && !passedKYC {
 				fmt.Println()
 				helpers.PrintLine("You didn't pass the KYC yet. Please do the KYC now:", helpers.INFO)
-				helpers.PrintLine("Go to our Twitter @ditcraft and tweet the following at us:", helpers.INFO)
-				helpers.PrintLine("@ditcraft I want to try dit, the decentralized git. Please verify me "+config.DitConfig.EthereumKeys.Address+"!", helpers.INFO)
+				helpers.PrintLine("Visit the ditExplorer (https://explorer.ditcraft.io), login via GitHub or Twitter and follow the instructions.", helpers.INFO)
+				helpers.PrintLine("Provide your ditCLI's address in the process: "+config.DitConfig.EthereumKeys.Address+"", helpers.INFO)
 			}
 		}
 	case "set_coordinator":
@@ -143,7 +157,7 @@ func main() {
 			helpers.PrintLine("ditCoordinator successfully set", helpers.INFO)
 		}
 		break
-	case "get_balance", "balance":
+	case "get_balance":
 		// Retrieve the balances in ETH and KNW
 		err = router.GetBalances()
 		break
@@ -162,7 +176,7 @@ func main() {
 			privateKey, err = config.GetPrivateKey(false)
 			if len(privateKey) == 64 {
 				helpers.PrintLine("Ethereum Address: "+config.DitConfig.EthereumKeys.Address, helpers.INFO)
-				helpers.PrintLine("Ethereum Private-Key: "+privateKey, helpers.INFO)
+				helpers.PrintLine("Ethereum Private-Key: "+privateKey, helpers.CONFIDENTIAL)
 			}
 		} else {
 			err = errors.New("Cancelling key export due to users choice")
@@ -316,7 +330,7 @@ func main() {
 			if strings.Contains(output, "No commits yet") {
 				helpers.PrintLine("It seems that the master branch is empty and you want to switch to another branch.", helpers.ERROR)
 				helpers.PrintLine("The ditCLI depends on an exisiting master-branch with a valid state, please create a README first to initialize the master branch.", helpers.ERROR)
-				os.Exit(0)
+				helpers.ExitAndLog(0)
 			}
 		}
 		_ = git.ExecuteCommand(args[:]...)
@@ -337,6 +351,8 @@ func main() {
 		"status",
 		"tag":
 		_ = git.ExecuteCommand(args[:]...)
+	case "upload_logs":
+		err = api.UploadLog(version)
 	case "vote_info":
 		// Prints the details of a vote
 		if len(args) == 2 {
@@ -392,29 +408,41 @@ func main() {
 			}
 		}
 		break
+	// case "balance":
+	// 	err = ethereum.GetDaiPrice()
+	// 	break
+	// case "wallet":
+	// 	if args[1] == "deposit" {
+	// 		err = ethereum.SwapETHtoXDai()
+	// 	}
+	// 	break
 	case "-v", "--version", "version":
 		helpers.PrintLine(version, helpers.INFO)
 	default:
 		printUsage()
+		ditLog.AddToLog("Printed usage\n")
+		helpers.ExitAndLog(0)
 		break
 	}
+
 	if err != nil {
 		if len(err.Error()) > 0 {
 			helpers.PrintLine(err.Error(), helpers.ERROR)
 		}
 	}
+	helpers.ExitAndLog(0)
 }
 
 // Will check whether a provided argument exists and tell the user if its missing
 func checkIfExists(_arguments []string, _index int, _description string) {
 	if len(_arguments) < _index+1 {
 		helpers.PrintLine("Please provide "+_description, helpers.ERROR)
-		os.Exit(0)
+		helpers.ExitAndLog(0)
 	}
 }
 
 func printUsage() {
-	// fmt.Println("---- ditCLI v0.3.1 prerelease ----")
+	fmt.Println("---- ditCLI v0.3.1 prerelease ----")
 	fmt.Println("----------- ditCLI v0.3 ----------")
 	if config.DitConfig.DemoModeActive {
 		fmt.Println("--------- demo mode active -------")
@@ -425,6 +453,8 @@ func printUsage() {
 	fmt.Println(" - dit setup\t\t\t\t\tCreates or imports the ethereum keys and creates a config")
 	fmt.Println(" - dit update\t\t\t\t\tUpdates the ditCLIs config after an update of the ditCLI")
 	fmt.Println(" - dit mode <MODE>\t\t\t\tSwitch between the modes of the ditCLI (live or demo)")
+	fmt.Println(" - dit upload_logs\t\t\t\tUploads the ditCLI's logs onto our servers for troubleshooting")
+	fmt.Println("\t\t\t\t\t\tor feedback")
 	fmt.Println("")
 	fmt.Println("------------ Ethereum ------------")
 	fmt.Println(" - dit get_address\t\t\t\tReturns ethereum address of the account")
@@ -454,5 +484,4 @@ func printUsage() {
 	fmt.Println(" - diff, fetch, grep, log, merge, pull\t\tthem with the regular git client. If you are not familiar")
 	fmt.Println(" - push, rebase, reset, rm, show, stash\t\twith the usage of one of these commands, please refer to")
 	fmt.Println(" - status, tag\t\t\t\t\tthe git clients' help by invoking 'git help' directly")
-	os.Exit(0)
 }

@@ -16,6 +16,7 @@ import (
 	"strings"
 
 	"github.com/ditcraft/cli/helpers"
+	ditLog "github.com/ditcraft/cli/log"
 	"github.com/ethereum/go-ethereum/crypto"
 	"golang.org/x/crypto/ssh/terminal"
 )
@@ -30,6 +31,12 @@ var Version = 5
 // EthereumNodes is an array of rpc nodes that are used. First one is the primary, if one fails,
 // the next one is used
 var EthereumNodes = []string{"https://node.ditcraft.io", "https://dai.poa.network"}
+
+// MainnetNodes contains the infura address to the eth mainnet
+var MainnetNodes = []string{"https://mainnet.infura.io/v3/e0c6c62366d14f509033c919f2c72767"}
+
+// KyberNetworkProxy address that will be used for the ETH<->DAI swap
+var KyberNetworkProxy = "0x818E6FECD516Ecc3849DAf6845e3EC868087B755"
 
 type ditConfig struct {
 	DitCoordinator   string                 `json:"dit_coordinator"`
@@ -94,6 +101,7 @@ func GetPrivateKey(_forTransaction bool) (string, error) {
 	}
 
 	helpers.Printf("Please provide your password to unlock your ethereum account: ", helpers.INFO)
+	ditLog.AddToLog("\n")
 	iteration := 0
 	for iteration <= 2 {
 		password, err := terminal.ReadPassword(0)
@@ -111,6 +119,7 @@ func GetPrivateKey(_forTransaction bool) (string, error) {
 				if iteration < 2 {
 					iteration++
 					helpers.Printf("Failed to decrypt the encrypted private key - wrong password? Please try again: ", helpers.INFO)
+					ditLog.AddToLog("\n")
 				} else {
 					return "", errors.New("There was an error during the private key decryption, probably due to a wrong password")
 				}
@@ -245,6 +254,7 @@ func Create(_demoMode bool) error {
 		} else {
 			// Import existing ones, prompting the user for input
 			answerPrivateKeyInput := helpers.GetUserInput("Please provide a hex-formatted ethereum private-key")
+			ditLog.RemoveLastLine("Please provide a hex-formatted ethereum private-key:")
 			if len(answerPrivateKeyInput) == 64 || len(answerPrivateKeyInput) == 66 {
 				// Remove possible "0x" at the beginning
 				if strings.Contains(answerPrivateKeyInput, "0x") && len(answerPrivateKeyInput) == 66 {

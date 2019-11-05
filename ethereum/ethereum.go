@@ -6,7 +6,6 @@ import (
 	"errors"
 	"fmt"
 	"math/big"
-	"os"
 	"strconv"
 	"strings"
 	"time"
@@ -16,6 +15,7 @@ import (
 	"github.com/ditcraft/cli/helpers"
 	"github.com/ditcraft/cli/smartcontracts/KNWToken"
 	"github.com/ditcraft/cli/smartcontracts/KNWVoting"
+	KyberNetwork "github.com/ditcraft/cli/smartcontracts/KyberNetworkProxy"
 	"github.com/ditcraft/cli/smartcontracts/ditCoordinator"
 	"github.com/ditcraft/cli/smartcontracts/ditDemoCoordinator"
 	"github.com/ditcraft/cli/smartcontracts/ditToken"
@@ -29,6 +29,204 @@ import (
 )
 
 const correctETHAddressLength = 42
+
+// // GetDaiPrice will return the price in dai
+// func GetDaiPrice() error {
+// 	connection, err := getConnectionMainnet()
+// 	if err != nil {
+// 		return err
+// 	}
+
+// 	KyberInstance, err := getKyberInstance(connection)
+
+// 	priceStruct, err := KyberInstance.GetExpectedRate(nil, common.HexToAddress("0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"), common.HexToAddress("0x89d24a6b4ccb1b6faa2625fe562bdd9a23260359"), big.NewInt(1*10^18))
+// 	if err != nil {
+// 		return err
+// 	}
+
+// 	floatRate := new(big.Float).Quo((new(big.Float).SetInt(priceStruct.ExpectedRate)), big.NewFloat(1000000000000000000))
+
+// 	fmt.Println(fmt.Sprintf("Current exchange rate for 1 ETH: %.2f DAI", floatRate))
+// 	fmt.Println("These rates are directly sourced from the KyberNetwork smart contracts.")
+// 	fmt.Println("For more details visit: https://kyberswap.com")
+// 	return nil
+// }
+
+// // SwapETHtoXDai will swap all ETH on mainnet to xdai on the xdai chain
+// func SwapETHtoXDai() error {
+// 	connectionMainnet, err := getConnectionMainnet()
+// 	if err != nil {
+// 		return err
+// 	}
+
+// 	connectionXDai, err := getConnection()
+// 	if err != nil {
+// 		return err
+// 	}
+
+// 	balanceMainnet, err := connectionMainnet.BalanceAt(context.Background(), common.HexToAddress(config.DitConfig.EthereumKeys.Address), nil)
+// 	if err != nil {
+// 		return err
+// 	}
+
+// 	KyberInstance, err := getKyberInstance(connectionMainnet)
+
+// 	priceStruct, err := KyberInstance.GetExpectedRate(nil, common.HexToAddress("0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"), common.HexToAddress("0x89d24a6b4ccb1b6faa2625fe562bdd9a23260359"), big.NewInt(1*10^18))
+// 	if err != nil {
+// 		return err
+// 	}
+
+// 	minRate := new(big.Int).Div(new(big.Int).Mul(priceStruct.ExpectedRate, big.NewInt(97)), big.NewInt(100))
+
+// 	floatBalance := new(big.Float).Quo((new(big.Float).SetInt(balanceMainnet)), big.NewFloat(1000000000000000000))
+// 	floatRate := new(big.Float).Quo((new(big.Float).SetInt(priceStruct.ExpectedRate)), big.NewFloat(1000000000000000000))
+
+// 	floatValueDai, _ := new(big.Float).Mul(floatBalance, floatRate).Float64()
+// 	if floatValueDai < 0.01 {
+// 		return errors.New("The amount of ETH you have on the Ethereum Mainnet has to equivalted to a value greater than 0.01 DAI")
+// 	}
+
+// 	response, err := http.Get("https://ethgasstation.info/json/ethgasAPI.json")
+// 	if err != nil {
+// 		return err
+// 	}
+
+// 	data, _ := ioutil.ReadAll(response.Body)
+
+// 	position := strings.Index(string(data), "average")
+// 	if position == -1 {
+// 		return errors.New("Failed to retrieve the current gas price on Mainnet")
+// 	}
+// 	gasPricePart := string(data)[position+10:]
+// 	gasPriceString := strings.Split(gasPricePart, ",")[0]
+// 	gasPrice, err := strconv.ParseFloat(gasPriceString, 64)
+// 	if err != nil {
+// 		return err
+// 	}
+// 	gasPrice = (gasPrice * 1.1) / 10
+
+// 	helpers.PrintLine("Starting the deposit of xDai from ETH onto your account:", helpers.INFO)
+// 	helpers.PrintLine("---------------------------", helpers.INFO)
+// 	helpers.PrintLine(fmt.Sprintf("The current exchange rate is 1 ETH = %.2f DAI", floatRate), helpers.INFO)
+// 	helpers.PrintLine(fmt.Sprintf("You will be converting %.2f ETH to ~%.2f xDAI", floatBalance, floatValueDai), helpers.INFO)
+// 	helpers.PrintLine(fmt.Sprintf("The current gas price is %.2f GWei", gasPrice), helpers.INFO)
+// 	helpers.PrintLine("---------------------------", helpers.INFO)
+
+// 	daiInstance, err := getDAIInstance(connectionMainnet)
+// 	if err != nil {
+// 		return err
+// 	}
+
+// 	daiBalanceOld, err := daiInstance.BalanceOf(nil, common.HexToAddress(config.DitConfig.EthereumKeys.Address))
+
+// 	privateKeyString, err := config.GetPrivateKey(true)
+// 	if err != nil {
+// 		return err
+// 	}
+
+// 	// Crerating the transaction (basic values)
+// 	auth, err := populateTx(connectionMainnet, privateKeyString)
+// 	if err != nil {
+// 		return err
+// 	}
+
+// 	auth.GasPrice = new(big.Int).Mul(big.NewInt(int64(gasPrice*100)), big.NewInt(10000000))
+// 	auth.GasLimit = uint64(375000)
+// 	auth.Value = new(big.Int).Div(balanceMainnet, big.NewInt(100))
+
+// 	tx, err := KyberInstance.SwapEtherToToken(auth, common.HexToAddress("0x89d24a6b4ccb1b6faa2625fe562bdd9a23260359"), minRate)
+// 	if err != nil {
+// 		return err
+// 	}
+
+// 	daiBalanceNew := daiBalanceOld
+// 	helpers.PrintLine("\nConverting your Ether to DAI via KyberNetwork...", helpers.INFO)
+// 	// Waiting for the proposals transaction to be mined
+// 	helpers.Printf("Waiting for KyberNetwork transaction to be mined", helpers.INFO)
+// 	waitingFor := 0
+// 	for daiBalanceOld.Cmp(daiBalanceNew) == 0 {
+// 		waitingFor += 20
+// 		time.Sleep(20 * time.Second)
+// 		fmt.Printf(".")
+// 		// Checking the current dai balance every 5 seconds
+// 		daiBalanceNew, err = daiInstance.BalanceOf(nil, common.HexToAddress(config.DitConfig.EthereumKeys.Address))
+// 		if err != nil {
+// 			return errors.New("Failed to retrieve the current dai balance")
+// 		}
+// 		// If we are waiting for more than 30 minutes, the transaction might have failed
+// 		if waitingFor > 60*30 {
+// 			fmt.Printf("\n")
+// 			helpers.PrintLine("Waiting for over 30 minutes, maybe the transaction or the network failed?", 1)
+// 			helpers.PrintLine("Check at: https://etherscan.com/tx/"+tx.Hash().Hex(), 1)
+// 			helpers.ExitAndLog(0)
+// 		}
+// 	}
+// 	fmt.Printf("\n")
+
+// 	xdaiBalanceOld, err := connectionXDai.BalanceAt(context.Background(), common.HexToAddress(config.DitConfig.EthereumKeys.Address), nil)
+// 	if err != nil {
+// 		return err
+// 	}
+
+// 	response, err = http.Get("https://ethgasstation.info/json/ethgasAPI.json")
+// 	if err != nil {
+// 		return err
+// 	}
+
+// 	data, _ = ioutil.ReadAll(response.Body)
+
+// 	position = strings.Index(string(data), "average")
+// 	if position == -1 {
+// 		return errors.New("Failed to retrieve the current gas price on Mainnet")
+// 	}
+// 	gasPricePart = string(data)[position+10:]
+// 	gasPriceString = strings.Split(gasPricePart, ",")[0]
+// 	gasPrice, err = strconv.ParseFloat(gasPriceString, 64)
+// 	if err != nil {
+// 		return err
+// 	}
+// 	gasPrice = (gasPrice * 1.1) / 10
+
+// 	// Crerating the transaction (basic values)
+// 	auth, err = populateTx(connectionMainnet, privateKeyString)
+// 	if err != nil {
+// 		return err
+// 	}
+
+// 	auth.GasPrice = new(big.Int).Mul(big.NewInt(int64(gasPrice*100)), big.NewInt(10000000))
+// 	auth.GasLimit = uint64(50000)
+
+// 	tx, err = daiInstance.Transfer(auth, common.HexToAddress("0x4aa42145Aa6Ebf72e164C9bBC74fbD3788045016"), daiBalanceNew)
+// 	if err != nil {
+// 		return err
+// 	}
+
+// 	xdaiBalanceNew := xdaiBalanceOld
+// 	helpers.PrintLine("\nTransferring your DAI from Ethereum Mainnet to xDAI on the POA Network...", helpers.INFO)
+// 	// Waiting for the proposals transaction to be mined
+// 	helpers.Printf("Waiting for xDAI-Bridge transaction to be mined", helpers.INFO)
+// 	waitingFor = 0
+// 	for xdaiBalanceOld.Cmp(xdaiBalanceNew) == 0 {
+// 		waitingFor += 20
+// 		time.Sleep(20 * time.Second)
+// 		fmt.Printf(".")
+// 		// Checking the current dai balance every 5 seconds
+// 		xdaiBalanceNew, err = connectionXDai.BalanceAt(context.Background(), common.HexToAddress(config.DitConfig.EthereumKeys.Address), nil)
+// 		if err != nil {
+// 			return errors.New("Failed to retrieve the current xdai balance")
+// 		}
+// 		// If we are waiting for more than 30 minutes, the transaction might have failed
+// 		if waitingFor > 60*30 {
+// 			fmt.Printf("\n")
+// 			helpers.PrintLine("Waiting for over 30 minutes, maybe the transaction or the network failed?", 1)
+// 			helpers.PrintLine("Check at: https://etherscan.com/tx/"+tx.Hash().Hex(), 1)
+// 			helpers.ExitAndLog(0)
+// 		}
+// 	}
+// 	fmt.Printf("\n")
+
+// 	return nil
+// }
 
 // SetDitCoordinator will write the dit coordinators address to the config and
 // retrieve the addresses of the KNWToken and KNWVoting contracts
@@ -141,7 +339,7 @@ func InitDitRepository(_optionalRepository ...string) error {
 			return nil
 		}
 		helpers.PrintLine("Repository is already initialized", helpers.INFO)
-		os.Exit(0)
+		helpers.ExitAndLog(0)
 	}
 
 	connection, err := getConnection()
@@ -171,7 +369,7 @@ func InitDitRepository(_optionalRepository ...string) error {
 		helpers.PrintLine("There was an update to the ditCraft smartcontracts. Please update your ditCLI in order to interact with them.", helpers.INFO)
 		helpers.PrintLine(fmt.Sprintf("Please execute %s to update the ditCLI", aurora.Green("bash <(curl https://get.ditcraft.io -Ls)")), helpers.INFO)
 		helpers.PrintLine("Or go to: https://github.com/ditcraft/cli", helpers.INFO)
-		os.Exit(0)
+		helpers.ExitAndLog(0)
 	}
 
 	// Retrieving the address of the ditContract that was deployed for this repository
@@ -194,7 +392,7 @@ func InitDitRepository(_optionalRepository ...string) error {
 			// If not: exit
 			helpers.PrintLine("Initialization cancelled - repository can't be used with dit until this is done", 1)
 			helpers.PrintLine("Execute '"+helpers.ColorizeCommand("init")+"' in the directory of the repository to do so", 1)
-			os.Exit(0)
+			helpers.ExitAndLog(0)
 		}
 	}
 
@@ -369,7 +567,7 @@ func ProposeCommit(_branch string, _branchHeadHash string) (string, int, error) 
 		helpers.PrintLine("There was an update to the ditCraft smartcontracts. Please update your ditCLI in order to interact with them.", helpers.INFO)
 		helpers.PrintLine(fmt.Sprintf("Please execute %s to update the ditCLI", aurora.Green("bash <(curl https://get.ditcraft.io -Ls)")), helpers.INFO)
 		helpers.PrintLine("Or go to: https://github.com/ditcraft/cli", helpers.INFO)
-		os.Exit(0)
+		helpers.ExitAndLog(0)
 	}
 
 	// Create a new instance of the KNWToken to access it
@@ -537,7 +735,7 @@ func ProposeCommit(_branch string, _branchHeadHash string) (string, int, error) 
 			fmt.Printf("\n")
 			helpers.PrintLine("Waiting for over 3 minutes, maybe the transaction or the network failed?", 1)
 			helpers.PrintLine("Check at: https://blockscout.com/poa/dai/tx/"+transaction.Hash().Hex(), 1)
-			os.Exit(0)
+			helpers.ExitAndLog(0)
 		}
 	}
 	fmt.Printf("\n")
@@ -760,7 +958,7 @@ func Vote(_proposalID string, _choice string, _salt string) error {
 	if answer == "n" {
 		// If not: exit
 		helpers.PrintLine("No vote executed due to users choice", 1)
-		os.Exit(0)
+		helpers.ExitAndLog(0)
 	}
 
 	// In order to create a valid abi-encoded hash of the vote choice and salt
@@ -823,7 +1021,7 @@ func Vote(_proposalID string, _choice string, _salt string) error {
 			fmt.Printf("\n")
 			helpers.PrintLine("Waiting for over 3 minutes, maybe the transaction or the network failed?", 1)
 			helpers.PrintLine("Check at: https://blockscout.com/poa/dai/tx/"+transaction.Hash().Hex(), 1)
-			os.Exit(0)
+			helpers.ExitAndLog(0)
 		}
 	}
 	fmt.Printf("\n")
@@ -994,7 +1192,7 @@ func Open(_proposalID string) error {
 			fmt.Printf("\n")
 			helpers.PrintLine("Waiting for over 3 minutes, maybe the transaction or the network failed?", 1)
 			helpers.PrintLine("Check at: https://blockscout.com/poa/dai/tx/"+transaction.Hash().Hex(), 1)
-			os.Exit(0)
+			helpers.ExitAndLog(0)
 		}
 	}
 	fmt.Printf("\n")
@@ -1152,7 +1350,7 @@ func Finalize(_proposalID string) (bool, bool, error) {
 			fmt.Printf("\n")
 			helpers.PrintLine("Waiting for over 3 minutes, maybe the transaction or the network failed?", 1)
 			helpers.PrintLine("Check at: https://blockscout.com/poa/dai/tx/"+transaction.Hash().Hex(), 1)
-			os.Exit(0)
+			helpers.ExitAndLog(0)
 		}
 	}
 	fmt.Printf("\n")
@@ -1286,7 +1484,7 @@ func GetVoteInfo(_proposalID ...int) error {
 	currentProposalID := int(currentProposalIDBigInt.Int64())
 	if currentProposalID == 0 {
 		helpers.PrintLine("There are no votes for this repository", 1)
-		os.Exit(0)
+		helpers.ExitAndLog(0)
 	}
 
 	// If a proposalID is specified in the function call, use that
@@ -1687,7 +1885,7 @@ func initDitRepository(_ditCoordinatorInstance *ditCoordinator.DitCoordinator, _
 			fmt.Printf("\n")
 			helpers.PrintLine("Waiting for over 3 minutes, maybe the transaction or the network failed?", 1)
 			helpers.PrintLine("Check at: https://blockscout.com/poa/dai/tx/"+transaction.Hash().Hex(), 1)
-			os.Exit(0)
+			helpers.ExitAndLog(0)
 		}
 	}
 	fmt.Printf("\n")
@@ -1697,12 +1895,17 @@ func initDitRepository(_ditCoordinatorInstance *ditCoordinator.DitCoordinator, _
 
 // populateTX will set the necessary values for a ethereum transaction
 // amount of gas, gasprice, nonce, sign this with the private key
-func populateTx(_connection *ethclient.Client) (*bind.TransactOpts, error) {
+func populateTx(_connection *ethclient.Client, _privatKey ...string) (*bind.TransactOpts, error) {
 	// Retrieve the decrypted private key through a password prompt
 	var err error
-	privateKeyString, err := config.GetPrivateKey(true)
-	if err != nil {
-		return nil, err
+	var privateKeyString string
+	if len(_privatKey) != 1 {
+		privateKeyString, err = config.GetPrivateKey(true)
+		if err != nil {
+			return nil, err
+		}
+	} else {
+		privateKeyString = _privatKey[0]
 	}
 
 	// Converting the private key string into a private key object
@@ -1823,6 +2026,18 @@ func getKNWVotingInstance(_connection *ethclient.Client) (*KNWVoting.KNWVoting, 
 	return KNWVotingInstance, nil
 }
 
+func getKyberInstance(_connection *ethclient.Client) (*KyberNetwork.KyberNetwork, error) {
+	KyberNetworkProxyAddress := common.HexToAddress(config.KyberNetworkProxy)
+
+	// Create a new instance of the KyberNetworkProxy contract to access it
+	KyberInstance, err := KyberNetwork.NewKyberNetwork(KyberNetworkProxyAddress, _connection)
+	if err != nil {
+		return nil, errors.New("Failed to find KyberNetworkProxy at provided address")
+	}
+
+	return KyberInstance, nil
+}
+
 // getConnection will return a connection to the ethereum blockchain
 func getConnection() (*ethclient.Client, error) {
 	for i := 0; i < len(config.EthereumNodes); i++ {
@@ -1847,10 +2062,46 @@ func getConnection() (*ethclient.Client, error) {
 	return nil, errors.New("Failed to connect to the ethereum network")
 }
 
+// getConnection will return a connection to the ethereum blockchain
+func getConnectionMainnet() (*ethclient.Client, error) {
+	for i := 0; i < len(config.MainnetNodes); i++ {
+		connection, err := ethclient.Dial(config.MainnetNodes[i])
+		if err != nil {
+			if i == len(config.MainnetNodes)-1 {
+				return nil, errors.New("Failed to connect to the ethereum network" + strconv.Itoa(i))
+			}
+		} else {
+			networkID, err := connection.NetworkID(context.Background())
+			if err != nil {
+				if i == len(config.MainnetNodes)-1 {
+					return nil, errors.New("Failed to connect to the ethereum network" + strconv.Itoa(i))
+				}
+			} else {
+				if networkID.Cmp(big.NewInt(1)) == 0 {
+					return connection, nil
+				}
+			}
+		}
+	}
+	return nil, errors.New("Failed to connect to the ethereum network")
+}
+
 // GetHashOfString takes a string a returns it as keccak256
 func GetHashOfString(_string string) [32]byte {
 	repoHash32 := [32]byte{}
 	copy(repoHash32[:], crypto.Keccak256([]byte(_string))[:])
 
 	return repoHash32
+}
+
+func getDAIInstance(_connection *ethclient.Client) (*ditToken.MintableERC20, error) {
+	daiAddress := common.HexToAddress("0x89d24A6b4CcB1B6fAA2625fE562bDD9a23260359")
+
+	// Create a new instance of the KNWToken contract to access it
+	daiInstance, err := ditToken.NewMintableERC20(daiAddress, _connection)
+	if err != nil {
+		return nil, errors.New("Failed to find DAI contract at provided address")
+	}
+
+	return daiInstance, nil
 }
