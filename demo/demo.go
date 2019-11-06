@@ -626,6 +626,33 @@ func Vote(_proposalID string, _choice string, _salt string) error {
 	newVote.Choice = choice
 	newVote.Salt = salt.String()
 
+	if config.DitConfig.DemoRepositories[repository] == nil {
+		// Retrieving the knowledge-labels of this ditContract
+		var knowledgeLabels []config.KnowledgeLabel
+		contractKnowledgeIDs, err := ditCoordinatorInstance.GetKnowledgeIDs(nil, repoHash)
+		if err != nil {
+			return err
+		}
+		for i := 0; i < len(contractKnowledgeIDs); i++ {
+			knowledgeLabel, err := KNWTokenInstance.LabelOfID(nil, contractKnowledgeIDs[i])
+			if err != nil {
+				return err
+			}
+			if len(knowledgeLabel) > 0 {
+				knowledgeLabels = append(knowledgeLabels, config.KnowledgeLabel{ID: int(contractKnowledgeIDs[i].Int64()), Label: knowledgeLabel})
+			}
+		}
+
+		// Inserting this repositories details into the cobfig
+		var newRepository config.Repository
+		if strings.Contains(repository, "github.com") {
+			newRepository.Provider = "github"
+		}
+		newRepository.KnowledgeLabels = knowledgeLabels
+		newRepository.ActiveVotes = make(map[string]*config.ActiveVote)
+		config.DitConfig.DemoRepositories[repository] = &newRepository
+	}
+
 	// Adding the new vote to the config object
 	config.DitConfig.DemoRepositories[repository].ActiveVotes[_proposalID] = &newVote
 

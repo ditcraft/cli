@@ -844,7 +844,7 @@ func Vote(_proposalID string, _choice string, _salt string) error {
 	myAddress := common.HexToAddress(config.DitConfig.EthereumKeys.Address)
 
 	// Create a new instance of the ditContract to access it
-	ditCooordinatorInstance, err := getDitCoordinatorInstance(connection)
+	ditCoordinatorInstance, err := getDitCoordinatorInstance(connection)
 	if err != nil {
 		return err
 	}
@@ -862,7 +862,7 @@ func Vote(_proposalID string, _choice string, _salt string) error {
 	}
 
 	// Retrieving the proposal object from the ditContract
-	proposal, err := ditCooordinatorInstance.ProposalsOfRepository(nil, repoHash, big.NewInt(int64(proposalID)))
+	proposal, err := ditCoordinatorInstance.ProposalsOfRepository(nil, repoHash, big.NewInt(int64(proposalID)))
 	if err != nil {
 		return errors.New("Failed to retrieve proposal")
 	}
@@ -995,7 +995,7 @@ func Vote(_proposalID string, _choice string, _salt string) error {
 	intKNW := big.NewInt(weiFloatKNW)
 
 	// Voting on the proposal
-	transaction, err := ditCooordinatorInstance.VoteOnProposal(auth, repoHash, big.NewInt(int64(proposalID)), voteHash, intKNW)
+	transaction, err := ditCoordinatorInstance.VoteOnProposal(auth, repoHash, big.NewInt(int64(proposalID)), voteHash, intKNW)
 	if err != nil {
 		if strings.Contains(err.Error(), "insufficient funds") {
 			return errors.New("Your account doesn't have enough xDAI to pay for the transaction")
@@ -1027,7 +1027,7 @@ func Vote(_proposalID string, _choice string, _salt string) error {
 	fmt.Printf("\n")
 
 	// Gathering the information of the proposal from the ditContract
-	newVote, err := gatherProposalInfo(connection, ditCooordinatorInstance, repoHash, int64(proposalID))
+	newVote, err := gatherProposalInfo(connection, ditCoordinatorInstance, repoHash, int64(proposalID))
 	if err != nil {
 		return err
 	}
@@ -1036,6 +1036,33 @@ func Vote(_proposalID string, _choice string, _salt string) error {
 	// when he will reveal the vote later on
 	newVote.Choice = choice
 	newVote.Salt = salt.String()
+
+	if config.DitConfig.LiveRepositories[repository] == nil {
+		// Retrieving the knowledge-labels of this ditContract
+		var knowledgeLabels []config.KnowledgeLabel
+		contractKnowledgeIDs, err := ditCoordinatorInstance.GetKnowledgeIDs(nil, repoHash)
+		if err != nil {
+			return err
+		}
+		for i := 0; i < len(contractKnowledgeIDs); i++ {
+			knowledgeLabel, err := KNWTokenInstance.LabelOfID(nil, contractKnowledgeIDs[i])
+			if err != nil {
+				return err
+			}
+			if len(knowledgeLabel) > 0 {
+				knowledgeLabels = append(knowledgeLabels, config.KnowledgeLabel{ID: int(contractKnowledgeIDs[i].Int64()), Label: knowledgeLabel})
+			}
+		}
+
+		// Inserting this repositories details into the cobfig
+		var newRepository config.Repository
+		if strings.Contains(repository, "github.com") {
+			newRepository.Provider = "github"
+		}
+		newRepository.KnowledgeLabels = knowledgeLabels
+		newRepository.ActiveVotes = make(map[string]*config.ActiveVote)
+		config.DitConfig.LiveRepositories[repository] = &newRepository
+	}
 
 	// Adding the new vote to the config object
 	config.DitConfig.LiveRepositories[repository].ActiveVotes[_proposalID] = &newVote
@@ -1104,7 +1131,7 @@ func Open(_proposalID string) error {
 	myAddress := common.HexToAddress(config.DitConfig.EthereumKeys.Address)
 
 	// Create a new instance of the ditContract to access it
-	ditCooordinatorInstance, err := getDitCoordinatorInstance(connection)
+	ditCoordinatorInstance, err := getDitCoordinatorInstance(connection)
 	if err != nil {
 		return err
 	}
@@ -1166,7 +1193,7 @@ func Open(_proposalID string) error {
 	}
 
 	// Revealing the vote on the proposal
-	transaction, err := ditCooordinatorInstance.OpenVoteOnProposal(auth, repoHash, big.NewInt(int64(proposalID)), choice, salt)
+	transaction, err := ditCoordinatorInstance.OpenVoteOnProposal(auth, repoHash, big.NewInt(int64(proposalID)), choice, salt)
 	if err != nil {
 		if strings.Contains(err.Error(), "insufficient funds") {
 			return errors.New("Your account doesn't have enough xDAI to pay for the transaction")
@@ -1248,7 +1275,7 @@ func Finalize(_proposalID string) (bool, bool, error) {
 	myAddress := common.HexToAddress(config.DitConfig.EthereumKeys.Address)
 
 	// Create a new instance of the ditContract to access it
-	ditCooordinatorInstance, err := getDitCoordinatorInstance(connection)
+	ditCoordinatorInstance, err := getDitCoordinatorInstance(connection)
 	if err != nil {
 		return false, false, err
 	}
@@ -1292,7 +1319,7 @@ func Finalize(_proposalID string) (bool, bool, error) {
 	}
 
 	// Retrieve the selected proposal obkect
-	proposal, err := ditCooordinatorInstance.ProposalsOfRepository(nil, repoHash, big.NewInt(int64(proposalID)))
+	proposal, err := ditCoordinatorInstance.ProposalsOfRepository(nil, repoHash, big.NewInt(int64(proposalID)))
 	if err != nil {
 		return false, false, errors.New("Failed to retrieve the new proposal")
 	}
@@ -1324,7 +1351,7 @@ func Finalize(_proposalID string) (bool, bool, error) {
 	}
 
 	// Resolving the vote
-	transaction, err := ditCooordinatorInstance.FinalizeVote(auth, repoHash, big.NewInt(int64(proposalID)))
+	transaction, err := ditCoordinatorInstance.FinalizeVote(auth, repoHash, big.NewInt(int64(proposalID)))
 	if err != nil {
 		if strings.Contains(err.Error(), "insufficient funds") {
 			return false, false, errors.New("Your account doesn't have enough xDAI to pay for the transaction")
@@ -1456,7 +1483,7 @@ func GetVoteInfo(_proposalID ...int) error {
 	}
 
 	// Create a new instance of the ditContract to access it
-	ditCooordinatorInstance, err := getDitCoordinatorInstance(connection)
+	ditCoordinatorInstance, err := getDitCoordinatorInstance(connection)
 	if err != nil {
 		return err
 	}
@@ -1474,7 +1501,7 @@ func GetVoteInfo(_proposalID ...int) error {
 	}
 
 	// Retrieving the current proposalID
-	currentProposalIDBigInt, err := ditCooordinatorInstance.GetCurrentProposalID(nil, repoHash)
+	currentProposalIDBigInt, err := ditCoordinatorInstance.GetCurrentProposalID(nil, repoHash)
 	if err != nil {
 		return errors.New("Failed to retrieve the current proposal id")
 	}
@@ -1499,7 +1526,7 @@ func GetVoteInfo(_proposalID ...int) error {
 	}
 
 	// Retrieve the selected proposal obkect
-	proposal, err := ditCooordinatorInstance.ProposalsOfRepository(nil, repoHash, big.NewInt(int64(proposalID)))
+	proposal, err := ditCoordinatorInstance.ProposalsOfRepository(nil, repoHash, big.NewInt(int64(proposalID)))
 	if err != nil {
 		return errors.New("Failed to retrieve the new proposal")
 	}
@@ -1551,7 +1578,7 @@ func GetVoteInfo(_proposalID ...int) error {
 	helpers.PrintLine("Knowledge-Label: "+knowledgeLabel, helpers.INFO)
 
 	// If the user participated in this vote, the choice and stake/KNW are also printed
-	if repositoryMap[repository].ActiveVotes[strconv.Itoa(proposalID)] != nil {
+	if repositoryMap[repository] != nil && repositoryMap[repository].ActiveVotes[strconv.Itoa(proposalID)] != nil {
 		// TODO: FIX nil pointer crash
 		intxDAI, ok := new(big.Int).SetString(repositoryMap[repository].ActiveVotes[strconv.Itoa(proposalID)].NumTokens, 10)
 		if !ok {
