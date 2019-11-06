@@ -195,9 +195,10 @@ func UploadLog(_version string) error {
 		return err
 	}
 
-	if len(status.Status) != 10 {
+	if len(status.Status) < 5 {
 		return errors.New("There was an error uploading the logs - please try again")
 	}
+
 	helpers.PrintLine("Successfully uploaded your logs under the id "+fmt.Sprintf("%s", aurora.Bold("#"+status.Status)), helpers.INFO)
 	helpers.PrintLine("Please include this id when referring to your logs so that we can easily identify them.", helpers.INFO)
 	return nil
