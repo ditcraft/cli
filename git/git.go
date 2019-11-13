@@ -29,13 +29,6 @@ func GetRepository() (string, error) {
 	// Removing unecessary stuff from the url
 	repositoryName := sanitizeURL(repositoryRemote)
 
-	configErr := checkGitSetup()
-	if configErr != nil {
-		helpers.PrintLine("You don't have a user.email and/or user.name set in your git config. ditCLI won't work if this is not fixed!", helpers.ERROR)
-		helpers.PrintLine("Please run '"+helpers.ColorizeCommand("config user.name <GITHUB_USERNAME_HERE>")+"' and '"+helpers.ColorizeCommand("config user.email <GITHUB_EMAIL_HERE>")+"'", helpers.ERROR)
-		return "", errors.New("git is not configured correctly")
-	}
-
 	return repositoryName, nil
 }
 
@@ -59,12 +52,6 @@ func Clone(_repository string) (string, error) {
 
 	// Removing unecessary stuff from the url
 	_repository = sanitizeURL(_repository)
-
-	configErr := checkGitSetup()
-	if configErr != nil {
-		helpers.PrintLine("You don't have a user.email and/or user.name set in your git config. ditCLI won't work if this is not fixed!", helpers.WARN)
-		helpers.PrintLine("Please run 'dit config user.name <GITHUB_USERNAME_HERE>' and 'dit config user.email <GITHUB_EMAIL_HERE>'", helpers.WARN)
-	}
 
 	return _repository, nil
 }
@@ -134,39 +121,49 @@ func MasterIsClean() error {
 	return errors.New("Your remote and local master branches have diverged - please resolve this first")
 }
 
-func checkGitSetup() error {
-	// Verifying whether a git user email is set correctly
-	gitOutput, err := ExecuteCommandWithoutStdOut("config", "user.email")
+// SideBranchIsPushed will throw an error when the local side branch is different from the remote side branch
+// which will tell the merge command that the user hasn't pushed his changes live
+func SideBranchIsPushed(_branch string) error {
+	// Fetching the branches
+	err := ExecuteCommand("fetch")
 	if err != nil {
-		return err
-	}
-	if len(strings.TrimSpace(gitOutput)) <= 0 {
-		return errors.New("There is no git user.email set")
+		return errors.New("There was an error retrieving the current status of the remote branches")
 	}
 
-	// Verifying whether a git user name is set correctly
-	gitOutput, err = ExecuteCommandWithoutStdOut("config", "user.name")
+	// Retrieving the head of the local sidebranch
+	gitOutputLocal, err := ExecuteCommandWithoutStdOut("rev-parse", _branch)
 	if err != nil {
-		return err
+		return errors.New("There was an error retrieving the current head of the local sidebranch")
 	}
-	if len(strings.TrimSpace(gitOutput)) <= 0 {
-		return errors.New("There is no git user.name set")
+	gitOutputLocal = strings.TrimSpace(gitOutputLocal)
+
+	// Retrieving the head of the remote sidebranch
+	gitOutputRemote, err := ExecuteCommandWithoutStdOut("rev-parse", "origin/"+_branch)
+	if err != nil {
+		helpers.PrintLine("There was an error retrieving the current head of the remote sidebranch", helpers.ERROR)
+		helpers.PrintLine("This usually happens if you never pushed the commits of the sidebranch", helpers.ERROR)
+		return errors.New("Please push before trying to merge into master")
+	}
+	gitOutputRemote = strings.TrimSpace(gitOutputRemote)
+
+	// Retrieving the head of the merge base
+	gitOutputBase, err := ExecuteCommandWithoutStdOut("merge-base", "@", "origin/"+_branch)
+	if err != nil {
+		return errors.New("There was an error retrieving the current head of the remote merge base")
+	}
+	gitOutputBase = strings.TrimSpace(gitOutputBase)
+
+	if gitOutputLocal == gitOutputRemote {
+		return nil
+	} else if gitOutputLocal == gitOutputBase {
+		return errors.New("The remote " + _branch + " branch is ahead of your local state. Please pull the changes before trying to merge into master")
+	} else if gitOutputRemote == gitOutputBase {
+		return errors.New("You didn't push all of your commits in the " + _branch + " branch. Please push before trying to merge into master")
 	}
 
-	// Verifying whether the git password is being cached
-	// If nothing is set, we will cache it for now
-	gitOutput, err = ExecuteCommandWithoutStdOut("config", "credential.helper")
-	if err != nil {
-		return err
-	}
-	if len(strings.TrimSpace(gitOutput)) <= 0 {
-		_, err = ExecuteCommandWithoutStdOut("config", "credential.helper", "cache")
-		if err != nil {
-			return err
-		}
-	}
-
-	return nil
+	helpers.PrintLine("The remote and local states of the "+_branch+" branch are not the same", helpers.ERROR)
+	helpers.PrintLine("This usually happens if you didn't push the latest commits of the sidebranch", helpers.ERROR)
+	return errors.New("Please resolve this before trying to merge into master")
 }
 
 // Validate will return an error when the connection to
