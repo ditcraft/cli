@@ -35,7 +35,10 @@ func main() {
 	err = config.Load()
 
 	// Loading the logfile
-	err = ditLog.Load()
+	logErr := ditLog.Load()
+	if logErr != nil {
+		helpers.PrintLine(logErr.Error(), helpers.ERROR)
+	}
 
 	// If no arguments are provided print the usage information
 	if len(args) == 0 {
@@ -47,7 +50,7 @@ func main() {
 	// is capitalized by accident
 	command := strings.ToLower(args[0])
 
-	logErr := ditLog.AddCommand("dit " + strings.Join(args, " "))
+	logErr = ditLog.AddCommand("dit " + strings.Join(args, " "))
 	if logErr != nil {
 		if len(logErr.Error()) > 0 {
 			helpers.PrintLine(logErr.Error(), helpers.ERROR)
@@ -211,54 +214,57 @@ func main() {
 			checkIfExists(args, 1, "the branch to be "+command+"d")
 			err = git.MasterIsClean()
 			if err == nil {
-				var branchHash string
-				branchHash, err = git.GetHeadHashOfBranch(args[1])
+				err = git.SideBranchIsPushed(args[1])
 				if err == nil {
-					var repository, voteDetails string
-					var voteID int
-					var newVote, voteEnded, votePassed bool
-					if config.DitConfig.DemoModeActive {
-						voteID, voteEnded, votePassed, repository, err = demo.SearchForHashInVotes(branchHash)
-						if err == nil {
-							if voteID == 0 {
-								helpers.PrintLine("You are trying to "+command+" into the master branch - this requires a vote.", helpers.INFO)
-								voteDetails, voteID, err = demo.ProposeCommit(args[1], branchHash)
-								newVote = true
-							}
-						}
-					} else {
-						voteID, voteEnded, votePassed, repository, err = ethereum.SearchForHashInVotes(branchHash)
-						if err == nil {
-							if voteID == 0 {
-								helpers.PrintLine("You are trying to "+command+" into the master branch - this requires a vote.", helpers.INFO)
-								voteDetails, voteID, err = ethereum.ProposeCommit(args[1], branchHash)
-								newVote = true
-							}
-						}
-					}
-					if err == nil && voteID > 0 {
-						if newVote {
-							stringLines := strings.Split(voteDetails, "\n")
-							for i := range stringLines {
-								helpers.PrintLine(stringLines[i], helpers.INFO)
+					var branchHash string
+					branchHash, err = git.GetHeadHashOfBranch(args[1])
+					if err == nil {
+						var repository, voteDetails string
+						var voteID int
+						var newVote, voteEnded, votePassed bool
+						if config.DitConfig.DemoModeActive {
+							voteID, voteEnded, votePassed, repository, err = demo.SearchForHashInVotes(branchHash)
+							if err == nil {
+								if voteID == 0 {
+									helpers.PrintLine("You are trying to "+command+" into the master branch - this requires a vote.", helpers.INFO)
+									voteDetails, voteID, err = demo.ProposeCommit(args[1], branchHash)
+									newVote = true
+								}
 							}
 						} else {
-							if !voteEnded {
-								helpers.PrintLine("The vote on this "+command+" hasn't ended yet - please wait!", helpers.ERROR)
-							} else if voteEnded && !votePassed {
-								helpers.PrintLine("The vote on this "+command+" hasn't passed - you are not allowed to "+command+" into master!", helpers.ERROR)
-							} else if voteEnded && votePassed {
-								err = git.ExecuteCommand(args[:]...)
-								if err == nil {
-									var newHeadHash string
-									newHeadHash, err = git.GetHeadHashOfBranch("master")
+							voteID, voteEnded, votePassed, repository, err = ethereum.SearchForHashInVotes(branchHash)
+							if err == nil {
+								if voteID == 0 {
+									helpers.PrintLine("You are trying to "+command+" into the master branch - this requires a vote.", helpers.INFO)
+									voteDetails, voteID, err = ethereum.ProposeCommit(args[1], branchHash)
+									newVote = true
+								}
+							}
+						}
+						if err == nil && voteID > 0 {
+							if newVote {
+								stringLines := strings.Split(voteDetails, "\n")
+								for i := range stringLines {
+									helpers.PrintLine(stringLines[i], helpers.INFO)
+								}
+							} else {
+								if !voteEnded {
+									helpers.PrintLine("The vote on this "+command+" hasn't ended yet - please wait!", helpers.ERROR)
+								} else if voteEnded && !votePassed {
+									helpers.PrintLine("The vote on this "+command+" hasn't passed - you are not allowed to "+command+" into master!", helpers.ERROR)
+								} else if voteEnded && votePassed {
+									err = git.ExecuteCommand(args[:]...)
 									if err == nil {
-										if config.DitConfig.DemoModeActive {
-											config.DitConfig.DemoRepositories[repository].ActiveVotes[strconv.Itoa(voteID)].NewHeadHash = newHeadHash
-										} else {
-											config.DitConfig.LiveRepositories[repository].ActiveVotes[strconv.Itoa(voteID)].NewHeadHash = newHeadHash
+										var newHeadHash string
+										newHeadHash, err = git.GetHeadHashOfBranch("master")
+										if err == nil {
+											if config.DitConfig.DemoModeActive {
+												config.DitConfig.DemoRepositories[repository].ActiveVotes[strconv.Itoa(voteID)].NewHeadHash = newHeadHash
+											} else {
+												config.DitConfig.LiveRepositories[repository].ActiveVotes[strconv.Itoa(voteID)].NewHeadHash = newHeadHash
+											}
+											err = config.Save()
 										}
-										err = config.Save()
 									}
 								}
 							}
@@ -401,7 +407,7 @@ func main() {
 			if err == nil && isProposer {
 				fmt.Println()
 				if pollPassed {
-					helpers.PrintLine("You are now allowed to integrate your changes into the master branch", helpers.INFO)
+					helpers.PrintLine("You are now allowed to integrate your changes into the master branch, e.g. through "+helpers.ColorizeCommand("merge <branch>"), helpers.INFO)
 				} else {
 					helpers.PrintLine(fmt.Sprintf("You are %s allowed to integrate your changes into the master branch", aurora.Bold(aurora.Red("NOT"))), helpers.INFO)
 				}
@@ -443,7 +449,7 @@ func checkIfExists(_arguments []string, _index int, _description string) {
 
 func printUsage() {
 	fmt.Println("---- ditCLI v0.3.1 prerelease ----")
-	fmt.Println("----------- ditCLI v0.3 ----------")
+	// fmt.Println("---------- ditCLI v0.3.1 ---------")
 	if config.DitConfig.DemoModeActive {
 		fmt.Println("--------- demo mode active -------")
 	} else {

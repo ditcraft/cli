@@ -667,13 +667,14 @@ func ProposeCommit(_branch string, _branchHeadHash string) (string, int, error) 
 			keepAsking = false
 		}
 	}
+	fmt.Println("")
 
 	// Prompting the user whether he is sure of this proposal and its details
 	floatStakeString := fmt.Sprintf("%.2f", floatStakeParsed)
 	floatKNWString := fmt.Sprintf("%.2f", floatKNWParsed)
 	floatLengthString := fmt.Sprintf("%.1f", floatLengthParsed)
 
-	helpers.PrintLine("  Proposing the changes with the following settings:", helpers.INFO)
+	helpers.PrintLine("Proposing the changes with the following settings:", helpers.INFO)
 	helpers.PrintLine("  Proposal Description: '"+answerProposalSummary+"'", helpers.INFO)
 	helpers.PrintLine("  Knowledge Label: "+knowledgeLabels[answerKnowledgeLabel-1].Label, helpers.INFO)
 	helpers.PrintLine("  Amount of KNW Tokens: "+floatKNWString+" KNW", helpers.INFO)
